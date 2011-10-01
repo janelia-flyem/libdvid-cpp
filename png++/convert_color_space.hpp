@@ -167,19 +167,37 @@ namespace png
             template< class reader >
             static void handle_palette(reader& io)
             {
-                if (io.get_color_type() == color_type_palette)
+                bool src_palette =
+                    io.get_color_type() == color_type_palette;
+                bool dst_palette =
+                    traits::get_color_type() == color_type_palette;
+                if (src_palette && !dst_palette)
                 {
 #ifdef PNG_READ_EXPAND_SUPPORTED
                     io.set_palette_to_rgb();
-
-                    if (traits::get_color_type() != color_type_palette)
-                    {
-                        io.get_info().drop_palette();
-                    }
+                    io.get_info().drop_palette();
 #else
                     throw error("indexed colors unexpected;"
                                 " recompile with PNG_READ_EXPAND_SUPPORTED");
 #endif
+                }
+                else if (!src_palette && dst_palette)
+                {
+                    throw error("conversion to indexed colors is unsupported (yet)");
+                }
+                else if (src_palette && dst_palette
+                         && io.get_bit_depth() != traits::get_bit_depth())
+                {
+                    if (traits::get_bit_depth() == 8)
+                    {
+#ifdef PNG_READ_PACK_SUPPORTED
+                        io.set_packing();
+#endif
+                    }
+                    else
+                    {
+                        throw error("cannot convert to indexed colors with bit-depth < 8");
+                    }
                 }
             }
 
@@ -330,6 +348,16 @@ namespace png
     template<>
     struct convert_color_space< ga_pixel_16 >
         : detail::convert_color_space_impl< ga_pixel_16 >
+    {
+    };
+
+    /**
+     * \brief Converts %image %color space.  A specialization for
+     * index_pixel type.
+     */
+    template<>
+    struct convert_color_space< index_pixel >
+        : detail::convert_color_space_impl< index_pixel >
     {
     };
 
