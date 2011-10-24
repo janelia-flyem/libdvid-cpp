@@ -115,8 +115,7 @@ namespace png
                                  m_tRNS.size(),
                                  NULL);
 #else
-                    throw error("attempted to write tRNS chunk;"
-                                " recompile with PNG_tRNS_SUPPORTED");
+                    throw error("attempted to write tRNS chunk; recompile with PNG_tRNS_SUPPORTED");
 #endif
                 }
             }
