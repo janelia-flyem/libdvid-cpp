@@ -92,9 +92,9 @@ namespace png
         }
 
         size_t get_height() const
-	    {
+        {
             return m_height;
-	    }
+        }
 
         /**
          * \brief Resizes the pixel buffer.
