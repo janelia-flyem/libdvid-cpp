@@ -265,14 +265,6 @@ namespace png
         /**
          * \brief Writes an image to a stream.
          */
-        void write_stream(std::ostream& stream)
-        {
-            write_stream(stream);
-        }
-
-        /**
-         * \brief Writes an image to a stream.
-         */
         template< class ostream >
         void write_stream(ostream& stream)
         {
