@@ -52,6 +52,10 @@
 #include <machine/endian.h>
 #include <sys/endian.h>
 
+#elif defined(__sun)
+
+#include <sys/isa_defs.h>
+
 #else
 
 #error Byte-order could not be detected.
