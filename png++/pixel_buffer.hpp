@@ -65,6 +65,8 @@ namespace png
          * \brief A row of pixel data.
          */
         typedef row row_type;
+        typedef row_type& row_access;
+        typedef row_type const& row_const_access;
         typedef traits row_traits;
 
         /**
@@ -123,7 +125,7 @@ namespace png
          * std::out_of_range is thrown if \c index is greater than \c
          * height.
          */
-        row_type& get_row(size_t index)
+        row_access get_row(size_t index)
         {
             return m_rows.at(index);
         }
@@ -134,7 +136,7 @@ namespace png
          *
          * The checking version.
          */
-        row_type const& get_row(size_t index) const
+        row_const_access get_row(size_t index) const
         {
             return m_rows.at(index);
         }
@@ -142,7 +144,7 @@ namespace png
         /**
          * \brief The non-checking version of get_row() method.
          */
-        row_type& operator[](size_t index)
+        row_access operator[](size_t index)
         {
             return m_rows[index];
         }
@@ -150,7 +152,7 @@ namespace png
         /**
          * \brief The non-checking version of get_row() method.
          */
-        row_type const& operator[](size_t index) const
+        row_const_access operator[](size_t index) const
         {
             return m_rows[index];
         }

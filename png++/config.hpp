@@ -62,4 +62,35 @@
 
 #endif
 
+// Determine C++11 features
+#if defined(__GNUC__) && defined(__GNUC_MINOR__) && defined(__GNUC_PATCHLEVEL__) && defined(__GXX_EXPERIMENTAL_CXX0X__)
+
+#define PNGPP_GCC_VERSION (__GNUC__ * 10000 + __GNUC_MINOR__ * 100 + __GNUC_PATCHLEVEL__)
+// gcc c++11 support list
+// http://gcc.gnu.org/projects/cxx0x.html
+
+// gcc supports static_assert since 4.3
+#if (PNGPP_GCC_VERSION >= 40300)
+#define PNGPP_HAS_STATIC_ASSERT
+#endif
+
+// gcc supports std::move since 4.6
+#if (PNGPP_GCC_VERSION >= 40600)
+#define PNGPP_HAS_STD_MOVE
+#endif
+
+#undef PNGPP_GCC_VERSION
+
+#elif defined(_MSC_VER)
+
+// MS Visual C++ compiler supports static_assert and std::move since VS2010
+// http://blogs.msdn.com/b/vcblog/archive/2011/09/12/10209291.aspx
+#if (_MSC_VER >= 1600)
+#define PNGPP_HAS_STATIC_ASSERT
+#define PNGPP_HAS_STD_MOVE
+#endif
+
+#endif
+
+
 #endif // PNGPP_CONFIG_HPP_INCLUDED
