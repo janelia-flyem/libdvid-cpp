@@ -1,0 +1,13 @@
+-make dvid server and check for existence (info?)
+-make dvid node and check for existence
+-create coords, channels, and size utilities
+-make DVIDVoxels generic type (initialization from string) -- just use c_str casted to template -- prevent 2D start, convert all 2D slices to 3D (2D x 1)
+-implement get/put interface (especially with JSON)
+-deal with binary data object since it is really a string -- just create string from char *? -- what about unnecessary copying -- figure this stuff out
+-create buildem setup
+-make an example taking dvid server, uuid, and optional 
+
+
+
+
+
