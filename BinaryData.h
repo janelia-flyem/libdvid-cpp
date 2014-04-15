@@ -2,38 +2,47 @@
 #define BINARYDATA
 
 #include <boost/shared_ptr.hpp>
+#include <fstream>
+#include <string>
 
-typedef unsigned char byte
+namespace libdvid {
+
+typedef unsigned char byte;
 
 class BinaryData;
 typedef boost::shared_ptr<BinaryData> BinaryDataPtr;
 
 class BinaryData {
   public:
-    static BinaryDataPtr create_binary_data(byte* data_)
+    static BinaryDataPtr create_binary_data(const char* data_)
     {
         return BinaryDataPtr(new BinaryData(data_));
     }
-    char * get_raw()
+    static BinaryDataPtr create_binary_data(std::ifstream& fin)
+    {
+        return BinaryDataPtr(new BinaryData(fin));
+    }
+
+    byte * get_raw()
+    {
+        return (byte *)(data.c_str());
+    }
+    std::string& get_data()
     {
         return data;
     }
-    ~BinaryData()
-    {
-        delete data;
-    }
-
+    ~BinaryData() {}
   private:
-    BinaryData(byte data_) : data(data_) {}
-    byte data;
+    BinaryData(const char* data_) : data(data_) {}
+    BinaryData(std::ifstream& fin)
+    {
+        data.assign( (std::istreambuf_iterator<char>(fin) ),
+                (std::istreambuf_iterator<char>()    ) ); 
+    }
+    std::string data;
 };
 
-
-
-
-
-
-
+}
 
 #endif
 

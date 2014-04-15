@@ -12,6 +12,10 @@ class DVIDServer {
     {
         return addr;
     }
+    std::string get_uri_root()
+    {
+        addr + "/api/";
+    }
 
   private:
     std::string addr;

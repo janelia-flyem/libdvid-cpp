@@ -1,9 +1,11 @@
 #ifndef UTILITIES_H
 #define UTILITIES_H
 
-namespace libdvid {
-
 #include <string>
+#include <ostream>
+#include <vector>
+
+namespace libdvid {
 
 class ErrMsg { 
   public:
@@ -15,14 +17,16 @@ class ErrMsg {
 
   private:
     std::string msg;
-}
-
+};
 
 std::ostream& operator<<(std::ostream& os, ErrMsg& err)
 {
     os << err.get_msg(); 
     return os;
 }
+
+// e.g., dim1, dim2, dim3; x, y, z
+typedef std::vector<int> tuple;
 
 }
 

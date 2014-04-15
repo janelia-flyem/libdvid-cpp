@@ -2,20 +2,20 @@
 #define DVIDEXCEPTION_H
 
 #include "Utilities.h"
-#include <ostream>
+#include <sstream>
 
 namespace libdvid {
 
 class DVIDException : public ErrMsg {
   public:
-    DVIDException(int status_) :
+    DVIDException(std::string msg_, int status_) :
         ErrMsg(msg_), status(status_) {}
 
     std::string get_msg()
     {
         std::stringstream sstr;
-        sstr << status << ": " << ErrMsg::get_msg();
-        return sstr.string();
+        sstr << "DVID Error (" << status << "): " << ErrMsg::get_msg();
+        return sstr.str();
     }
   private:
     int status;
