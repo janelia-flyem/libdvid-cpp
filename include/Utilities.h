@@ -1,5 +1,5 @@
-#ifndef UTILITIES_H
-#define UTILITIES_H
+#ifndef DUTILITIES_H
+#define DUTILITIES_H
 
 #include <string>
 #include <ostream>
@@ -19,11 +19,7 @@ class ErrMsg {
     std::string msg;
 };
 
-std::ostream& operator<<(std::ostream& os, ErrMsg& err)
-{
-    os << err.get_msg(); 
-    return os;
-}
+std::ostream& operator<<(std::ostream& os, ErrMsg& err);
 
 // e.g., dim1, dim2, dim3; x, y, z
 typedef std::vector<int> tuple;
