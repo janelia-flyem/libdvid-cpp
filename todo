@@ -7,7 +7,7 @@ X-make DVIDVoxels generic type (initialization from string) -- just use c_str ca
 X-implement get/put interface (especially with JSON)
 X-deal with binary data object since it is really a string -- just create string from char *? -- what about unnecessary copying -- figure this stuff out
 
--create buildem setup (buildem library module, standalone build, handle includes)
+-create buildem setup (create libdvid.cmake, make new boost cmake -- check for duplicate?, make netlib cmake, copy binaries, make sure includes copy, make simple cmake for simple app)
 -make an example taking dvid server, uuid, and option
 -integration tests?; extensive debug
 -documentation

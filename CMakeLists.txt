@@ -68,22 +68,15 @@ else ()
     set (LIBDVID_EXT_LIBS ${CPPNETLIB_LIBRARIES})
 endif (NOT ${BUILDEM_DIR} STREQUAL "None")
 
-# set bin and lib directories
-set (CMAKE_RUNTIME_OUTPUT_DIRECTORY ${BUILDLOC}/bin)
-if (NOT EXISTS ${BUILDLOC}/bin)
-    file (MAKE_DIRECTORY ${BUILDLOC}/bin)
-endif() 
-
-set (CMAKE_LIBRARY_OUTPUT_DIRECTORY ${BUILDLOC}/lib)
-set (CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${BUILDLOC}/lib)
-if (NOT EXISTS ${BUILDLOC}/lib)
-    file (MAKE_DIRECTORY ${BUILDLOC}/lib)
-endif() 
+include_directories (BEFORE ${CMAKE_SOURCE_DIR}/include)
 
 # Compile libdvidcpp library components
-add_library (libdvidcpp SHARED DVIDNode.cpp DVIDServer.cpp)
+add_library (libdvidcpp SHARED src/DVIDNode.cpp src/DVIDServer.cpp)
 
 target_link_libraries (libdvidcpp ${LIBDVID_EXT_LIBS})
+
+INSTALL(DIRECTORY ${PROJECT_SOURCE_DIR}/include DESTINATION include/libdvid)
+INSTALL(TARGETS libdvidcpp DESTINATION lib)
 
 if (NOT ${BUILDEM_DIR} STREQUAL "None")
     add_dependencies (libdvidcpp ${LIBDVID_DEPS})
