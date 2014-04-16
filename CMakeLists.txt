@@ -75,7 +75,7 @@ add_library (dvidcpp src/DVIDNode.cpp src/DVIDServer.cpp src/Utilities)
 
 target_link_libraries (dvidcpp ${LIBDVID_EXT_LIBS})
 
-INSTALL(DIRECTORY ${PROJECT_SOURCE_DIR}/include DESTINATION include/libdvid)
+INSTALL(DIRECTORY ${PROJECT_SOURCE_DIR}/libdvid DESTINATION include)
 INSTALL(TARGETS dvidcpp DESTINATION lib)
 
 if (NOT ${BUILDEM_DIR} STREQUAL "None")
