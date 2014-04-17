@@ -60,9 +60,10 @@ Consult the application in *example* to see many of the API features exercised. 
     
 ## TODO
 
-* Add test regressions
+* Add test regressions and more documentation
 * Improve performance of streaming large amounts of data by eliminating unnecessary copying.
-* Expand support to more datatype instances in DVID (like sparse volumes)
+* Expand support to more datatype instances in DVID (like sparse volumes) and handling DVID meta-data
+* Simpler package linking
 
 ## Notes
     

@@ -11,11 +11,11 @@ class DVIDVoxels {
   public:
     static boost::shared_ptr<DVIDVoxels<T> > get_dvid_voxels(T* array_)
     {
-        return boost::shared_ptr<DVIDVoxels<T> >(new DVIDVoxels(array_));
+        return boost::shared_ptr<DVIDVoxels<T> >(new DVIDVoxels<T>(array_));
     }
     static boost::shared_ptr<DVIDVoxels<T> > get_dvid_voxels(std::string& data_str)
     {
-        return boost::shared_ptr<DVIDVoxels<T> >(new DVIDVoxels(data_str));
+        return boost::shared_ptr<DVIDVoxels<T> >(new DVIDVoxels<T>(data_str));
     }
 
     ~DVIDVoxels()

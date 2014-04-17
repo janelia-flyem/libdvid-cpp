@@ -14,9 +14,9 @@ typedef boost::shared_ptr<BinaryData> BinaryDataPtr;
 
 class BinaryData {
   public:
-    static BinaryDataPtr create_binary_data(const char* data_)
+    static BinaryDataPtr create_binary_data(const char* data_, unsigned int length)
     {
-        return BinaryDataPtr(new BinaryData(data_));
+        return BinaryDataPtr(new BinaryData(data_, length));
     }
     static BinaryDataPtr create_binary_data(std::ifstream& fin)
     {
@@ -33,7 +33,7 @@ class BinaryData {
     }
     ~BinaryData() {}
   private:
-    BinaryData(const char* data_) : data(data_) {}
+    BinaryData(const char* data_, unsigned int length) : data(data_, length) {}
     BinaryData(std::ifstream& fin)
     {
         data.assign( (std::istreambuf_iterator<char>(fin) ),

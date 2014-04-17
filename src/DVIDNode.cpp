@@ -10,7 +10,6 @@ using namespace boost::network;
 using std::ifstream; using std::set; using std::stringstream;
 Json::Reader json_reader;
 
-
 namespace libdvid {
 
 DVIDNode::DVIDNode(DVIDServer web_addr_, UUID uuid_) : 
@@ -65,7 +64,7 @@ void DVIDNode::put(std::string keyvalue, std::string key, Json::Value& data)
 {
     stringstream datastr;
     datastr << data;
-    BinaryDataPtr bdata = BinaryData::create_binary_data(datastr.str().c_str());
+    BinaryDataPtr bdata = BinaryData::create_binary_data(datastr.str().c_str(), datastr.str().length());
     put(keyvalue, key, bdata);
 }
 
@@ -82,7 +81,7 @@ void DVIDNode::get(std::string keyvalue, std::string key, BinaryDataPtr& value)
     }
     std::string data = body(respdata);
     // ?! allow intialization to happen in constructor
-    value = BinaryData::create_binary_data(data.c_str());
+    value = BinaryData::create_binary_data(data.c_str(), data.length());
 }
 
 void DVIDNode::get(std::string keyvalue, std::string key, Json::Value& data)
@@ -96,7 +95,7 @@ void DVIDNode::get(std::string keyvalue, std::string key, Json::Value& data)
     }
 }
 
-void DVIDNode::get_gray_slice(std::string datatype_instance, tuple start,
+void DVIDNode::get_volume_roi(std::string datatype_instance, tuple start,
         tuple sizes, tuple channels, DVIDGrayPtr& gray)
 {
     std::string volume;
@@ -104,7 +103,7 @@ void DVIDNode::get_gray_slice(std::string datatype_instance, tuple start,
     gray = DVIDVoxels<unsigned char>::get_dvid_voxels(volume); 
 }
 
-void DVIDNode::get_label_slice(std::string datatype_instance, tuple start,
+void DVIDNode::get_volume_roi(std::string datatype_instance, tuple start,
         tuple sizes, tuple channels, DVIDLabelPtr& labels)
 {
     std::string volume;
@@ -112,7 +111,7 @@ void DVIDNode::get_label_slice(std::string datatype_instance, tuple start,
     labels = DVIDVoxels<unsigned long long>::get_dvid_voxels(volume); 
 }
 
-void DVIDNode::write_label_slice(std::string datatype_instance, tuple start,
+void DVIDNode::write_volume_roi(std::string datatype_instance, tuple start,
         tuple sizes, tuple channels, BinaryDataPtr data)
 {
     client::request requestobj(construct_volume_uri(

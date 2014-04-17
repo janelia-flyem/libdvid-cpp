@@ -23,12 +23,12 @@ class DVIDNode {
     bool create_grayscale8(std::string datatype_name);
     bool create_labels64(std::string datatype_name);
     
-    void get_gray_slice(std::string datatype_instance, tuple start,
+    void get_volume_roi(std::string datatype_instance, tuple start,
             tuple sizes, tuple channels, DVIDGrayPtr& gray);
-    void get_label_slice(std::string datatype_instance, tuple start,
+    void get_volume_roi(std::string datatype_instance, tuple start,
             tuple sizes, tuple channels, DVIDLabelPtr& labels);
     
-    void write_label_slice(std::string datatype_instance, tuple start,
+    void write_volume_roi(std::string datatype_instance, tuple start,
             tuple sizes, tuple channels, BinaryDataPtr data);
 
     // Key-Value Interface

@@ -1,8 +1,6 @@
--make some fake image data -- perhaps write out hello world on two planes
--debug
+-documentation/fix label pushing
 
--documentation
-
+-be careful about 0/nulls
 -find datatype_instance function
 -integration and unit tests
 -automatically include cppnet and boost libraries in build
