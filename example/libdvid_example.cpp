@@ -1,62 +1,47 @@
 #include <iostream>
-#include <boost/network/protocol/http/client.hpp>
-#include <libdvid/DVIDServer.h>
 #include <libdvid/DVIDNode.h>
-#include <libdvid/Utilities.h>
 
 using std::cout; using std::endl;
-using namespace boost::network;
-using namespace boost::network::http;
+using std::string;
+
 using namespace libdvid;
 
-int main() {
-    client client2;
+int main(int argc, char** argv) {
+    if (argc != 3) {
+        cout << "Usage: <program> <server_name> <uuid>" << endl;
+        return -1;
+    }
+    
     try {
-        DVIDServer server("http://127.0.0.1:8000");
-        DVIDNode dvid_node(server, "1e8");
-//        dvid_node.create_keyvalue("blah");    
+        DVIDServer server(argv[1]);
+        DVIDNode dvid_node(server, argv[2]);
        
+        string gray_datatype_name = "gray1";
+        string label_datatype_name = "labels1";
+        string keyvalue_datatype_name = "keys";
+
+        // test creation of DVID datatypes
+        if(!dvid_node.create_grayscale8(gray_datatype_name)) {
+            cout << gray_datatype_name << " already exists" << endl;
+        }
+        if(!dvid_node.create_labels64(label_datatype_name)) {
+            cout << label_datatype_name << " already exists" << endl;
+        }
+        if(!dvid_node.create_keyvalue(keyvalue_datatype_name)) {
+            cout << keyvalue_datatype_name << " already exists" << endl;
+        }
         
-        
-        Json::Value data2;
-        data2["hello"] = "no!!!!!"; 
-        dvid_node.put("blah", "spot0", data2); 
-        
-        
-        
-        Json::Value data; 
-        dvid_node.get("blah", "spot0", data);
-        std::string data_str = data["hello"].asString();
-        cout << data_str << endl; 
-    
-    
+        // test key value interface
+        Json::Value data_init;
+        data_init["hello"] = "world"; 
+        dvid_node.put(keyvalue_datatype_name, "spot0", data_init); 
+        Json::Value data_ret; 
+        dvid_node.get(keyvalue_datatype_name, "spot0", data_ret);
+        std::string data_str = data_ret["hello"].asString();
+        cout << "Response: " << data_str << endl; 
     
     } catch (std::exception& e) {
+        // catch DVID, libdvid, and boost errors
         cout << e.what() << endl;
     }
-
-   
-   /*
-    client::request request2("http://www.google2.com");
-    request2 << header("Connection", "close");
-    client client2;
-    cout << "blah0" << endl;
-    client::response response2 = client2.get(request2);
-    cout << "blah1" << endl;
-    int body4;
-    try {
-        body4 = status(response2);
-    } catch (std::exception& ex) {
-        cout << ex.what() << endl;
-    }
-    cout << "blah2" << endl;
-    cout << body4 << endl;
-    cout << "blah3" << endl;
-    std::string body2 = body(response2);
-    cout << "blah4" << endl;
-    std::string body3 = status_message(response2);
-
-    cout << body2 << endl;
-    cout << body3 << endl;
-    */
 }

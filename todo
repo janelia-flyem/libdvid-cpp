@@ -1,15 +1,17 @@
--add a function to check whether the keyvalue exists -- check info
--add a function for creating grayscale/label data -- make some fake image data -- perhaps write out hello world on two planes
-
-
--make an example taking dvid server, uuid, and option -- just take location of dvid and uuid as command (create label, gray, and keyvalue)
-
+-make some fake image data -- perhaps write out hello world on two planes
+-debug
 
 -documentation
--integration tests?; extensive debug
 
-
+-find datatype_instance function
+-integration and unit tests
 -automatically include cppnet and boost libraries in build
+-load datatype_instance info in dataset objects
+-capabilities (DVID interface and meta information)
+-performance (string buffer copying)
+
+
+
 
 
 

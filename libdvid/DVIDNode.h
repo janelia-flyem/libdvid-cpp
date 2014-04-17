@@ -20,6 +20,9 @@ class DVIDNode {
     DVIDNode(DVIDServer web_addr_, UUID uuid_);
 
     // throw error if start point is 2D
+    bool create_grayscale8(std::string datatype_name);
+    bool create_labels64(std::string datatype_name);
+    
     void get_gray_slice(std::string datatype_instance, tuple start,
             tuple sizes, tuple channels, DVIDGrayPtr& gray);
     void get_label_slice(std::string datatype_instance, tuple start,
@@ -31,8 +34,8 @@ class DVIDNode {
     // Key-Value Interface
 
     // will ignore if keyvalue already exists
-    void create_keyvalue(std::string keyvalue);
-
+    bool create_keyvalue(std::string keyvalue);
+    
     void put(std::string keyvalue, std::string key, BinaryDataPtr value);
     void put(std::string keyvalue, std::string key, std::ifstream& fin);
     void put(std::string keyvalue, std::string key, Json::Value& data);
@@ -47,6 +50,10 @@ class DVIDNode {
 
     std::string construct_volume_uri(std::string datatype_inst, tuple start, tuple sizes, tuple channels);
     void retrieve_volume(std::string datatype_inst, tuple start, tuple sizes, tuple channels, std::string& volume);
+
+    bool exists(std::string uri);
+
+    bool create_datatype(std::string datatype, std::string datatype_name);
 
     // ?! maybe add node meta data ?? -- but probably make it on demand
 

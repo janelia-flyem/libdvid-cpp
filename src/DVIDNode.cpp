@@ -3,11 +3,13 @@
 #include <json/json.h>
 #include <set>
 
+// std::string collides with a boost string
+using namespace boost::network::http;
+using namespace boost::network;
+
 using std::ifstream; using std::set; using std::stringstream;
 Json::Reader json_reader;
 
-using namespace boost::network;
-using namespace boost::network::http;
 
 namespace libdvid {
 
@@ -23,19 +25,19 @@ DVIDNode::DVIDNode(DVIDServer web_addr_, UUID uuid_) :
     }
 }
 
-void DVIDNode::create_keyvalue(std::string keyvalue)
+bool DVIDNode::create_grayscale8(std::string datatype_name)
 {
-    client::request requestobj(web_addr.get_uri_root() + "dataset/" + uuid +
-            "/new/keyvalue/" + keyvalue );
-    requestobj << header("Connection", "close");
+    return create_datatype("grayscale8", datatype_name);
+}
 
-    std::string data("{}");
-    client::response respdata = request_client.post(requestobj,
-            data, std::string("application/json"));
-    int status_code = status(respdata);
-    if (status_code != 200) {
-        throw DVIDException(body(respdata), status_code);
-    }
+bool DVIDNode::create_labels64(std::string datatype_name)
+{
+    return create_datatype("labels64", datatype_name);
+}
+
+bool DVIDNode::create_keyvalue(std::string keyvalue)
+{
+    return create_datatype("keyvalue", keyvalue);
 }
 
 void DVIDNode::put(std::string keyvalue, std::string key, BinaryDataPtr value)
@@ -185,6 +187,44 @@ void DVIDNode::retrieve_volume(std::string datatype_inst, tuple start, tuple siz
         throw DVIDException(body(respdata), status_code);
     }
     volume = body(respdata);
+}
+
+bool DVIDNode::exists(std::string uri)
+{ 
+    try {
+        client::request requestobj(uri);
+        requestobj << header("Connection", "close");
+        client::response respdata = request_client.get(requestobj);
+        int status_code = status(respdata);
+        if (status_code != 200) {
+            return false;
+        }
+    } catch (std::exception& e) {
+        return false;
+    }
+
+    return true;
+}
+
+bool DVIDNode::create_datatype(std::string datatype, std::string datatype_name)
+{
+    if (exists(web_addr.get_uri_root() + "node/" + uuid + "/" + datatype_name + "/info")) {
+        return false;
+    } 
+
+    client::request requestobj(web_addr.get_uri_root() + "dataset/" + uuid +
+            "/new/" + datatype + "/" + datatype_name );
+    requestobj << header("Connection", "close");
+
+    std::string data("{}");
+    client::response respdata = request_client.post(requestobj,
+            data, std::string("application/json"));
+    int status_code = status(respdata);
+    if (status_code != 200) {
+        throw DVIDException(body(respdata), status_code);
+    }
+
+    return true;
 }
 
 }
