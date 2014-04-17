@@ -1,22 +1,7 @@
-X-make dvid server and check for existence (info?)
-
-X-make dvid node and check for existence
-X-create coords, channels, and size utilities
-X-make DVIDVoxels generic type (initialization from string) -- just use c_str casted to template -- prevent 2D start, convert all 2D slices to 3D (2D x 1)
-
-X-implement get/put interface (especially with JSON)
-X-deal with binary data object since it is really a string -- just create string from char *? -- what about unnecessary copying -- figure this stuff out
-X-create buildem setup (create libdvid.cmake, make new boost cmake -- check for duplicate?, make netlib cmake, copy binaries, make sure includes copy, make simple cmake for simple app)
-
-??s:
-
--includes are not being moved to the correct directory (do I have to specify the headers explicitly?)
--must include boost libs and other libs explicitly (might need to support find package?)
-
-
-
-
+-automatically include cppnet and boost libraries in build
 -make an example taking dvid server, uuid, and option
+
+
 -integration tests?; extensive debug
 -documentation
 
