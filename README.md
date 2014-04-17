@@ -56,7 +56,7 @@ The advantage of this approach is that you never have to explicitly build libdvi
     
 ## Example application
 
-Consult the application of *example* to see many of the API features exercised.  Applications should include *<libdvid/DVIDNode.h>*.  The API requires the creation of a DVID server type and a DVID node type corresponding to the htpp address where DVID is running and the UUID for the version of the interested node.  Beyond this state, all API calls are stateless.
+Consult the application in *example* to see many of the API features exercised.  Applications should include \<libdvid/DVIDNode.h\>.  The API requires the creation of a DVID server type and a DVID node type corresponding to the htpp address where DVID is running and the UUID for the version of the desired repository.  Beyond this state, all API calls are stateless.
     
 ## TODO
 
