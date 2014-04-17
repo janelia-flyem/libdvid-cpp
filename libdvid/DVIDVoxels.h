@@ -31,11 +31,11 @@ class DVIDVoxels {
     DVIDVoxels(T* array_) : array(array_) {}
     DVIDVoxels(std::string& data_str)
     {
-        const char * byte_array = data_str.c_str();
+        T * byte_array = (T*) data_str.c_str();
         int incr = sizeof(T);
         array = new T[data_str.size()];
-        for (int i = 0, pos = 0; i < data_str.size(); i+=incr, pos++) {
-            array[pos] = T(byte_array[i]); 
+        for (int i = 0, pos = 0; i < data_str.size(); ++i) {
+            array[i] = T(byte_array[i]); 
         }
     }
     

@@ -105,14 +105,14 @@ int main(int argc, char** argv) {
         // be at least an ND point where N is greater than 2
         
         // !! not currently working
-        //dvid_node.write_volume_roi(label_datatype_name, start, sizes, channels, labelbin);
+        dvid_node.write_volume_roi(label_datatype_name, start, sizes, channels, labelbin);
 
         // retrieve the image volume and make sure it makes the posted volume
         DVIDLabelPtr labelcomp;
         dvid_node.get_volume_roi(label_datatype_name, start, sizes, channels, labelcomp);
         unsigned long long* labeldatacomp = labelcomp->get_raw();
         for (int i = 0; i < sizeof(img1_mask)*2; ++i) {
-            //assert(labeldatacomp[i] == img_labels[i]);
+            assert(labeldatacomp[i] == img_labels[i]);
         }
 
         // ** Test key value interface **
