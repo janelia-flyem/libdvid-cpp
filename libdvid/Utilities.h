@@ -7,15 +7,15 @@
 
 namespace libdvid {
 
-class ErrMsg { 
+class ErrMsg : public std::exception { 
   public:
     ErrMsg(std::string msg_) : msg(msg_) {}
-    virtual std::string get_msg()
+    virtual const char* what() const throw()
     {
-        return msg;
+        return msg.c_str();
     }
-
-  private:
+    ~ErrMsg() throw() {}
+  protected:
     std::string msg;
 };
 

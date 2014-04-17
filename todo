@@ -1,11 +1,15 @@
--automatically include cppnet and boost libraries in build
--make an example taking dvid server, uuid, and option
+-add a function to check whether the keyvalue exists -- check info
+-add a function for creating grayscale/label data -- make some fake image data -- perhaps write out hello world on two planes
 
 
--integration tests?; extensive debug
+-make an example taking dvid server, uuid, and option -- just take location of dvid and uuid as command (create label, gray, and keyvalue)
+
+
 -documentation
+-integration tests?; extensive debug
 
 
+-automatically include cppnet and boost libraries in build
 
 
 

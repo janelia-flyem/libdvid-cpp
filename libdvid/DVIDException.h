@@ -8,17 +8,17 @@ namespace libdvid {
 
 class DVIDException : public ErrMsg {
   public:
-    DVIDException(std::string msg_, int status_) :
-        ErrMsg(msg_), status(status_) {}
-
-    std::string get_msg()
+    DVIDException(std::string msg_, int status_) : ErrMsg(msg_)
     {
         std::stringstream sstr;
-        sstr << "DVID Error (" << status << "): " << ErrMsg::get_msg();
-        return sstr.str();
+        sstr << "DVID Error (" << status_ << "): " << msg_;
+        msg = sstr.str();
     }
+    ~DVIDException() throw() {}
+
   private:
     int status;
+    std::string temp_msg;
 };
 
 }

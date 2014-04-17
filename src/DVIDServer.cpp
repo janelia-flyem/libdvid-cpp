@@ -9,11 +9,12 @@ namespace libdvid {
 
 DVIDServer::DVIDServer(std::string addr_) : addr(addr_)
 {
-    client::request requestobj(get_uri_root() + "info");
+    client::request requestobj(get_uri_root() + std::string("server/info"));
     requestobj << header("Connection", "close");
     client request_client;
     client::response respdata = request_client.get(requestobj);
     int status_code = status(respdata);
+    
     if (status_code != 200) {
         throw DVIDException(body(respdata), status_code);
     }

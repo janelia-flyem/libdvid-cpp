@@ -8,6 +8,7 @@
 #include <json/value.h>
 #include <fstream>
 #include <string>
+#include <boost/network/protocol/http/client.hpp>
 
 namespace libdvid {
 
@@ -42,6 +43,7 @@ class DVIDNode {
   private:
     UUID uuid;
     DVIDServer web_addr;
+    boost::network::http::client request_client;
 
     std::string construct_volume_uri(std::string datatype_inst, tuple start, tuple sizes, tuple channels);
     void retrieve_volume(std::string datatype_inst, tuple start, tuple sizes, tuple channels, std::string& volume);

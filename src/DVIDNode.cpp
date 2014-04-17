@@ -1,6 +1,5 @@
 #include "DVIDNode.h"
 #include "DVIDException.h"
-#include <boost/network/protocol/http/client.hpp>
 #include <json/json.h>
 #include <set>
 
@@ -15,9 +14,8 @@ namespace libdvid {
 DVIDNode::DVIDNode(DVIDServer web_addr_, UUID uuid_) : 
     web_addr(web_addr_), uuid(uuid_)
 {
-    client::request requestobj(web_addr.get_uri_root() + "node/" + uuid + "/info");
+    client::request requestobj(web_addr.get_uri_root() + "dataset/" + uuid + "/info");
     requestobj << header("Connection", "close");
-    client request_client;
     client::response respdata = request_client.get(requestobj);
     int status_code = status(respdata);
     if (status_code != 200) {
@@ -28,13 +26,12 @@ DVIDNode::DVIDNode(DVIDServer web_addr_, UUID uuid_) :
 void DVIDNode::create_keyvalue(std::string keyvalue)
 {
     client::request requestobj(web_addr.get_uri_root() + "dataset/" + uuid +
-            "/new/keyvalue" + keyvalue );
+            "/new/keyvalue/" + keyvalue );
     requestobj << header("Connection", "close");
-    client request_client;
 
     std::string data("{}");
     client::response respdata = request_client.post(requestobj,
-            "application/json", data);
+            data, std::string("application/json"));
     int status_code = status(respdata);
     if (status_code != 200) {
         throw DVIDException(body(respdata), status_code);
@@ -46,10 +43,9 @@ void DVIDNode::put(std::string keyvalue, std::string key, BinaryDataPtr value)
     client::request requestobj(web_addr.get_uri_root() + "node/" + uuid +
             "/" + keyvalue + "/" + key);
     requestobj << header("Connection", "close");
-    client request_client;
 
     client::response respdata = request_client.post(requestobj,
-            "application/octet-stream", value->get_data());
+            value->get_data(), std::string("application/octet-stream"));
     int status_code = status(respdata);
     if (status_code != 200) {
         throw DVIDException(body(respdata), status_code);
@@ -77,7 +73,6 @@ void DVIDNode::get(std::string keyvalue, std::string key, BinaryDataPtr& value)
     client::request requestobj(web_addr.get_uri_root() + "node/" + uuid +
             "/" + keyvalue + "/" + key);
     requestobj << header("Connection", "close");
-    client request_client;
     client::response respdata = request_client.get(requestobj);
     int status_code = status(respdata);
     if (status_code != 200) {
@@ -121,9 +116,8 @@ void DVIDNode::write_label_slice(std::string datatype_instance, tuple start,
     client::request requestobj(construct_volume_uri(
                 datatype_instance, start, sizes, channels));
     requestobj << header("Connection", "close");
-    client request_client;
     client::response respdata = request_client.post(requestobj,
-            "application/octet-stream", data->get_data());
+            data->get_data(), std::string("application/octet-stream"));
     int status_code = status(respdata);
     if (status_code != 200) {
         throw DVIDException(body(respdata), status_code);
@@ -185,7 +179,6 @@ void DVIDNode::retrieve_volume(std::string datatype_inst, tuple start, tuple siz
 {
     client::request requestobj(construct_volume_uri(datatype_inst, start, sizes, channels));
     requestobj << header("Connection", "close");
-    client request_client;
     client::response respdata = request_client.get(requestobj);
     int status_code = status(respdata);
     if (status_code != 200) {

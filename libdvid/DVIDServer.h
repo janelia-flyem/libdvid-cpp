@@ -2,6 +2,7 @@
 #define DVIDSERVER_H
 
 #include <string>
+#include <boost/network/protocol/http/client.hpp>
 
 namespace libdvid {
 
@@ -14,7 +15,7 @@ class DVIDServer {
     }
     std::string get_uri_root()
     {
-        addr + "/api/";
+        return (addr + "/api/");
     }
 
   private:
