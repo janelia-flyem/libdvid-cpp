@@ -6,7 +6,7 @@ retrieving of nd-data and key-value pairs.
 
 ## Installation
 
-The primary dependencies are Boost (>=1.54) and cpp-netlib.  These dependencies are
+The primary dependencies are Boost (>=1.54), cpp-netlib, and jsoncpp.  These dependencies are
 resolved automatically if building with [buildem](https://github.com/janelia-flyem/buildem).
 
 There are two preferred ways to build libdvid-cpp both use buildem: 1) build the library directly using buildem (see following) or 2) build the library as a buildem dependency when building your application (see next section).
@@ -25,7 +25,7 @@ This will install the libray to ${BUILDEM_DIR}/lib and cmake modules to ${BUILDE
     % cmake ..
     % make; make install
 
-cpp-netlib must be installed and in the cmake search path.
+cpp-netlib must be installed and in the cmake search path.  jsoncpp must also be installed.
 
 ## Building an application
 
