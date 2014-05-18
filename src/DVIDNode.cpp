@@ -10,6 +10,8 @@ using namespace boost::network;
 using std::ifstream; using std::set; using std::stringstream;
 Json::Reader json_reader;
 
+const int TransactionLimit = 1000;
+
 namespace libdvid {
 
 DVIDNode::DVIDNode(DVIDServer web_addr_, UUID uuid_) : 
@@ -37,6 +39,11 @@ bool DVIDNode::create_labels64(std::string datatype_name)
 bool DVIDNode::create_keyvalue(std::string keyvalue)
 {
     return create_datatype("keyvalue", keyvalue);
+}
+
+bool DVIDNode::create_graph(std::string graph_name)
+{
+    return create_datatype("labelgraph", graph_name);
 }
 
 void DVIDNode::put(std::string keyvalue, std::string key, BinaryDataPtr value)
@@ -112,7 +119,52 @@ void DVIDNode::get_vertex_neighbors(std::string graph_name, VertexID id, Graph& 
     graph.import_json(data);
 }
 
+void DVIDNode::update_vertices(std::string graph_name, std::vector<Vertex>& vertices)
+{
+    int num_examined = 0;
 
+    while (num_examined < vertices.size()) {
+        Graph graph;
+        
+        // grab 1000 vertices at a time
+        int max_size = ((num_examined + TransactionLimit) > vertices.size()) ? vertices.size() : (num_examined + TransactionLimit); 
+        for (; num_examined < max_size; ++num_examined) {
+            graph.vertices.push_back(vertices[num_examined]);
+        }
+
+        Json::Value data;
+        graph.export_json(data);
+
+        put(graph_name, std::string("weight"), data);
+    }
+}
+    
+void DVIDNode::update_edges(std::string graph_name, std::vector<Edge>& edges)
+{
+
+    int num_examined = 0;
+    while (num_examined < edges.size()) {
+        VertexSet examined_vertices; 
+        Graph graph;
+        
+        for (; num_examined < edges.size(); ++num_examined) {
+            graph.edges.push_back(edges[num_examined]);
+            examined_vertices.insert(edges[num_examined].id1);
+            examined_vertices.insert(edges[num_examined].id2);
+            
+            // break if it is not possible to add another edge transaction
+            // (assuming that both vertices of that edge will be new vertices)
+            if (examined_vertices.size() >= (TransactionLimit - 1)) {
+                break;
+            }
+        }
+        Json::Value data;
+        graph.export_json(data);
+
+        put(graph_name, std::string("weight"), data);
+    }
+}
+    
 void DVIDNode::get_volume_roi(std::string datatype_instance, tuple start,
         tuple sizes, tuple channels, DVIDGrayPtr& gray)
 {

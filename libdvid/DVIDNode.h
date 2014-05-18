@@ -48,6 +48,10 @@ class DVIDNode {
 
     void get_vertex_neighbors(std::string graph_name, VertexID id, Graph& graph);
 
+    void update_vertices(std::string graph_name, std::vector<Vertex>& vertices);
+    void update_edges(std::string graph_name, std::vector<Edge>& edges);
+    bool create_graph(std::string name);
+
   private:
     UUID uuid;
     DVIDServer web_addr;

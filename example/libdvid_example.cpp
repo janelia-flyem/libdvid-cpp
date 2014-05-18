@@ -1,8 +1,10 @@
 #include <iostream>
 #include <libdvid/DVIDNode.h>
+#include <vector>
 
 using std::cout; using std::endl;
 using std::string;
+using std::vector;
 
 using namespace libdvid;
 
@@ -50,6 +52,7 @@ int main(int argc, char** argv) {
         string gray_datatype_name = "gray1";
         string label_datatype_name = "labels1";
         string keyvalue_datatype_name = "keys";
+        string graph_datatype_name = "graphtest";
 
         // ** Test creation of DVID datatypes **
         if(!dvid_node.create_grayscale8(gray_datatype_name)) {
@@ -60,6 +63,9 @@ int main(int argc, char** argv) {
         }
         if(!dvid_node.create_keyvalue(keyvalue_datatype_name)) {
             cout << keyvalue_datatype_name << " already exists" << endl;
+        }
+        if(!dvid_node.create_graph(graph_datatype_name)) {
+            cout << graph_datatype_name << " already exists" << endl;
         }
        
         // ** Write and read grayscale data **
@@ -123,11 +129,56 @@ int main(int argc, char** argv) {
         cout << "Response: " << data_str << endl; 
    
         // ** Test graph interface **
-        Graph graph;
-        dvid_node.get_vertex_neighbors("graph3", 1, graph);
-        cout << "Weight of vertex 1: " << graph.vertices[0].weight << endl; 
 
+        // update or add vertex1 and vertex2
+        Vertex vertex1(1, 0.0);
+        Vertex vertex2(2, 0.0);
+        vector<Vertex> vertices;
+        vertices.push_back(vertex1);
+        vertices.push_back(vertex2);
+        // if the node was already created the value will be different
+        dvid_node.update_vertices(graph_datatype_name, vertices);
+        
+        // update or add edge
+        Edge edge(1, 2, 0.0);
+        vector<Edge> edges;
+        edges.push_back(edge);
+        dvid_node.update_edges(graph_datatype_name, edges);
+       
+        // get vertex and edge weight 
+        Graph graph_initial;
+        dvid_node.get_vertex_neighbors(graph_datatype_name, 1, graph_initial);
+        double weight_initial = graph_initial.vertices[0].weight;
+        double edge_weight_initial = graph_initial.edges[0].weight;
+        if (graph_initial.vertices[1].id == 1) {
+            weight_initial = graph_initial.vertices[1].weight;
+        } 
+         
+        // update vertex1 weight
+        Vertex vertex1_update(1, -3.0);
+        vertices.clear();
+        vertices.push_back(vertex1_update);
+        dvid_node.update_vertices(graph_datatype_name, vertices);
 
+        // update edge weight
+        Edge edge_update(1, 2, 5.5);
+        edges.clear();
+        edges.push_back(edge_update);
+        dvid_node.update_edges(graph_datatype_name, edges);
+
+        // get vertex and edge updated weight 
+        Graph graph_final;
+        dvid_node.get_vertex_neighbors(graph_datatype_name, 1, graph_final);
+        double weight_final = graph_final.vertices[0].weight;
+        double edge_weight_final = graph_final.edges[0].weight;
+        if (graph_final.vertices[1].id == 1) {
+            weight_final = graph_final.vertices[1].weight;
+        }
+        assert(weight_final == (weight_initial - 3));
+        assert(edge_weight_final == (edge_weight_initial + 5.5));
+
+        cout << "Weight of vertex 1: " << weight_final << endl; 
+        cout << "Weight of edge: " << edge_weight_final << endl; 
     } catch (std::exception& e) {
         // catch DVID, libdvid, and boost errors
         cout << e.what() << endl;

@@ -3,7 +3,9 @@
 
 #include <vector>
 #include <tr1/unordered_map>
+#include <tr1/unordered_set>
 #include <json/json.h>
+#include "BinaryData.h"
 
 namespace libdvid {
 
@@ -39,6 +41,14 @@ struct Edge {
  * last known state of the data.  An ID of 0 means there is no current transaction ID
 */
 typedef std::tr1::unordered_map<VertexID, TransactionID> VertexTransactions; 
+
+typedef std::tr1::unordered_set<VertexID> VertexSet; 
+
+//! Retrieve transactions map from binary data
+size_t load_transactions_from_binary(std::string& data, VertexTransactions& transactions); 
+
+//! Write transactions map to binary data
+BinaryDataPtr write_transactions_to_binary(VertexTransactions& transactions); 
 
 /*!
  * Graph contains the vertices and edges in the DVID graph.  Only basic serialization

@@ -1,5 +1,7 @@
 #include "DVIDGraph.h"
 
+using std::string;
+
 namespace libdvid {
 
 Vertex::Vertex(Json::Value& data)
@@ -67,6 +69,56 @@ void Graph::export_json(Json::Value& data)
     }
     data["Edges"] = edges_data;
 }
+
+BinaryDataPtr write_transactions_to_binary(VertexTransactions& transactions)
+{
+    unsigned long long * trans_array = new unsigned long long [(transactions.size()*2+1)*8];
+    int pos = 0;
+    trans_array[pos] = transactions.size();
+    ++pos;
+
+    for (VertexTransactions::iterator iter = transactions.begin(); iter != transactions.end(); ++iter) {
+        trans_array[pos] = iter->first;
+        ++pos;
+        trans_array[pos] = iter->second;
+        ++pos;
+    }
+    
+    BinaryDataPtr ptr = BinaryData::create_binary_data((char*)trans_array, sizeof(transactions.size()*2+1)*8);
+    delete []trans_array;
+    return ptr;
+}
+
+size_t load_transactions_from_binary(string& data, VertexTransactions& transactions, VertexSet& bad_vertices)
+{
+    char* bytearray = (char*) data.c_str();
+    size_t byte_pos = 0;
+
+    // get number of transactions
+    unsigned long long* num_transactions = (unsigned long long *)(bytearray);
+    byte_pos += 8;
+
+    // get vertex / transaction list
+    for (int i = 0; i < int(*num_transactions); ++i) {
+        VertexID* vertex_id = (VertexID *)(bytearray+byte_pos);
+        byte_pos += 8;
+        TransactionID* transaction_id = (TransactionID *)(bytearray+byte_pos);
+        byte_pos += 8;
+        transactions[*vertex_id] = *transaction_id;  
+    }
+
+    // find failed transactions
+    unsigned long long* num_failed_transactions = (unsigned long long *)(bytearray+byte_pos);
+    byte_pos += 8;
+
+    for (int i = 0; i < int(*num_failed_transactions); ++i) {
+        VertexID* vertex_id = (VertexID *)(bytearray+byte_pos);
+        byte_pos += 8;
+        bad_vertices.insert(*vertex_id);
+    }
+   
+    return byte_pos; 
+} 
 
 }
 
