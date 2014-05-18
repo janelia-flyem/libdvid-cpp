@@ -103,8 +103,6 @@ int main(int argc, char** argv) {
         // post labels volume
         // one could also write 2D image slices but the starting location must
         // be at least an ND point where N is greater than 2
-        
-        // !! not currently working
         dvid_node.write_volume_roi(label_datatype_name, start, sizes, channels, labelbin);
 
         // retrieve the image volume and make sure it makes the posted volume
@@ -123,7 +121,13 @@ int main(int argc, char** argv) {
         dvid_node.get(keyvalue_datatype_name, "spot0", data_ret);
         std::string data_str = data_ret["hello"].asString();
         cout << "Response: " << data_str << endl; 
-    
+   
+        // ** Test graph interface **
+        Graph graph;
+        dvid_node.get_vertex_neighbors("graph3", 1, graph);
+        cout << "Weight of vertex 1: " << graph.vertices[0].weight << endl; 
+
+
     } catch (std::exception& e) {
         // catch DVID, libdvid, and boost errors
         cout << e.what() << endl;

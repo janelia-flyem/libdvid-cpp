@@ -75,7 +75,7 @@ endif (NOT ${BUILDEM_DIR} STREQUAL "None")
 include_directories (BEFORE ${CMAKE_SOURCE_DIR}/libdvid)
 
 # Compile libdvidcpp library components
-add_library (dvidcpp src/DVIDNode.cpp src/DVIDServer.cpp src/Utilities)
+add_library (dvidcpp src/DVIDNode.cpp src/DVIDServer.cpp src/Utilities.cpp src/DVIDGraph.cpp)
 target_link_libraries (dvidcpp ${LIBDVID_EXT_LIBS})
 if (NOT ${BUILDEM_DIR} STREQUAL "None")
     add_dependencies (dvidcpp ${LIBDVID_DEPS})

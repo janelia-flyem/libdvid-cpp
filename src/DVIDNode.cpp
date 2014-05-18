@@ -95,6 +95,24 @@ void DVIDNode::get(std::string keyvalue, std::string key, Json::Value& data)
     }
 }
 
+void DVIDNode::get_vertex_neighbors(std::string graph_name, VertexID id, Graph& graph)
+{
+    BinaryDataPtr binary;
+
+    // use key/value functionality to make call
+    stringstream uri_ending;
+    uri_ending << "neighbors/" << id;
+    get(graph_name, uri_ending.str(), binary);
+    
+    Json::Reader json_reader;
+    Json::Value data;
+    if (!json_reader.parse(binary->get_data(), data)) {
+        throw ErrMsg("Could not decode JSON");
+    }
+    graph.import_json(data);
+}
+
+
 void DVIDNode::get_volume_roi(std::string datatype_instance, tuple start,
         tuple sizes, tuple channels, DVIDGrayPtr& gray)
 {

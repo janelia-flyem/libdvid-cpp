@@ -4,6 +4,7 @@
 #include "BinaryData.h"
 #include "DVIDServer.h"
 #include "DVIDVoxels.h"
+#include "DVIDGraph.h"
 #include "Utilities.h"
 #include <json/value.h>
 #include <fstream>
@@ -31,7 +32,7 @@ class DVIDNode {
     void write_volume_roi(std::string datatype_instance, tuple start,
             tuple sizes, tuple channels, BinaryDataPtr data);
 
-    // Key-Value Interface
+    // --- Key-Value Interface ---
 
     // will ignore if keyvalue already exists
     bool create_keyvalue(std::string keyvalue);
@@ -42,6 +43,10 @@ class DVIDNode {
 
     void get(std::string keyvalue, std::string key, BinaryDataPtr& value);
     void get(std::string keyvalue, std::string key, Json::Value& data);
+
+    // --- DVID graph interface ---
+
+    void get_vertex_neighbors(std::string graph_name, VertexID id, Graph& graph);
 
   private:
     UUID uuid;
