@@ -184,12 +184,26 @@ void DVIDNode::get_volume_roi(std::string datatype_instance, tuple start,
 void DVIDNode::write_volume_roi(std::string datatype_instance, tuple start,
         tuple sizes, tuple channels, BinaryDataPtr data)
 {
-    client::request requestobj(construct_volume_uri(
-                datatype_instance, start, sizes, channels));
-    requestobj << header("Connection", "close");
-    client::response respdata = request_client.post(requestobj,
-            data->get_data(), std::string("application/octet-stream"));
-    int status_code = status(respdata);
+    bool waiting = true;
+    int status_code;
+    client::response respdata;
+
+    while (waiting) {
+        client::request requestobj(construct_volume_uri(
+                    datatype_instance, start, sizes, channels));
+        requestobj << header("Connection", "close");
+        respdata = request_client.post(requestobj,
+                data->get_data(), std::string("application/octet-stream"));
+        status_code = status(respdata);
+
+        // wait 1 second if the server is busy
+        if (status_code == 503) {
+            sleep(1);
+        } else {
+            waiting = false;
+        }
+    }
+
     if (status_code != 200) {
         throw DVIDException(body(respdata), status_code);
     }
@@ -243,15 +257,30 @@ std::string DVIDNode::construct_volume_uri(std::string datatype_inst, tuple star
         sstr << "_" << start[i];
     }
 
+    sstr << "?throttle=on";
     return sstr.str();
 }
 
 void DVIDNode::retrieve_volume(std::string datatype_inst, tuple start, tuple sizes, tuple channels, std::string& volume)
 {
-    client::request requestobj(construct_volume_uri(datatype_inst, start, sizes, channels));
-    requestobj << header("Connection", "close");
-    client::response respdata = request_client.get(requestobj);
-    int status_code = status(respdata);
+    bool waiting = true;
+    int status_code;
+    client::response respdata;
+
+    while (waiting) {
+        client::request requestobj(construct_volume_uri(datatype_inst, start, sizes, channels));
+        requestobj << header("Connection", "close");
+        respdata = request_client.get(requestobj);
+        status_code = status(respdata);
+    
+        // wait 1 second if the server is busy
+        if (status_code == 503) {
+            sleep(1);
+        } else {
+            waiting = false;
+        }
+    }
+    
     if (status_code != 200) {
         throw DVIDException(body(respdata), status_code);
     }
