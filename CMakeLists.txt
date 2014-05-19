@@ -102,8 +102,8 @@ CONFIGURE_FILE(${PROJECT_SOURCE_DIR}/config/libdvidcppConfigVersion.cmake.in
 if (${BUILDEM_DIR} STREQUAL "None")
     INSTALL(DIRECTORY ${PROJECT_SOURCE_DIR}/libdvid DESTINATION include)
     INSTALL(TARGETS dvidcpp DESTINATION lib)
-    INSTALL(FILES ${PROJECT_BINARY_DIR}/lib/libdvidcpp/libdvidcppConfig.cmake
-    ${PROJECT_BINARY_DIR}/lib/libdvidcpp/libdvidcppConfigVersion.cmake
+    INSTALL(FILES ${PROJECT_BINARY_DIR}/libdvidcppConfig.cmake
+    ${PROJECT_BINARY_DIR}/libdvidcppConfigVersion.cmake
     DESTINATION lib${LIB_SUFFIX}/libdvidcpp)
 else()
     add_custom_command (
