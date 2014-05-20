@@ -36,8 +36,21 @@ unsigned char img2_mask[] = {
     0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,
     0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0};
 
+unsigned long long int limg1_mask[] = {
+    5, 4, 3, 2,
+    4, 4, 1, 3,
+    7, 7, 7, 7};
+
+unsigned long long int limg2_mask[] = {
+    8, 8, 9, 0,
+    9, 9, 9, 3,
+    9, 9, 9, 7};
+
 int WIDTH = 28;
 int HEIGHT = 11;
+
+int LWIDTH = 4;
+int LHEIGHT = 3;
 
 int main(int argc, char** argv) {
     if (argc != 3) {
@@ -50,7 +63,7 @@ int main(int argc, char** argv) {
         DVIDNode dvid_node(server, argv[2]);
        
         string gray_datatype_name = "gray1";
-        string label_datatype_name = "labels1";
+        string label_datatype_name = "labels2";
         string keyvalue_datatype_name = "keys";
         string graph_datatype_name = "graphtest";
 
@@ -97,25 +110,26 @@ int main(int argc, char** argv) {
 
         // ** Write and read labels64 data **
         // create label 64 image volume
-        unsigned long long * img_labels = new unsigned long long [sizeof(img1_mask)*2];
-        for (int i = 0; i < sizeof(img1_mask); ++i) {
-            img_labels[i] = img1_mask[i] * 255;
-            img_labels[i+sizeof(img1_mask)] = img2_mask[i] * 255;
+        unsigned long long * img_labels = new unsigned long long [sizeof(limg1_mask)*2];
+        for (int i = 0; i < (LWIDTH*LHEIGHT); ++i) {
+            img_labels[i] = limg1_mask[i];
+            img_labels[i+12] = limg2_mask[i];
         }
 
         // create binary data string wrapper (64 bits per pixel)
-        BinaryDataPtr labelbin = BinaryData::create_binary_data((char*)(img_labels), sizeof(img1_mask)*2*8);
+        BinaryDataPtr labelbin = BinaryData::create_binary_data((char*)(img_labels), sizeof(limg1_mask)*2);
 
         // post labels volume
         // one could also write 2D image slices but the starting location must
         // be at least an ND point where N is greater than 2
-        dvid_node.write_volume_roi(label_datatype_name, start, sizes, channels, labelbin);
+        tuple lsizes; lsizes.push_back(LWIDTH); lsizes.push_back(LHEIGHT); lsizes.push_back(2);
+        dvid_node.write_volume_roi(label_datatype_name, start, lsizes, channels, labelbin);
 
         // retrieve the image volume and make sure it makes the posted volume
         DVIDLabelPtr labelcomp;
-        dvid_node.get_volume_roi(label_datatype_name, start, sizes, channels, labelcomp);
+        dvid_node.get_volume_roi(label_datatype_name, start, lsizes, channels, labelcomp);
         unsigned long long* labeldatacomp = labelcomp->get_raw();
-        for (int i = 0; i < sizeof(img1_mask)*2; ++i) {
+        for (int i = 0; i < (LWIDTH*LHEIGHT*2); ++i) {
             assert(labeldatacomp[i] == img_labels[i]);
         }
 
