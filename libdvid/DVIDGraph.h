@@ -6,6 +6,7 @@
 #include <tr1/unordered_set>
 #include <json/json.h>
 #include "BinaryData.h"
+#include <boost/functional/hash.hpp>
 
 namespace libdvid {
 
@@ -26,6 +27,7 @@ struct Vertex {
 
 //! Vertex represent DVID edge type of vertex ID1 and ID2 and weight
 struct Edge {
+    Edge() : id1(0), id2(0), weight(0) {}
     Edge(VertexID id1_, VertexID id2_, double weight_) : id1(id1_), id2(id2_), weight(weight_) {}
     Edge(Json::Value& data);
     
@@ -34,6 +36,42 @@ struct Edge {
     VertexID id1;
     VertexID id2;
     double weight;
+
+    bool operator==(const Edge& edge) const
+    {
+        VertexID tid1 = edge.id1;
+        VertexID tid2 = edge.id2;
+        if (tid1 > tid2) {
+            tid1 = edge.id2;
+            tid2 = edge.id1;
+        } 
+
+        VertexID bid1 = id1;
+        VertexID bid2 = id2;
+        if (id1 > id2) {
+            bid1 = id2;
+            bid2 = id1;
+        }
+        return ((bid1 == tid1) && (bid2 == tid2));
+    }
+
+    size_t operator()(const Edge& edge) const
+    {
+        std::size_t seed = 0;
+        // TODO: make more generic for other data types -- will only work well for
+        //     // those data types <=32 bytes
+        //         // NOTE: node id type must allow for casting to size_t
+        VertexID tid1 = edge.id1;
+        VertexID tid2 = edge.id2;
+        if (tid1 > tid2) {
+            tid1 = tid2;
+            tid2 = edge.id1;
+        }
+        
+        boost::hash_combine(seed, std::size_t(edge.id1));
+        boost::hash_combine(seed, std::size_t(edge.id2));
+        return seed;
+    }
 };
 
 /*!
@@ -45,7 +83,8 @@ typedef std::tr1::unordered_map<VertexID, TransactionID> VertexTransactions;
 typedef std::tr1::unordered_set<VertexID> VertexSet; 
 
 //! Retrieve transactions map from binary data
-size_t load_transactions_from_binary(std::string& data, VertexTransactions& transactions); 
+size_t load_transactions_from_binary(std::string& data, VertexTransactions& transactions, 
+        VertexSet& bad_vertices); 
 
 //! Write transactions map to binary data
 BinaryDataPtr write_transactions_to_binary(VertexTransactions& transactions); 

@@ -52,6 +52,20 @@ class DVIDNode {
     void update_edges(std::string graph_name, std::vector<Edge>& edges);
     bool create_graph(std::string name);
 
+    void get_properties(std::string graph_name, std::vector<Vertex> vertices, std::string key,
+            std::vector<BinaryDataPtr>& properties, VertexTransactions& transactions);
+
+    void set_properties(std::string graph_name, std::vector<Vertex>& vertices, std::string key,
+            std::vector<BinaryDataPtr>& properties, VertexTransactions& transactions,
+            std::vector<Vertex>& leftover_vertices);
+
+    void get_properties(std::string graph_name, std::vector<Edge> edges, std::string key,
+            std::vector<BinaryDataPtr>& properties, VertexTransactions& transactions);
+
+    void set_properties(std::string graph_name, std::vector<Edge>& edges, std::string key,
+            std::vector<BinaryDataPtr>& properties, VertexTransactions& transactions,
+            std::vector<Edge>& leftover_edges);
+
   private:
     UUID uuid;
     DVIDServer web_addr;
@@ -59,6 +73,9 @@ class DVIDNode {
 
     std::string construct_volume_uri(std::string datatype_inst, tuple start, tuple sizes, tuple channels);
     void retrieve_volume(std::string datatype_inst, tuple start, tuple sizes, tuple channels, std::string& volume);
+    void put(std::string keyvalue, std::string key, BinaryDataPtr value, VertexSet& failed_vertices);
+
+    void get(std::string keyvalue, std::string key, BinaryDataPtr& value, BinaryDataPtr request_data);
 
     bool exists(std::string uri);
 

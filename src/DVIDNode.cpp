@@ -46,6 +46,27 @@ bool DVIDNode::create_graph(std::string graph_name)
     return create_datatype("labelgraph", graph_name);
 }
 
+void DVIDNode::put(std::string keyvalue, std::string key, BinaryDataPtr value, VertexSet& failed_vertices)
+{
+    client::request requestobj(web_addr.get_uri_root() + "node/" + uuid +
+            "/" + keyvalue + "/" + key);
+    requestobj << header("Connection", "close");
+
+    client::response respdata = request_client.post(requestobj,
+            value->get_data(), std::string("application/octet-stream"));
+    int status_code = status(respdata);
+    if (status_code != 200) {
+        throw DVIDException(body(respdata), status_code);
+    }
+
+    VertexTransactions temp_transactions;
+    std::string data = body(respdata);
+    BinaryDataPtr binary = BinaryData::create_binary_data(data.c_str(), data.length());
+    size_t byte_pos = load_transactions_from_binary(binary->get_data(),
+            temp_transactions, failed_vertices);
+}
+
+
 void DVIDNode::put(std::string keyvalue, std::string key, BinaryDataPtr value)
 {
     client::request requestobj(web_addr.get_uri_root() + "node/" + uuid +
@@ -75,6 +96,30 @@ void DVIDNode::put(std::string keyvalue, std::string key, Json::Value& data)
     put(keyvalue, key, bdata);
 }
 
+void DVIDNode::get(std::string keyvalue, std::string key, BinaryDataPtr& value, BinaryDataPtr request_data)
+{
+    client::request requestobj(web_addr.get_uri_root() + "node/" + uuid +
+            "/" + keyvalue + "/" + key);
+    requestobj << header("Connection", "close");
+
+    // write header so body is seen
+    stringstream strstream;
+    strstream << request_data->get_data().length();
+    requestobj << header("Content-Length", strstream.str());
+    requestobj << header("Content-Type", "application/octet-stream");
+    body(requestobj, request_data->get_data());
+
+    client::response respdata = request_client.get(requestobj);
+    int status_code = status(respdata);
+    if (status_code != 200) {
+        throw DVIDException(body(respdata), status_code);
+    }
+    std::string data = body(respdata);
+    
+    // ?! allow intialization to happen in constructor
+    value = BinaryData::create_binary_data(data.c_str(), data.length());
+}
+
 
 void DVIDNode::get(std::string keyvalue, std::string key, BinaryDataPtr& value)
 {
@@ -87,6 +132,7 @@ void DVIDNode::get(std::string keyvalue, std::string key, BinaryDataPtr& value)
         throw DVIDException(body(respdata), status_code);
     }
     std::string data = body(respdata);
+    
     // ?! allow intialization to happen in constructor
     value = BinaryData::create_binary_data(data.c_str(), data.length());
 }
@@ -119,6 +165,287 @@ void DVIDNode::get_vertex_neighbors(std::string graph_name, VertexID id, Graph& 
     graph.import_json(data);
 }
 
+// vertex list is modified, just use a copy
+void DVIDNode::get_properties(std::string graph_name, std::vector<Vertex> vertices, std::string key,
+            std::vector<BinaryDataPtr>& properties, VertexTransactions& transactions)
+{
+    int num_examined = 0;
+    std::tr1::unordered_map<VertexID, BinaryDataPtr> properties_map;
+    int num_verts = vertices.size();
+
+    // keep extending vertices with failed ones
+    while (num_examined < vertices.size()) {
+        // grab 1000 vertices at a time
+        int max_size = ((num_examined + TransactionLimit) > vertices.size()) ? vertices.size() : (num_examined + TransactionLimit); 
+
+        VertexTransactions current_transactions;
+        // serialize data to push
+        for (; num_examined < max_size; ++num_examined) {
+            current_transactions[vertices[num_examined].id] = 0;
+        }
+        BinaryDataPtr transaction_binary = write_transactions_to_binary(current_transactions);
+        
+        // add vertex list to get properties
+        unsigned long long * vertex_array =
+            new unsigned long long [(current_transactions.size()+1)*8];
+        int pos = 0;
+        vertex_array[pos] = current_transactions.size();
+        ++pos;
+        for (VertexTransactions::iterator iter = current_transactions.begin();
+                iter != current_transactions.end(); ++iter) {
+            vertex_array[pos] = iter->first;
+            ++pos;
+        }
+        std::string& str_append = transaction_binary->get_data();
+        str_append += std::string((char*)vertex_array, (current_transactions.size()+1)*8);
+        
+        delete []vertex_array;
+
+        // get data associated with given graph and 'key'
+        BinaryDataPtr binary;
+        get(graph_name, "propertytransaction/vertices/" + key + "/", binary, transaction_binary);
+
+        VertexSet bad_vertices;
+        size_t byte_pos = load_transactions_from_binary(binary->get_data(), transactions, bad_vertices);
+       
+        // failed vertices should be re-examined 
+        for (VertexSet::iterator iter = bad_vertices.begin();
+                iter != bad_vertices.end(); ++iter) {
+            vertices.push_back(Vertex(*iter, 0));
+            //std::cout << "Failed vertex get!: " << *iter << std::endl; 
+        }
+
+        // load properties
+        unsigned char* bytearray = binary->get_raw();
+       
+        // get number of properties
+        unsigned long long* num_transactions = (unsigned long long *)(bytearray+byte_pos);
+        byte_pos += 8;
+
+        // iterate through all properties
+        for (int i = 0; i < int(*num_transactions); ++i) {
+            VertexID* vertex_id = (VertexID *)(bytearray+byte_pos);
+            byte_pos += 8;
+            unsigned long long* data_size = (unsigned long long*)(bytearray+byte_pos);
+            byte_pos += 8;
+            properties_map[*vertex_id] = BinaryData::create_binary_data(
+                    (const char *)(bytearray+byte_pos), *data_size);      
+            byte_pos += *data_size;
+        }
+    }
+
+    for (int i = 0; i < num_verts; ++i) {
+        properties.push_back(properties_map[vertices[i].id]);
+    }
+}
+
+
+void DVIDNode::set_properties(std::string graph_name, std::vector<Vertex>& vertices,
+        std::string key, std::vector<BinaryDataPtr>& properties,
+        VertexTransactions& transactions, std::vector<Vertex>& leftover_vertices)
+{
+    int num_examined = 0;
+
+    // only post 1000 properties at a time
+    while (num_examined < vertices.size()) {
+        // add vertex list and properties
+        
+        // grab 1000 vertices at a time
+        int max_size = ((num_examined + TransactionLimit) > vertices.size()) ? vertices.size() : (num_examined + TransactionLimit); 
+   
+        VertexTransactions temp_transactions;
+        for (int i = num_examined; i < max_size; ++i) {
+            temp_transactions[vertices[i].id] = transactions[vertices[i].id];
+        }
+        BinaryDataPtr binary = write_transactions_to_binary(temp_transactions);
+
+        // write out number of trans
+        std::string& str_append = binary->get_data();
+        unsigned long long num_trans = temp_transactions.size();
+        str_append += std::string((char*)&num_trans, 8);
+
+        
+        for (; num_examined < max_size; ++num_examined) {
+            unsigned long long id = vertices[num_examined].id;
+            BinaryDataPtr databin = properties[num_examined];
+            std::string& data = databin->get_data();
+            unsigned long long data_size = data.size();
+
+            str_append += std::string((char*)&id, 8);
+            str_append += std::string((char*)&data_size, 8);
+            str_append += data;
+        } 
+
+        // put the data
+        VertexSet failed_trans;
+        put(graph_name, "propertytransaction/vertices/" + key + "/", binary, failed_trans);
+
+        // add failed vertices to leftover vertices
+        for (VertexSet::iterator iter = failed_trans.begin();
+                iter != failed_trans.end(); ++iter) {
+            leftover_vertices.push_back(Vertex(*iter, 0));
+        }
+    }
+}
+
+void DVIDNode::set_properties(std::string graph_name, std::vector<Edge>& edges,
+        std::string key, std::vector<BinaryDataPtr>& properties,
+        VertexTransactions& transactions, std::vector<Edge>& leftover_edges)
+{
+    int num_examined = 0;
+
+    // only post 1000 properties at a time
+    while (num_examined < edges.size()) {
+        VertexSet examined_vertices; 
+        
+        int num_current_edges = 0;
+        int starting_num = num_examined;
+        for (; num_examined < edges.size(); ++num_current_edges, ++num_examined) {
+            // break if it is not possible to add another edge transaction
+            // (assuming that both vertices of that edge will be new vertices)
+            if (examined_vertices.size() >= (TransactionLimit - 1)) {
+                break;
+            }
+
+            examined_vertices.insert(edges[num_examined].id1);
+            examined_vertices.insert(edges[num_examined].id2);
+        }
+    
+        // write out transactions for current edge
+        VertexTransactions current_transactions;
+        for (VertexSet::iterator iter = examined_vertices.begin();
+                iter != examined_vertices.end(); ++iter) {
+            current_transactions[*iter] = transactions[*iter];
+        }
+        BinaryDataPtr binary = write_transactions_to_binary(current_transactions);
+        
+        // add vertex list and properties
+        std::string& str_append = binary->get_data();
+        
+        unsigned long long num_trans = num_current_edges;
+        str_append += std::string((char*)&num_trans, 8);
+
+        for (int iter = starting_num; iter < num_examined; ++iter) {
+            unsigned long long id1 = edges[iter].id1;
+            unsigned long long id2 = edges[iter].id2;
+            BinaryDataPtr databin = properties[iter];
+            std::string& data = databin->get_data();
+            unsigned long long data_size = data.size();
+
+            str_append += std::string((char*)&id1, 8);
+            str_append += std::string((char*)&id2, 8);
+            str_append += std::string((char*)&data_size, 8);
+            str_append += data;
+        } 
+
+        // put the data
+        VertexSet failed_trans;
+        put(graph_name, "propertytransaction/edges/" + key + "/", binary, failed_trans);
+
+        // add leftover edges from failed vertices
+        for (int iter = starting_num; iter < num_examined; ++iter) {
+            if (failed_trans.find(edges[iter].id1) != failed_trans.end()) {
+                leftover_edges.push_back(edges[iter]);
+            } else if (failed_trans.find(edges[iter].id2) != failed_trans.end()) {
+                leftover_edges.push_back(edges[iter]);
+            }
+        }
+    }
+}
+
+// edge list is modified, just use a copy
+void DVIDNode::get_properties(std::string graph_name, std::vector<Edge> edges, std::string key,
+            std::vector<BinaryDataPtr>& properties, VertexTransactions& transactions)
+{
+    int num_examined = 0;
+    std::tr1::unordered_map<Edge, BinaryDataPtr, Edge> properties_map;
+    int num_edges = edges.size();
+
+    // keep extending vertices with failed ones
+    while (num_examined < edges.size()) {
+        VertexSet examined_vertices; 
+
+        int num_current_edges = 0;
+        int starting_num = num_examined;
+        for (; num_examined < edges.size(); ++num_current_edges, ++num_examined) {
+            // break if it is not possible to add another edge transaction
+            // (assuming that both vertices of that edge will be new vertices)
+            if (examined_vertices.size() >= (TransactionLimit - 1)) {
+                break;
+            }
+
+            examined_vertices.insert(edges[num_examined].id1);
+            examined_vertices.insert(edges[num_examined].id2);
+            
+        }
+
+        // write out transactions for current edge
+        VertexTransactions current_transactions;
+        for (VertexSet::iterator iter = examined_vertices.begin();
+                iter != examined_vertices.end(); ++iter) {
+            current_transactions[*iter] = 0;
+        }
+        BinaryDataPtr transaction_binary = write_transactions_to_binary(current_transactions);
+       
+        // add edge list to get properties
+        unsigned long long * edge_array =
+            new unsigned long long [(num_current_edges*2+1)*8];
+        int pos = 0;
+        edge_array[pos] = num_current_edges;
+        ++pos;
+        for (int iter = starting_num; iter < num_examined; ++iter) {
+            edge_array[pos] = edges[iter].id1;
+            ++pos;
+            edge_array[pos] = edges[iter].id2;
+            ++pos;
+        }
+        std::string& str_append = transaction_binary->get_data();
+        str_append += std::string((char*)edge_array, (num_current_edges*2+1)*8);
+        delete []edge_array;
+
+        // get data associated with given graph and 'key'
+        BinaryDataPtr binary;
+        get(graph_name, "propertytransaction/edges/" + key + "/", binary, transaction_binary);
+
+        VertexSet bad_vertices;
+        size_t byte_pos = load_transactions_from_binary(binary->get_data(), transactions, bad_vertices);
+       
+        // failed vertices should cause corresponding edges to be re-examined 
+        for (int iter = starting_num; iter < num_examined; ++iter) {
+            if (bad_vertices.find(edges[iter].id1) != bad_vertices.end()) {
+                edges.push_back(edges[iter]);
+            } else if (bad_vertices.find(edges[iter].id2) != bad_vertices.end()) {
+                edges.push_back(edges[iter]);
+            }
+        }
+        
+        // load properties
+        unsigned char* bytearray = binary->get_raw();
+        
+        // get number of properties
+        unsigned long long* num_transactions = (unsigned long long *)(bytearray+byte_pos);
+        byte_pos += 8;
+
+        // iterate through all properties
+        for (int i = 0; i < int(*num_transactions); ++i) {
+            VertexID* vertex_id1 = (VertexID *)(bytearray+byte_pos);
+            byte_pos += 8;
+            VertexID* vertex_id2 = (VertexID *)(bytearray+byte_pos);
+            byte_pos += 8;
+            unsigned long long* data_size = (unsigned long long*)(bytearray+byte_pos);
+            byte_pos += 8;
+            properties_map[Edge(*vertex_id1, *vertex_id2, 0)] = BinaryData::create_binary_data(
+                    (const char*)(bytearray+byte_pos), *data_size);      
+            byte_pos += *data_size;
+        }
+    }
+
+    for (int i = 0; i < num_edges; ++i) {
+        properties.push_back(properties_map[edges[i]]);
+    }
+}
+
+
 void DVIDNode::update_vertices(std::string graph_name, std::vector<Vertex>& vertices)
 {
     int num_examined = 0;
@@ -148,16 +475,18 @@ void DVIDNode::update_edges(std::string graph_name, std::vector<Edge>& edges)
         Graph graph;
         
         for (; num_examined < edges.size(); ++num_examined) {
-            graph.edges.push_back(edges[num_examined]);
-            examined_vertices.insert(edges[num_examined].id1);
-            examined_vertices.insert(edges[num_examined].id2);
-            
             // break if it is not possible to add another edge transaction
             // (assuming that both vertices of that edge will be new vertices)
             if (examined_vertices.size() >= (TransactionLimit - 1)) {
                 break;
             }
+
+            graph.edges.push_back(edges[num_examined]);
+            examined_vertices.insert(edges[num_examined].id1);
+            examined_vertices.insert(edges[num_examined].id2);
+            
         }
+
         Json::Value data;
         graph.export_json(data);
 

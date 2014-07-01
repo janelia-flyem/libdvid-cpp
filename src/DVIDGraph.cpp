@@ -84,7 +84,7 @@ BinaryDataPtr write_transactions_to_binary(VertexTransactions& transactions)
         ++pos;
     }
     
-    BinaryDataPtr ptr = BinaryData::create_binary_data((char*)trans_array, sizeof(transactions.size()*2+1)*8);
+    BinaryDataPtr ptr = BinaryData::create_binary_data((char*)trans_array, (transactions.size()*2+1)*8);
     delete []trans_array;
     return ptr;
 }

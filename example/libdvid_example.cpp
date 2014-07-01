@@ -193,6 +193,98 @@ int main(int argc, char** argv) {
 
         cout << "Weight of vertex 1: " << weight_final << endl; 
         cout << "Weight of edge: " << edge_weight_final << endl; 
+
+
+        // ** Test graph property get/set **
+
+        // test vertex get/put properties
+        double incr1 = 1.3;
+        double incr2 = -2.1;
+        vector<Vertex> prop_vertices;
+        prop_vertices.push_back(vertex1); prop_vertices.push_back(vertex2);
+       
+        while (!prop_vertices.empty()) { 
+            vector<BinaryDataPtr> properties;
+            VertexTransactions transactions;
+
+            // retrieve properties and transactions
+            dvid_node.get_properties(graph_datatype_name, prop_vertices,
+                    "features", properties, transactions); 
+            
+            for (int i = 0; i < prop_vertices.size(); ++i) {
+                cout << "Vertex " << prop_vertices[i].id << ": Trans " << transactions[prop_vertices[i].id] << endl;
+            
+                // increment properties
+                if (properties[i]->get_data().length() > 0) {
+                    double* val_array = (double*) properties[i]->get_raw();
+                    cout << "Vals: " << val_array[0] << " " << val_array[1] << endl;
+        
+                    val_array[0] += (incr1*prop_vertices[i].id);
+                    val_array[1] += (incr2*prop_vertices[i].id);
+                } else{
+                    std::string& strdata = properties[i]->get_data();
+                    double val1 = (incr1*prop_vertices[i].id);
+                    double val2 = (incr2*prop_vertices[i].id);
+                    strdata += std::string((char*)&val1, 8);
+                    strdata += std::string((char*)&val2, 8);
+                }
+            }
+
+            // set properties
+            vector<Vertex> leftover_vertices;
+            dvid_node.set_properties(graph_datatype_name, prop_vertices,
+                    "features", properties, transactions, leftover_vertices); 
+
+            for (int i = 0; i < leftover_vertices.size(); ++i) {
+                cout << "Must re-write: " << leftover_vertices[i].id << endl;
+            }
+            prop_vertices = leftover_vertices;
+        }
+
+        // test edge get/put
+        vector<Edge> prop_edges;
+        prop_edges.push_back(edge);
+       
+        while (!prop_edges.empty()) { 
+            vector<BinaryDataPtr> properties;
+            VertexTransactions transactions;
+
+            // retrieve properties and transactions
+            dvid_node.get_properties(graph_datatype_name, prop_edges,
+                    "efeatures", properties, transactions); 
+            
+            for (int i = 0; i < prop_edges.size(); ++i) {
+                cout << "Edge " << prop_edges[i].id1 << " " << prop_edges[i].id2 << ": Trans " <<
+                    transactions[prop_edges[i].id1] << ", " << transactions[prop_edges[i].id2] << endl;
+            
+                // increment properties
+                if (properties[i]->get_data().length() > 0) {
+                    double* val_array = (double*) properties[i]->get_raw();
+                    cout << "Vals: " << val_array[0] << " " << val_array[1] << endl;
+        
+                    val_array[0] += (incr1*prop_edges[i].id1);
+                    val_array[1] += (incr2*prop_edges[i].id1);
+                } else{
+                    std::string& strdata = properties[i]->get_data();
+                    double val1 = (incr1*prop_edges[i].id1);
+                    double val2 = (incr2*prop_edges[i].id1);
+                    strdata += std::string((char*)&val1, 8);
+                    strdata += std::string((char*)&val2, 8);
+                }
+            }
+
+            // set properties
+            vector<Edge> leftover_edges;
+            dvid_node.set_properties(graph_datatype_name, prop_edges,
+                    "efeatures", properties, transactions, leftover_edges); 
+
+            for (int i = 0; i < leftover_edges.size(); ++i) {
+                cout << "Must re-write!: " << leftover_edges[i].id1 << ", " << leftover_edges[i].id2 << endl;
+            }
+            prop_edges = leftover_edges;
+        }
+
+
     } catch (std::exception& e) {
         // catch DVID, libdvid, and boost errors
         cout << e.what() << endl;
