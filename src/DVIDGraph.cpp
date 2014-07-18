@@ -72,7 +72,7 @@ void Graph::export_json(Json::Value& data)
 
 BinaryDataPtr write_transactions_to_binary(VertexTransactions& transactions)
 {
-    unsigned long long * trans_array = new unsigned long long [(transactions.size()*2+1)*8];
+    unsigned long long * trans_array = new unsigned long long [(transactions.size()*2+1)];
     int pos = 0;
     trans_array[pos] = transactions.size();
     ++pos;

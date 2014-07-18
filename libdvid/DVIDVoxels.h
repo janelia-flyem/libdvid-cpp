@@ -34,7 +34,7 @@ class DVIDVoxels {
         T * byte_array = (T*) data_str.c_str();
         int incr = sizeof(T);
         array = new T[data_str.size()];
-        for (int i = 0, pos = 0; i < data_str.size(); ++i) {
+        for (int i = 0; i < (data_str.size()/incr); ++i) {
             array[i] = T(byte_array[i]); 
         }
     }

@@ -58,7 +58,7 @@ void DVIDNode::put(std::string keyvalue, std::string key, BinaryDataPtr value, V
     if (status_code != 200) {
         throw DVIDException(body(respdata), status_code);
     }
-
+    
     VertexTransactions temp_transactions;
     std::string data = body(respdata);
     BinaryDataPtr binary = BinaryData::create_binary_data(data.c_str(), data.length());
@@ -75,6 +75,7 @@ void DVIDNode::put(std::string keyvalue, std::string key, BinaryDataPtr value)
 
     client::response respdata = request_client.post(requestobj,
             value->get_data(), std::string("application/octet-stream"));
+
     int status_code = status(respdata);
     if (status_code != 200) {
         throw DVIDException(body(respdata), status_code);
@@ -187,7 +188,7 @@ void DVIDNode::get_properties(std::string graph_name, std::vector<Vertex> vertic
         
         // add vertex list to get properties
         unsigned long long * vertex_array =
-            new unsigned long long [(current_transactions.size()+1)*8];
+            new unsigned long long [(current_transactions.size()+1)];
         int pos = 0;
         vertex_array[pos] = current_transactions.size();
         ++pos;
@@ -197,6 +198,7 @@ void DVIDNode::get_properties(std::string graph_name, std::vector<Vertex> vertic
             ++pos;
         }
         std::string& str_append = transaction_binary->get_data();
+
         str_append += std::string((char*)vertex_array, (current_transactions.size()+1)*8);
         
         delete []vertex_array;
@@ -264,7 +266,6 @@ void DVIDNode::set_properties(std::string graph_name, std::vector<Vertex>& verti
         unsigned long long num_trans = temp_transactions.size();
         str_append += std::string((char*)&num_trans, 8);
 
-        
         for (; num_examined < max_size; ++num_examined) {
             unsigned long long id = vertices[num_examined].id;
             BinaryDataPtr databin = properties[num_examined];
@@ -601,7 +602,6 @@ void DVIDNode::retrieve_volume(std::string datatype_inst, tuple start, tuple siz
         requestobj << header("Connection", "close");
         respdata = request_client.get(requestobj);
         status_code = status(respdata);
-    
         // wait 1 second if the server is busy
         if (status_code == 503) {
             sleep(1);
