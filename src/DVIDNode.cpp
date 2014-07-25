@@ -97,6 +97,33 @@ void DVIDNode::put(std::string keyvalue, std::string key, Json::Value& data)
     put(keyvalue, key, bdata);
 }
 
+void DVIDNode::get(std::string keyvalue, std::string key, BinaryDataPtr& value, Json::Value& json_data)
+{
+    client::request requestobj(web_addr.get_uri_root() + "node/" + uuid +
+            "/" + keyvalue + "/" + key);
+    requestobj << header("Connection", "close");
+
+    // write header so body is seen
+    stringstream datastr;
+    datastr << json_data;
+    stringstream strstream;
+    strstream << datastr.str().length();
+    requestobj << header("Content-Length", strstream.str());
+    requestobj << header("Content-Type", "application/json");
+    body(requestobj, datastr.str());
+
+    client::response respdata = request_client.get(requestobj);
+    int status_code = status(respdata);
+    if (status_code != 200) {
+        throw DVIDException(body(respdata), status_code);
+    }
+    std::string data = body(respdata);
+    
+    // ?! allow intialization to happen in constructor
+    value = BinaryData::create_binary_data(data.c_str(), data.length());
+}
+
+
 void DVIDNode::get(std::string keyvalue, std::string key, BinaryDataPtr& value, BinaryDataPtr request_data)
 {
     client::request requestobj(web_addr.get_uri_root() + "node/" + uuid +
@@ -147,6 +174,29 @@ void DVIDNode::get(std::string keyvalue, std::string key, Json::Value& data)
     if (!json_reader.parse(binary->get_data(), data)) {
         throw ErrMsg("Could not decode JSON");
     }
+}
+
+void DVIDNode::get_subgraph(std::string graph_name, std::vector<Vertex>& vertices, Graph& graph)
+{
+    // make temporary graph for query
+    Graph temp_graph;
+    for (int i = 0; i < vertices.size(); ++i) {
+        temp_graph.vertices.push_back(vertices[i]);
+    }   
+    Json::Value data;
+    temp_graph.export_json(data);
+
+    // make request with json data
+    BinaryDataPtr binary;
+
+    get(graph_name, std::string("subgraph"), binary, data);
+    
+    Json::Reader json_reader;
+    Json::Value returned_data;
+    if (!json_reader.parse(binary->get_data(), returned_data)) {
+        throw ErrMsg("Could not decode JSON");
+    }
+    graph.import_json(returned_data);
 }
 
 void DVIDNode::get_vertex_neighbors(std::string graph_name, VertexID id, Graph& graph)

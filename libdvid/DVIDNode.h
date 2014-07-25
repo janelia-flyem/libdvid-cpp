@@ -46,6 +46,8 @@ class DVIDNode {
 
     // --- DVID graph interface ---
 
+    void get_subgraph(std::string graph_name, std::vector<Vertex>& vertices, Graph& graph);
+
     void get_vertex_neighbors(std::string graph_name, VertexID id, Graph& graph);
 
     void update_vertices(std::string graph_name, std::vector<Vertex>& vertices);
@@ -75,7 +77,9 @@ class DVIDNode {
     void retrieve_volume(std::string datatype_inst, tuple start, tuple sizes, tuple channels, std::string& volume);
     void put(std::string keyvalue, std::string key, BinaryDataPtr value, VertexSet& failed_vertices);
 
+    void get(std::string keyvalue, std::string key, BinaryDataPtr& value, Json::Value& json_data);
     void get(std::string keyvalue, std::string key, BinaryDataPtr& value, BinaryDataPtr request_data);
+
 
     bool exists(std::string uri);
 
