@@ -75,7 +75,7 @@ class DVIDNode {
 
     std::string construct_volume_uri(std::string datatype_inst, tuple start, tuple sizes, tuple channels);
     void retrieve_volume(std::string datatype_inst, tuple start, tuple sizes, tuple channels, std::string& volume);
-    void put(std::string keyvalue, std::string key, BinaryDataPtr value, VertexSet& failed_vertices);
+    void put(std::string keyvalue, std::string key, BinaryDataPtr value, VertexTransactions& transactions, VertexSet& failed_vertices);
 
     void get(std::string keyvalue, std::string key, BinaryDataPtr& value, Json::Value& json_data);
     void get(std::string keyvalue, std::string key, BinaryDataPtr& value, BinaryDataPtr request_data);

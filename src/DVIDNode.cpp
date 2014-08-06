@@ -46,7 +46,7 @@ bool DVIDNode::create_graph(std::string graph_name)
     return create_datatype("labelgraph", graph_name);
 }
 
-void DVIDNode::put(std::string keyvalue, std::string key, BinaryDataPtr value, VertexSet& failed_vertices)
+void DVIDNode::put(std::string keyvalue, std::string key, BinaryDataPtr value, VertexTransactions& transactions, VertexSet& failed_vertices)
 {
     client::request requestobj(web_addr.get_uri_root() + "node/" + uuid +
             "/" + keyvalue + "/" + key);
@@ -59,11 +59,10 @@ void DVIDNode::put(std::string keyvalue, std::string key, BinaryDataPtr value, V
         throw DVIDException(body(respdata), status_code);
     }
     
-    VertexTransactions temp_transactions;
     std::string data = body(respdata);
     BinaryDataPtr binary = BinaryData::create_binary_data(data.c_str(), data.length());
     size_t byte_pos = load_transactions_from_binary(binary->get_data(),
-            temp_transactions, failed_vertices);
+            transactions, failed_vertices);
 }
 
 
@@ -329,7 +328,14 @@ void DVIDNode::set_properties(std::string graph_name, std::vector<Vertex>& verti
 
         // put the data
         VertexSet failed_trans;
-        put(graph_name, "propertytransaction/vertices/" + key + "/", binary, failed_trans);
+        VertexTransactions succ_trans;
+        put(graph_name, "propertytransaction/vertices/" + key + "/", binary, succ_trans, failed_trans);
+    
+        // update transaction ids for successful trans
+        for (VertexTransactions::iterator iter = succ_trans.begin();
+                iter != succ_trans.end(); ++iter) {
+            transactions[iter->first] = iter->second;
+        }
 
         // add failed vertices to leftover vertices
         for (VertexSet::iterator iter = failed_trans.begin();
@@ -391,7 +397,14 @@ void DVIDNode::set_properties(std::string graph_name, std::vector<Edge>& edges,
 
         // put the data
         VertexSet failed_trans;
-        put(graph_name, "propertytransaction/edges/" + key + "/", binary, failed_trans);
+        VertexTransactions succ_trans;
+        put(graph_name, "propertytransaction/edges/" + key + "/", binary, succ_trans, failed_trans);
+
+        // update transaction ids for successful trans
+        for (VertexTransactions::iterator iter = succ_trans.begin();
+                iter != succ_trans.end(); ++iter) {
+            transactions[iter->first] = iter->second;
+        }
 
         // add leftover edges from failed vertices
         for (int iter = starting_num; iter < num_examined; ++iter) {
