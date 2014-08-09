@@ -29,6 +29,16 @@ cpp-netlib must be installed and in the cmake search path.  jsoncpp must also be
 
 ## Building an application
 
+It would be trivial to install and use libdvid-cpp except that the cppnetlib dependency requires
+a version of boost that might be newer than currently installed on most machines.  If building a
+newer version of boost is impractical, definitely install with buildem.  Once the library
+is built, linking it to myapp.cpp can be done by the following steps
+
+    % g++ -I{BUILDEM_DIR}/include -L${BUILDEM_DIR}/lib -L${BUILDEM_DIR}/lib64 myapp.cpp -ldvidcpp -ljsoncpp -lcppnetlib-uri -lcppnetlib-client-connections -lcppnetlib-server-parsers  -lboost_system -lboost_thread -lssl -lcrypto
+    % export LD_LIBRARY_PATH=~/packages/buildem/lib:~/packages/buildem/lib64
+
+## Building an application with CMAKE
+
 There are two recommended ways for linking lidvid-cpp.  Both are demonstrated in *example/CmakeLists.txt*.  Once libdvid-cpp is found or loaded the following should be added to your CMakeLists.txt:
 
     % include_directories(${LIBDVIDCPP_INCLUDE_DIRS})

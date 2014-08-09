@@ -88,11 +88,6 @@ set (libdvidcpp_version "0.1.0")
 set(CONF_INCLUDE_DIRS "${PROJECT_SOURCE_DIR}")
 export(TARGETS dvidcpp FILE "${PROJECT_BINARY_DIR}/libdvidcppTargets.cmake")
 
-add_custom_command (
-    TARGET NeuroProofPriority
-    POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy ${NeuroProofPriority_lib} ${PYLIBLOC})
-
 CONFIGURE_FILE(${PROJECT_SOURCE_DIR}/config/libdvidcppConfig.cmake.in
     ${PROJECT_BINARY_DIR}/libdvidcppConfig.cmake
     @ONLY IMMEDIATE)
@@ -111,6 +106,7 @@ else()
     add_custom_command (
     TARGET dvidcpp
     POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_directory ${PROJECT_SOURCE_DIR}/libdvid ${BUILDEM_DIR}/include/libdvid
     COMMAND ${CMAKE_COMMAND} -E copy ${PROJECT_BINARY_DIR}/libdvidcppConfigVersion.cmake ${BUILDEM_DIR}/lib/libdvidcpp/libdvidcppConfigVersion.cmake
     COMMAND ${CMAKE_COMMAND} -E copy ${PROJECT_BINARY_DIR}/libdvidcppConfig.cmake ${BUILDEM_DIR}/lib/libdvidcpp/libdvidcppConfig.cmake
     COMMAND ${CMAKE_COMMAND} -E copy ${PROJECT_BINARY_DIR}/libdvidcppTargets.cmake ${BUILDEM_DIR}/lib/libdvidcpp/libdvidcppTargets.cmake
