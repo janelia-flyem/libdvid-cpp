@@ -35,7 +35,7 @@ newer version of boost is impractical, definitely install with buildem.  Once th
 is built, linking it to myapp.cpp can be done by the following steps
 
     % g++ -I{BUILDEM_DIR}/include -L${BUILDEM_DIR}/lib -L${BUILDEM_DIR}/lib64 myapp.cpp -ldvidcpp -ljsoncpp -lcppnetlib-uri -lcppnetlib-client-connections -lcppnetlib-server-parsers  -lboost_system -lboost_thread -lssl -lcrypto
-    % export LD_LIBRARY_PATH=~/packages/buildem/lib:~/packages/buildem/lib64
+    % export LD_LIBRARY_PATH=${BUILDEM_DIR}/lib:${BUILDEM_DIR}/lib64
 
 ## Building an application with CMAKE
 
