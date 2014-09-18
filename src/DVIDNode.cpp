@@ -17,7 +17,7 @@ namespace libdvid {
 DVIDNode::DVIDNode(DVIDServer web_addr_, UUID uuid_) : 
     web_addr(web_addr_), uuid(uuid_)
 {
-    client::request requestobj(web_addr.get_uri_root() + "dataset/" + uuid + "/info");
+    client::request requestobj(web_addr.get_uri_root() + "repo/" + uuid + "/info");
     requestobj << header("Connection", "close");
     client::response respdata = request_client.get(requestobj);
     int status_code = status(respdata);
@@ -702,11 +702,12 @@ bool DVIDNode::create_datatype(std::string datatype, std::string datatype_name)
         return false;
     } 
 
-    client::request requestobj(web_addr.get_uri_root() + "dataset/" + uuid +
-            "/new/" + datatype + "/" + datatype_name );
+    client::request requestobj(web_addr.get_uri_root() + "repo/" + uuid +
+            "/instance");
     requestobj << header("Connection", "close");
 
-    std::string data("{}");
+    std::string data = "{\"typename\": \"" + datatype + "\", \"dataname\": \"" + datatype_name + "\"}";
+
     client::response respdata = request_client.post(requestobj,
             data, std::string("application/json"));
     int status_code = status(respdata);
