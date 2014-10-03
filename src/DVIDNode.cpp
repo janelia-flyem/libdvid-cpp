@@ -559,23 +559,23 @@ void DVIDNode::update_edges(std::string graph_name, std::vector<Edge>& edges)
 }
     
 void DVIDNode::get_volume_roi(std::string datatype_instance, tuple start,
-        tuple sizes, tuple channels, DVIDGrayPtr& gray)
+        tuple sizes, tuple channels, DVIDGrayPtr& gray, bool throttle)
 {
     std::string volume;
-    retrieve_volume(datatype_instance, start, sizes, channels, volume);
+    retrieve_volume(datatype_instance, start, sizes, channels, volume, throttle);
     gray = DVIDVoxels<unsigned char>::get_dvid_voxels(volume); 
 }
 
 void DVIDNode::get_volume_roi(std::string datatype_instance, tuple start,
-        tuple sizes, tuple channels, DVIDLabelPtr& labels)
+        tuple sizes, tuple channels, DVIDLabelPtr& labels, bool throttle)
 {
     std::string volume;
-    retrieve_volume(datatype_instance, start, sizes, channels, volume);
+    retrieve_volume(datatype_instance, start, sizes, channels, volume, throttle);
     labels = DVIDVoxels<unsigned long long>::get_dvid_voxels(volume); 
 }
 
 void DVIDNode::write_volume_roi(std::string datatype_instance, tuple start,
-        tuple sizes, tuple channels, BinaryDataPtr data)
+        tuple sizes, tuple channels, BinaryDataPtr data, bool throttle)
 {
     bool waiting = true;
     int status_code;
@@ -583,7 +583,7 @@ void DVIDNode::write_volume_roi(std::string datatype_instance, tuple start,
 
     while (waiting) {
         client::request requestobj(construct_volume_uri(
-                    datatype_instance, start, sizes, channels));
+                    datatype_instance, start, sizes, channels, throttle));
         requestobj << header("Connection", "close");
         respdata = request_client.post(requestobj,
                 data->get_data(), std::string("application/octet-stream"));
@@ -602,7 +602,7 @@ void DVIDNode::write_volume_roi(std::string datatype_instance, tuple start,
     }
 }
 
-std::string DVIDNode::construct_volume_uri(std::string datatype_inst, tuple start, tuple sizes, tuple channels)
+std::string DVIDNode::construct_volume_uri(std::string datatype_inst, tuple start, tuple sizes, tuple channels, bool throttle)
 {
     std::string uri = web_addr.get_uri_root() + "node/" + uuid + "/"
                     + datatype_inst + "/raw/";
@@ -650,18 +650,20 @@ std::string DVIDNode::construct_volume_uri(std::string datatype_inst, tuple star
         sstr << "_" << start[i];
     }
 
-    sstr << "?throttle=on";
+    if (throttle) {
+        sstr << "?throttle=on";
+    }
     return sstr.str();
 }
 
-void DVIDNode::retrieve_volume(std::string datatype_inst, tuple start, tuple sizes, tuple channels, std::string& volume)
+void DVIDNode::retrieve_volume(std::string datatype_inst, tuple start, tuple sizes, tuple channels, std::string& volume, bool throttle)
 {
     bool waiting = true;
     int status_code;
     client::response respdata;
 
     while (waiting) {
-        client::request requestobj(construct_volume_uri(datatype_inst, start, sizes, channels));
+        client::request requestobj(construct_volume_uri(datatype_inst, start, sizes, channels, throttle));
         requestobj << header("Connection", "close");
         respdata = request_client.get(requestobj);
         status_code = status(respdata);
