@@ -19,6 +19,9 @@ class DVIDNode {
   public:
     // check that node is available
     DVIDNode(DVIDServer web_addr_, UUID uuid_);
+   
+    // get meta for the type 
+    void get_typeinfo(std::string datatype_name, Json::Value& data);
 
     // throw error if start point is 2D
     bool create_grayscale8(std::string datatype_name);
@@ -43,6 +46,7 @@ class DVIDNode {
 
     void get(std::string keyvalue, std::string key, BinaryDataPtr& value);
     void get(std::string keyvalue, std::string key, Json::Value& data);
+    
 
     // --- DVID graph interface ---
 

@@ -164,6 +164,18 @@ void DVIDNode::get(std::string keyvalue, std::string key, BinaryDataPtr& value)
     value = BinaryData::create_binary_data(data.c_str(), data.length());
 }
 
+
+void DVIDNode::get_typeinfo(std::string datatype_name, Json::Value& data)
+{
+    BinaryDataPtr binary;
+    get(datatype_name, std::string("info"), binary);
+    
+    Json::Reader json_reader;
+    if (!json_reader.parse(binary->get_data(), data)) {
+        throw ErrMsg("Could not decode JSON");
+    }
+}
+
 void DVIDNode::get(std::string keyvalue, std::string key, Json::Value& data)
 {
     BinaryDataPtr binary;
