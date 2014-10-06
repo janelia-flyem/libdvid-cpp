@@ -20,6 +20,9 @@ class DVIDNode {
   public:
     // check that node is available
     DVIDNode(DVIDServer web_addr_, UUID uuid_);
+   
+    // get meta for the type 
+    void get_typeinfo(std::string datatype_name, Json::Value& data);
 
     // throw error if start point is 2D
     bool create_grayscale8(std::string datatype_name);
@@ -36,12 +39,12 @@ class DVIDNode {
             png::image<png::rgba_pixel_16>& image);
 
     void get_volume_roi(std::string datatype_instance, tuple start,
-            tuple sizes, tuple channels, DVIDGrayPtr& gray);
+            tuple sizes, tuple channels, DVIDGrayPtr& gray, bool throttle=true);
     void get_volume_roi(std::string datatype_instance, tuple start,
-            tuple sizes, tuple channels, DVIDLabelPtr& labels);
+            tuple sizes, tuple channels, DVIDLabelPtr& labels, bool throttle=true);
     
     void write_volume_roi(std::string datatype_instance, tuple start,
-            tuple sizes, tuple channels, BinaryDataPtr data);
+            tuple sizes, tuple channels, BinaryDataPtr data, bool throttle=true);
 
     // --- Key-Value Interface ---
 
@@ -54,6 +57,7 @@ class DVIDNode {
 
     void get(std::string keyvalue, std::string key, BinaryDataPtr& value);
     void get(std::string keyvalue, std::string key, Json::Value& data);
+    
 
     // --- DVID graph interface ---
 
@@ -84,8 +88,8 @@ class DVIDNode {
     DVIDServer web_addr;
     boost::network::http::client request_client;
 
-    std::string construct_volume_uri(std::string datatype_inst, tuple start, tuple sizes, tuple channels);
-    void retrieve_volume(std::string datatype_inst, tuple start, tuple sizes, tuple channels, std::string& volume);
+    std::string construct_volume_uri(std::string datatype_inst, tuple start, tuple sizes, tuple channels, bool throttle);
+    void retrieve_volume(std::string datatype_inst, tuple start, tuple sizes, tuple channels, std::string& volume, bool throttle);
     void put(std::string keyvalue, std::string key, BinaryDataPtr value, VertexTransactions& transactions, VertexSet& failed_vertices);
 
     void get(std::string keyvalue, std::string key, BinaryDataPtr& value, Json::Value& json_data);
