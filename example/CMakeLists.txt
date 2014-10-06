@@ -64,9 +64,9 @@ else()
 endif()
 
 # create example target
-include_directories(${LIBDVIDCPP_INCLUDE_DIRS})
+include_directories(${LIBDVIDCPP_INCLUDE_DIRS} ${CMAKE_PREFIX_PATH}/include)
 add_executable(libdvid_example libdvid_example.cpp)
-target_link_libraries(libdvid_example ${LIBLOC}/libjsoncpp.so ${LIBDVIDCPP_LIBRARIES} ${CPPNETLIB_LIBRARIES} ${LIBLOC}/libboost_system.so ${LIBLOC}/libboost_thread.so ${LIBLOC}/libssl.so ${LIBLOC}/libcrypto.so)
+target_link_libraries(libdvid_example ${LIBLOC}/libjsoncpp.so ${LIBDVIDCPP_LIBRARIES} ${CPPNETLIB_LIBRARIES} ${LIBLOC}/libboost_system.so ${LIBLOC}/libboost_thread.so ${LIBLOC}/libssl.so ${LIBLOC}/libcrypto.so ${LIBLOC}/libpng.so)
 
 # installation for non buildem
 if (${BUILDEM_DIR} STREQUAL "None")

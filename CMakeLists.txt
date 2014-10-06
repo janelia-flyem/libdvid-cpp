@@ -62,10 +62,11 @@ if (NOT ${BUILDEM_DIR} STREQUAL "None")
 
     include (jsoncpp)
     include (cppnetlib)
-    
+    include (libpng)
+
     include_directories (BEFORE ${CPPNETLIB_INCLUDE_DIRS})
     #set (LIBDVID_EXT_LIBS ${CPPNETLIB_LIBRARIES})
-    set (LIBDVID_DEPS ${jsoncpp_NAME} ${cppnetlib_NAME})
+    set (LIBDVID_DEPS ${jsoncpp_NAME} ${cppnetlib_NAME} ${libpng_NAME})
 else ()
     FIND_PACKAGE(Boost 1.54)
     FIND_PACKAGE(cppnetlib 0.11.0 REQUIRED)
@@ -74,7 +75,7 @@ else ()
     #set (LIBDVID_EXT_LIBS ${CPPNETLIB_LIBRARIES})
 endif (NOT ${BUILDEM_DIR} STREQUAL "None")
 
-include_directories (BEFORE ${CMAKE_SOURCE_DIR}/libdvid)
+include_directories (BEFORE ${CMAKE_SOURCE_DIR}/libdvid ${CMAKE_SOURCE_DIR})
 
 # Compile libdvidcpp library components
 add_library (dvidcpp src/DVIDNode.cpp src/DVIDServer.cpp src/Utilities.cpp src/DVIDGraph.cpp)
@@ -98,6 +99,7 @@ CONFIGURE_FILE(${PROJECT_SOURCE_DIR}/config/libdvidcppConfigVersion.cmake.in
 # installation for library (make install not needed for a buildem install)
 if (${BUILDEM_DIR} STREQUAL "None")
     INSTALL(DIRECTORY ${PROJECT_SOURCE_DIR}/libdvid DESTINATION include)
+    INSTALL(DIRECTORY ${PROJECT_SOURCE_DIR}/png++ DESTINATION include)
     INSTALL(TARGETS dvidcpp DESTINATION lib)
     INSTALL(FILES ${PROJECT_BINARY_DIR}/libdvidcppConfig.cmake
     ${PROJECT_BINARY_DIR}/libdvidcppConfigVersion.cmake
@@ -107,6 +109,7 @@ else()
     TARGET dvidcpp
     POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_directory ${PROJECT_SOURCE_DIR}/libdvid ${BUILDEM_DIR}/include/libdvid
+    COMMAND ${CMAKE_COMMAND} -E copy_directory ${PROJECT_SOURCE_DIR}/png++ ${BUILDEM_DIR}/include/png++
     COMMAND ${CMAKE_COMMAND} -E copy ${PROJECT_BINARY_DIR}/libdvidcppConfigVersion.cmake ${BUILDEM_DIR}/lib/libdvidcpp/libdvidcppConfigVersion.cmake
     COMMAND ${CMAKE_COMMAND} -E copy ${PROJECT_BINARY_DIR}/libdvidcppConfig.cmake ${BUILDEM_DIR}/lib/libdvidcpp/libdvidcppConfig.cmake
     COMMAND ${CMAKE_COMMAND} -E copy ${PROJECT_BINARY_DIR}/libdvidcppTargets.cmake ${BUILDEM_DIR}/lib/libdvidcpp/libdvidcppTargets.cmake

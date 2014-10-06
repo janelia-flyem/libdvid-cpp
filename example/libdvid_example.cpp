@@ -100,6 +100,11 @@ int main(int argc, char** argv) {
         // be at least an ND point where N is greater than 2
         dvid_node.write_volume_roi(gray_datatype_name, start, sizes, channels, graybin);
 
+        png::image<png::gray_pixel> image;
+        dvid_node.get_tile_slice(std::string("tiles2"), std::string("xy"),                                 
+                1, start, image);
+        cout << "PNG width: " << image.get_width() << endl;        
+
         // retrieve the image volume and make sure it makes the posted volume
         DVIDGrayPtr graycomp;
         dvid_node.get_volume_roi(gray_datatype_name, start, sizes, channels, graycomp);

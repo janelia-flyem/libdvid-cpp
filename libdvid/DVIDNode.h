@@ -9,6 +9,7 @@
 #include <json/value.h>
 #include <fstream>
 #include <string>
+#include <png++/png.hpp>
 #include <boost/network/protocol/http/client.hpp>
 
 namespace libdvid {
@@ -23,7 +24,17 @@ class DVIDNode {
     // throw error if start point is 2D
     bool create_grayscale8(std::string datatype_name);
     bool create_labels64(std::string datatype_name);
-    
+
+    // retrieve 1-byte tile of a given resolution
+    void get_tile_slice(std::string datatype_instance, std::string dims,
+            unsigned int scaling, tuple tcoord,
+            png::image<png::gray_pixel>& image);
+
+    // retrieve 4-byte tile of a given resolution
+    void get_tile_slice(std::string datatype_instance, std::string dims,
+            unsigned int scaling, tuple tcoord,
+            png::image<png::rgba_pixel_16>& image);
+
     void get_volume_roi(std::string datatype_instance, tuple start,
             tuple sizes, tuple channels, DVIDGrayPtr& gray);
     void get_volume_roi(std::string datatype_instance, tuple start,

@@ -14,6 +14,7 @@ const int TransactionLimit = 1000;
 
 namespace libdvid {
 
+
 DVIDNode::DVIDNode(DVIDServer web_addr_, UUID uuid_) : 
     web_addr(web_addr_), uuid(uuid_)
 {
@@ -25,7 +26,7 @@ DVIDNode::DVIDNode(DVIDServer web_addr_, UUID uuid_) :
         throw DVIDException(body(respdata), status_code);
     }
 }
-
+    
 bool DVIDNode::create_grayscale8(std::string datatype_name)
 {
     return create_datatype("grayscale8", datatype_name);
@@ -557,7 +558,70 @@ void DVIDNode::update_edges(std::string graph_name, std::vector<Edge>& edges)
         put(graph_name, std::string("weight"), data);
     }
 }
+   
+void DVIDNode::get_tile_slice(std::string datatype_instance, std::string dims,
+            unsigned int scaling, tuple tcoords,
+            png::image<png::gray_pixel>& image)
+{
+    int status_code;
+    client::response respdata;
+
+    std::string uri = web_addr.get_uri_root() + "node/" + uuid + "/" + 
+        datatype_instance + "/tile/" + dims + "/";
+    stringstream sstr;
+    sstr << uri;
+    sstr << scaling << "/" << tcoords[0];
+    for (int i = 1; i < tcoords.size(); ++i) {
+        sstr << "_" << tcoords[i];
+    }
+
+    client::request requestobj(sstr.str());
+    requestobj << header("Connection", "close");
+    respdata = request_client.get(requestobj);
+    status_code = status(respdata);
     
+    if (status_code != 200) {
+        throw DVIDException(body(respdata), status_code);
+    }
+
+    // retrieve PNG
+    std::string png_image = body(respdata);
+    std::istringstream sstr2(png_image);
+    image.read(sstr2);
+}
+
+void DVIDNode::get_tile_slice(std::string datatype_instance, std::string dims,
+            unsigned int scaling, tuple tcoords,
+            png::image<png::rgba_pixel_16>& image)
+{
+    int status_code;
+    client::response respdata;
+
+    std::string uri = web_addr.get_uri_root() + "node/" + uuid + "/" + 
+        datatype_instance + "/tile/" + dims + "/";
+    stringstream sstr;
+    sstr << uri;
+    sstr << scaling << "/" << tcoords[0];
+    for (int i = 1; i < tcoords.size(); ++i) {
+        sstr << "_" << tcoords[i];
+    }
+
+    client::request requestobj(sstr.str());
+    requestobj << header("Connection", "close");
+    respdata = request_client.get(requestobj);
+    status_code = status(respdata);
+    
+    if (status_code != 200) {
+        throw DVIDException(body(respdata), status_code);
+    }
+
+    // retrieve PNG
+    std::string png_image = body(respdata);
+    std::istringstream sstr2(png_image);
+    image.read(sstr2);
+}
+
+
 void DVIDNode::get_volume_roi(std::string datatype_instance, tuple start,
         tuple sizes, tuple channels, DVIDGrayPtr& gray)
 {
