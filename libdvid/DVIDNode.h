@@ -26,7 +26,7 @@ class DVIDNode {
 
     // throw error if start point is 2D
     bool create_grayscale8(std::string datatype_name);
-    bool create_labels64(std::string datatype_name);
+    bool create_labelblk(std::string datatype_name);
 
     // retrieve 1-byte tile of a given resolution
     void get_tile_slice(std::string datatype_instance, std::string dims,

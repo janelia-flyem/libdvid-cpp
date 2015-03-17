@@ -1,9 +1,58 @@
--documentation/fix label pushing
+order:
+
+X-fix broken interface stuff
+-add simple unit tests and be idiomatic
+-do not require 'http' prefix
+-verify interfaces -- fix key/value
+-block align checks -- or add padding
+-refactor binary data stuff
+-add some convenience functions
+-some warnings and meta checks
+-support jpeg?
+-code clean/refactor
+-code comment/doxygen
+
+
+fix:
+
+-fix broken DVID stuff (mostly type creation)
+
+testing:
+
+-simple unit tests for interface
+-dump static files for use in DVID load
+-write load tests
+-dump memory and runtime information for load tests
+
+refactoring:
+
+-binary data should be a base class of image types probably and one should be able to post directly
+-add convenience functions for building volume
+-make it easy to change API
+-reader/writer protection?
+-make exceptions more idiomatic
+-check meta-data for warnings/errors (depending on flag)
+-add a lot of comments and make doxygen compliant documentation
+-create doxygen file 
+
+code additions:
+
+-support ROI (custom class)
+-support sparsevol
+-python bindings
+-add jpeg support
+-add lz4/snappy support
+
+
+
+
+other:
+
+-documentation/fix label pushing ??
 
 -be careful about 0/nulls
 -find datatype_instance function
--integration and unit tests
--automatically include cppnet and boost libraries in build
+-automatically include cppnet and boost libraries in build ??
 -load datatype_instance info in dataset objects
 -capabilities (DVID interface and meta information)
 -performance (string buffer copying)

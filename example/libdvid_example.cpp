@@ -71,7 +71,7 @@ int main(int argc, char** argv) {
         if(!dvid_node.create_grayscale8(gray_datatype_name)) {
             cout << gray_datatype_name << " already exists" << endl;
         }
-        if(!dvid_node.create_labels64(label_datatype_name)) {
+        if(!dvid_node.create_labelblk(label_datatype_name)) {
             cout << label_datatype_name << " already exists" << endl;
         }
         if(!dvid_node.create_keyvalue(keyvalue_datatype_name)) {
@@ -83,16 +83,18 @@ int main(int argc, char** argv) {
        
         // ** Write and read grayscale data **
         // create grayscale image volume
-        unsigned char * img_gray = new unsigned char [sizeof(img1_mask)*2];
+        //unsigned char * img_gray = new unsigned char [sizeof(img1_mask)*2];
+        unsigned char * img_gray = new unsigned char [32*32*32];
         for (int i = 0; i < sizeof(img1_mask); ++i) {
             img_gray[i] = img1_mask[i] * 255;
-            img_gray[i+sizeof(img1_mask)] = img2_mask[i] * 255;
+            img_gray[i+32*32] = img2_mask[i] * 255;
         }
 
         // create binary data string wrapper (no meta-data for now -- must explicitly create)
-        BinaryDataPtr graybin = BinaryData::create_binary_data((char*)(img_gray), sizeof(img1_mask)*2);
+        BinaryDataPtr graybin = BinaryData::create_binary_data((char*)(img_gray), 32*32*32);
         tuple start; start.push_back(0); start.push_back(0); start.push_back(0);
-        tuple sizes; sizes.push_back(WIDTH); sizes.push_back(HEIGHT); sizes.push_back(2);
+        //tuple sizes; sizes.push_back(WIDTH); sizes.push_back(HEIGHT); sizes.push_back(2);
+        tuple sizes; sizes.push_back(32); sizes.push_back(32); sizes.push_back(32);
         tuple channels; channels.push_back(0); channels.push_back(1); channels.push_back(2);
 
         // post grayscale volume
@@ -100,50 +102,51 @@ int main(int argc, char** argv) {
         // be at least an ND point where N is greater than 2
         dvid_node.write_volume_roi(gray_datatype_name, start, sizes, channels, graybin);
 
-        png::image<png::gray_pixel> image;
-        dvid_node.get_tile_slice(std::string("tiles2"), std::string("xy"),                                 
-                1, start, image);
-        cout << "PNG width: " << image.get_width() << endl;        
+        // need to create tiles first
+        
+        //png::image<png::gray_pixel> image;
+        //dvid_node.get_tile_slice(std::string("tiles"), std::string("xy"), 1, start, image);
+        //cout << "PNG width: " << image.get_width() << endl;        
 
         // retrieve the image volume and make sure it makes the posted volume
         DVIDGrayPtr graycomp;
         dvid_node.get_volume_roi(gray_datatype_name, start, sizes, channels, graycomp);
         unsigned char* datacomp = graycomp->get_raw();
-        for (int i = 0; i < sizeof(img1_mask)*2; ++i) {
+        for (int i = 0; i < (32*32*32); ++i) {
             assert(datacomp[i] == img_gray[i]);
         }
 
-        // ** Write and read labels64 data **
+        // ** Write and read labelblk data **
         // create label 64 image volume
-        unsigned long long * img_labels = new unsigned long long [sizeof(limg1_mask)*2];
+        unsigned long long * img_labels = new unsigned long long [32*32*32];
         for (int i = 0; i < (LWIDTH*LHEIGHT); ++i) {
             img_labels[i] = limg1_mask[i];
-            img_labels[i+12] = limg2_mask[i];
+            img_labels[i+32*32] = limg2_mask[i];
         }
 
         // create binary data string wrapper (64 bits per pixel)
-        BinaryDataPtr labelbin = BinaryData::create_binary_data((char*)(img_labels), sizeof(limg1_mask)*2);
+        BinaryDataPtr labelbin = BinaryData::create_binary_data((char*)(img_labels), 32*32*32*sizeof(unsigned long long));
 
         // post labels volume
         // one could also write 2D image slices but the starting location must
         // be at least an ND point where N is greater than 2
-        tuple lsizes; lsizes.push_back(LWIDTH); lsizes.push_back(LHEIGHT); lsizes.push_back(2);
+        tuple lsizes; lsizes.push_back(32); lsizes.push_back(32); lsizes.push_back(32);
         dvid_node.write_volume_roi(label_datatype_name, start, lsizes, channels, labelbin);
 
         // retrieve the image volume and make sure it makes the posted volume
         DVIDLabelPtr labelcomp;
         dvid_node.get_volume_roi(label_datatype_name, start, lsizes, channels, labelcomp);
         unsigned long long* labeldatacomp = labelcomp->get_raw();
-        for (int i = 0; i < (LWIDTH*LHEIGHT*2); ++i) {
+        for (int i = 0; i < 32*32*32; ++i) {
             assert(labeldatacomp[i] == img_labels[i]);
         }
 
         // ** Test key value interface **
         Json::Value data_init;
         data_init["hello"] = "world"; 
-        dvid_node.put(keyvalue_datatype_name, "spot0", data_init); 
+        dvid_node.put(keyvalue_datatype_name, "key/spot0", data_init); 
         Json::Value data_ret; 
-        dvid_node.get(keyvalue_datatype_name, "spot0", data_ret);
+        dvid_node.get(keyvalue_datatype_name, "key/spot0", data_ret);
         std::string data_str = data_ret["hello"].asString();
         cout << "Response: " << data_str << endl; 
    

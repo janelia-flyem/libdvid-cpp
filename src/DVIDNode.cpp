@@ -29,12 +29,12 @@ DVIDNode::DVIDNode(DVIDServer web_addr_, UUID uuid_) :
     
 bool DVIDNode::create_grayscale8(std::string datatype_name)
 {
-    return create_datatype("grayscale8", datatype_name);
+    return create_datatype("uint8blk", datatype_name);
 }
 
-bool DVIDNode::create_labels64(std::string datatype_name)
+bool DVIDNode::create_labelblk(std::string datatype_name)
 {
-    return create_datatype("labels64", datatype_name);
+    return create_datatype("labelblk", datatype_name);
 }
 
 bool DVIDNode::create_keyvalue(std::string keyvalue)
