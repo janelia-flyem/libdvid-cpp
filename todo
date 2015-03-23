@@ -3,9 +3,10 @@ order:
 X-fix broken interface stuff
 X-add code to create a new repo (add for all my tests so there is a fresh one; assume one DVID server for now but could point to a config file that has the value set alternatively; definitely could use the config file for the load tests but that will be under a different executable set)
 X-add simple unit tests and be idiomatic
--add tiling test (inline tile create code?)
--performance tests for big accesses, random small accesses, tile accesses -- need memory and time breakdown
+-performance tests for big accesses, random small accesses -- need memory and time breakdown
+
 -libcurl refactor
+-need compression for ND push
 -do not require 'http' prefix
 -verify interfaces -- fix key/value
 -block align checks -- or add padding
@@ -17,6 +18,7 @@ X-add simple unit tests and be idiomatic
 -code clean/refactor
 -code comment/doxygen
 -might need to have a build without libpng, etc for compilation purposes with QT
+-add tiling test (inline tile create code?) -- need some way to create tiles
 
 
 fix:

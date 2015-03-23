@@ -1,0 +1,114 @@
+# write took a long time -- probably because of network card
+# why do some GETs take a lot longer -- might be some issue -- notice GETs do take ~2x longer -- is it because of the network card
+# it might take longer because of network, not because of DVID??
+# multiply everthing by 8 because I forgot to take into account that these are 64 bit
+Large volume dimension: 512
+Small volume dimension: 128
+Time to POST large label volume: 182.178 seconds
+736740 bytes posted per second for large label volume
+Time to GET large label volume: 13.3619 seconds
+10044816 bytes read per second for large label volume
+Time to GET small label volume: 0.228918 seconds
+Time to GET small label volume: 0.229508 seconds
+Time to GET small label volume: 0.227732 seconds
+Time to GET small label volume: 0.233251 seconds
+Time to GET small label volume: 0.236797 seconds
+Time to GET small label volume: 0.229143 seconds
+Time to GET small label volume: 0.233194 seconds
+Time to GET small label volume: 0.21965 seconds
+Time to GET small label volume: 0.231477 seconds
+Time to GET small label volume: 0.234772 seconds
+Time to GET small label volume: 0.219164 seconds
+Time to GET small label volume: 0.235076 seconds
+Time to GET small label volume: 0.229866 seconds
+Time to GET small label volume: 0.234989 seconds
+Time to GET small label volume: 0.79065 seconds
+Time to GET small label volume: 0.218566 seconds
+Time to GET small label volume: 0.229637 seconds
+Time to GET small label volume: 0.319641 seconds
+Time to GET small label volume: 0.652377 seconds
+Time to GET small label volume: 1.21311 seconds
+Time to GET small label volume: 1.12829 seconds
+Time to GET small label volume: 2.15353 seconds
+Time to GET small label volume: 1.32795 seconds
+Time to GET small label volume: 1.30306 seconds
+Time to GET small label volume: 0.532994 seconds
+Time to GET small label volume: 1.35912 seconds
+Time to GET small label volume: 1.43429 seconds
+Time to GET small label volume: 0.801441 seconds
+Time to GET small label volume: 0.665405 seconds
+Time to GET small label volume: 0.23179 seconds
+Time to GET small label volume: 0.231847 seconds
+Time to GET small label volume: 0.23062 seconds
+Time to GET small label volume: 0.241093 seconds
+Time to GET small label volume: 0.231063 seconds
+Time to GET small label volume: 0.233762 seconds
+Time to GET small label volume: 0.229751 seconds
+Time to GET small label volume: 0.246158 seconds
+Time to GET small label volume: 0.226995 seconds
+Time to GET small label volume: 0.245697 seconds
+Time to GET small label volume: 0.228585 seconds
+Time to GET small label volume: 0.230911 seconds
+Time to GET small label volume: 0.246079 seconds
+Time to GET small label volume: 0.229254 seconds
+Time to GET small label volume: 0.241283 seconds
+Time to GET small label volume: 0.234132 seconds
+Time to GET small label volume: 0.226847 seconds
+Time to GET small label volume: 0.23092 seconds
+Time to GET small label volume: 0.234882 seconds
+Time to GET small label volume: 0.234135 seconds
+Time to GET small label volume: 0.228356 seconds
+Time to GET small label volume: 0.231321 seconds
+Time to GET small label volume: 0.226998 seconds
+Time to GET small label volume: 0.230663 seconds
+Time to GET small label volume: 0.231901 seconds
+Time to GET small label volume: 0.229032 seconds
+Time to GET small label volume: 0.228551 seconds
+Time to GET small label volume: 0.230357 seconds
+Time to GET small label volume: 0.225531 seconds
+Time to GET small label volume: 0.237238 seconds
+Time to GET small label volume: 0.227391 seconds
+Time to GET small label volume: 0.231002 seconds
+Time to GET small label volume: 0.22821 seconds
+Time to GET small label volume: 0.228265 seconds
+Time to GET small label volume: 0.232546 seconds
+Time to GET small label volume: 0.231554 seconds
+Time to GET small label volume: 0.228556 seconds
+Time to GET small label volume: 0.218626 seconds
+Time to GET small label volume: 0.231571 seconds
+Time to GET small label volume: 0.228095 seconds
+Time to GET small label volume: 0.226441 seconds
+Time to GET small label volume: 0.233941 seconds
+Time to GET small label volume: 0.232886 seconds
+Time to GET small label volume: 0.226279 seconds
+Time to GET small label volume: 0.232186 seconds
+Time to GET small label volume: 0.227938 seconds
+Time to GET small label volume: 0.226381 seconds
+Time to GET small label volume: 0.22634 seconds
+Time to GET small label volume: 0.23152 seconds
+Time to GET small label volume: 0.231374 seconds
+Time to GET small label volume: 0.256702 seconds
+Time to GET small label volume: 0.233515 seconds
+Time to GET small label volume: 0.225563 seconds
+Time to GET small label volume: 0.225157 seconds
+Time to GET small label volume: 0.22646 seconds
+Time to GET small label volume: 0.216632 seconds
+Time to GET small label volume: 0.227423 seconds
+Time to GET small label volume: 0.234499 seconds
+Time to GET small label volume: 0.225649 seconds
+Time to GET small label volume: 0.238958 seconds
+Time to GET small label volume: 0.231167 seconds
+Time to GET small label volume: 0.228502 seconds
+Time to GET small label volume: 0.225671 seconds
+Time to GET small label volume: 0.230271 seconds
+Time to GET small label volume: 0.227892 seconds
+Time to GET small label volume: 0.225502 seconds
+Time to GET small label volume: 0.227827 seconds
+Time to GET small label volume: 0.230066 seconds
+Time to GET small label volume: 0.23284 seconds
+Time to GET small label volume: 0.228857 seconds
+Time to GET small label volume: 0.2334 seconds
+100 fetches performed in 33.753 seconds
+0.33753 seconds per fetch
+6213229 bytes read per second
+Time Elapsed: 232.712 seconds

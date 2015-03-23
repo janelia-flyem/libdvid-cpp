@@ -1,0 +1,11 @@
+# edges are slower to write because vertices get modified too
+# read rates seem similar to what I get off a bigger server
+Total vertices: 75002
+Total edges: 496383
+Time to write vertices: 7.75302
+Vertices written per second: 9673.91
+Time to write edges: 258.427
+Edges written per second: 1920.79
+Time to read graph: 55.6595
+Vertices and edges read per second: 10265.7
+Time Elapsed: 319.034 seconds

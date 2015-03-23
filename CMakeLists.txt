@@ -122,52 +122,58 @@ else()
     )
 endif()
 
-add_executable(test_newrepo "tests/test_newrepo.cpp")
-target_link_libraries(test_newrepo dvidcpp ${support_LIBS})
+add_executable(dvidtest_newrepo "tests/test_newrepo.cpp")
+target_link_libraries(dvidtest_newrepo dvidcpp ${support_LIBS})
 
-add_executable(test_nodeconnection "tests/test_nodeconnection.cpp")
-target_link_libraries(test_nodeconnection dvidcpp ${support_LIBS})
+add_executable(dvidtest_nodeconnection "tests/test_nodeconnection.cpp")
+target_link_libraries(dvidtest_nodeconnection dvidcpp ${support_LIBS})
 
-add_executable(test_grayscale "tests/test_grayscale.cpp")
-target_link_libraries(test_grayscale dvidcpp ${support_LIBS})
+add_executable(dvidtest_grayscale "tests/test_grayscale.cpp")
+target_link_libraries(dvidtest_grayscale dvidcpp ${support_LIBS})
 
-add_executable(test_labelblk "tests/test_labelblk.cpp")
-target_link_libraries(test_labelblk dvidcpp ${support_LIBS})
+add_executable(dvidtest_labelblk "tests/test_labelblk.cpp")
+target_link_libraries(dvidtest_labelblk dvidcpp ${support_LIBS})
 
-add_executable(test_keyvalue "tests/test_keyvalue.cpp")
-target_link_libraries(test_keyvalue dvidcpp ${support_LIBS})
+add_executable(dvidtest_keyvalue "tests/test_keyvalue.cpp")
+target_link_libraries(dvidtest_keyvalue dvidcpp ${support_LIBS})
 
-add_executable(test_labelgraph "tests/test_labelgraph.cpp")
-target_link_libraries(test_labelgraph dvidcpp ${support_LIBS})
+add_executable(dvidtest_labelgraph "tests/test_labelgraph.cpp")
+target_link_libraries(dvidtest_labelgraph dvidcpp ${support_LIBS})
+
+add_executable(dvidloadtest_labelblk "load_tests/loadtest_labelblk.cpp")
+target_link_libraries(dvidloadtest_labelblk dvidcpp ${support_LIBS})
+
+add_executable(dvidloadtest_labelgraph "load_tests/loadtest_labelgraph.cpp")
+target_link_libraries(dvidloadtest_labelgraph dvidcpp ${support_LIBS})
 
 enable_testing()
 
 add_test(
     newrepo
-    test_newrepo http://127.0.0.1:8000
+    dvidtest_newrepo http://127.0.0.1:8000
 )
 
 add_test(
     nodeconnection
-    test_nodeconnection http://127.0.0.1:8000
+    dvidtest_nodeconnection http://127.0.0.1:8000
 )
 
 add_test(
     grayscale 
-    test_grayscale http://127.0.0.1:8000
+    dvidtest_grayscale http://127.0.0.1:8000
 )
 
 add_test(
     labelblk 
-    test_labelblk http://127.0.0.1:8000
+    dvidtest_labelblk http://127.0.0.1:8000
 )
 
 add_test(
     keyvalue 
-    test_keyvalue http://127.0.0.1:8000
+    dvidtest_keyvalue http://127.0.0.1:8000
 )
 
 add_test(
     labelgraph 
-    test_labelgraph http://127.0.0.1:8000
+    dvidtest_labelgraph http://127.0.0.1:8000
 )
