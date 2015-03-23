@@ -8,7 +8,7 @@ using namespace boost::network::http;
 using namespace boost::network;
 
 using std::ifstream; using std::set; using std::stringstream;
-Json::Reader json_reader;
+//Json::Reader json_reader;
 
 const int TransactionLimit = 1000;
 

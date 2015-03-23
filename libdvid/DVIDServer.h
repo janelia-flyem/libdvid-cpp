@@ -17,6 +17,7 @@ class DVIDServer {
     {
         return (addr + "/api/");
     }
+    std::string create_new_repo(std::string alias, std::string description);
 
   private:
     std::string addr;

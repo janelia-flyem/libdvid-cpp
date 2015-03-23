@@ -1,16 +1,22 @@
 order:
 
 X-fix broken interface stuff
--add simple unit tests and be idiomatic
+X-add code to create a new repo (add for all my tests so there is a fresh one; assume one DVID server for now but could point to a config file that has the value set alternatively; definitely could use the config file for the load tests but that will be under a different executable set)
+X-add simple unit tests and be idiomatic
+-add tiling test (inline tile create code?)
+-performance tests for big accesses, random small accesses, tile accesses -- need memory and time breakdown
+-libcurl refactor
 -do not require 'http' prefix
 -verify interfaces -- fix key/value
 -block align checks -- or add padding
 -refactor binary data stuff
 -add some convenience functions
 -some warnings and meta checks
--support jpeg?
+-support label block calls (make a block binary blob)
+-support jpeg and lz4? -- lz4 probably easy
 -code clean/refactor
 -code comment/doxygen
+-might need to have a build without libpng, etc for compilation purposes with QT
 
 
 fix:
@@ -23,10 +29,19 @@ testing:
 -dump static files for use in DVID load
 -write load tests
 -dump memory and runtime information for load tests
+-create tiling tests (need to do before refactoring tiles, replacing with libcurl, and parallelization) 
+            // need to create tiles first
+            //png::image<png::gray_pixel> image;
+            //dvid_node.get_tile_slice(std::string("tiles"), std::string("xy"), 1, start, image);
+            //cout << "PNG width: " << image.get_width() << endl;        
+
+
+
 
 refactoring:
 
 -binary data should be a base class of image types probably and one should be able to post directly
+-each Node instance should be single threaded but can have multiple nodes; also parallelize tile command if it is blocking since that needs to be fast
 -add convenience functions for building volume
 -make it easy to change API
 -reader/writer protection?

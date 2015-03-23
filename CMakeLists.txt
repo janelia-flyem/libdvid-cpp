@@ -67,11 +67,17 @@ if (NOT ${BUILDEM_DIR} STREQUAL "None")
     include_directories (BEFORE ${CPPNETLIB_INCLUDE_DIRS})
     #set (LIBDVID_EXT_LIBS ${CPPNETLIB_LIBRARIES})
     set (LIBDVID_DEPS ${jsoncpp_NAME} ${cppnetlib_NAME} ${libpng_NAME})
+    set (boost_LIBS ${BUILDEM_LIB_DIR}/libboost_system.so
+        ${BUILDEM_LIB_DIR}/libboost_thread.so)
+    set (support_LIBS ${json_LIB} ${CPPNETLIB_LIBRARIES} ${boost_LIBS} ${BUILDEM_LIB_DIR}/libssl.so ${BUILDEM_LIB_DIR}/libcrypto.so ${BUILDEM_LIB_DIR}/libpng.so)
 else ()
     FIND_PACKAGE(Boost 1.54)
     FIND_PACKAGE(cppnetlib 0.11.0 REQUIRED)
     include_directories(${Boost_INCLUDE_DIRS})
+    set (json_LIB jsoncpp)
+    set (boost_LIBS boost_thread boost_system)
     include_directories (BEFORE ${CPPNETLIB_INCLUDE_DIRS})
+    set (support_LIBS ${json_LIB} ${CPPNETLIB_LIBRARIES} ${boost_LIBS} ssl crypto png)
     #set (LIBDVID_EXT_LIBS ${CPPNETLIB_LIBRARIES})
 endif (NOT ${BUILDEM_DIR} STREQUAL "None")
 
@@ -116,4 +122,52 @@ else()
     )
 endif()
 
+add_executable(test_newrepo "tests/test_newrepo.cpp")
+target_link_libraries(test_newrepo dvidcpp ${support_LIBS})
 
+add_executable(test_nodeconnection "tests/test_nodeconnection.cpp")
+target_link_libraries(test_nodeconnection dvidcpp ${support_LIBS})
+
+add_executable(test_grayscale "tests/test_grayscale.cpp")
+target_link_libraries(test_grayscale dvidcpp ${support_LIBS})
+
+add_executable(test_labelblk "tests/test_labelblk.cpp")
+target_link_libraries(test_labelblk dvidcpp ${support_LIBS})
+
+add_executable(test_keyvalue "tests/test_keyvalue.cpp")
+target_link_libraries(test_keyvalue dvidcpp ${support_LIBS})
+
+add_executable(test_labelgraph "tests/test_labelgraph.cpp")
+target_link_libraries(test_labelgraph dvidcpp ${support_LIBS})
+
+enable_testing()
+
+add_test(
+    newrepo
+    test_newrepo http://127.0.0.1:8000
+)
+
+add_test(
+    nodeconnection
+    test_nodeconnection http://127.0.0.1:8000
+)
+
+add_test(
+    grayscale 
+    test_grayscale http://127.0.0.1:8000
+)
+
+add_test(
+    labelblk 
+    test_labelblk http://127.0.0.1:8000
+)
+
+add_test(
+    keyvalue 
+    test_keyvalue http://127.0.0.1:8000
+)
+
+add_test(
+    labelgraph 
+    test_labelgraph http://127.0.0.1:8000
+)
