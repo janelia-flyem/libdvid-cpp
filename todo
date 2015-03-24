@@ -3,14 +3,17 @@ order:
 X-fix broken interface stuff
 X-add code to create a new repo (add for all my tests so there is a fresh one; assume one DVID server for now but could point to a config file that has the value set alternatively; definitely could use the config file for the load tests but that will be under a different executable set)
 X-add simple unit tests and be idiomatic
--performance tests for big accesses, random small accesses -- need memory and time breakdown
+X-performance tests for big accesses, random small accesses
+X-libcurl refactor
+X-do not require 'http' prefix
 
--libcurl refactor
+-refactor binary data stuff
+-add curl cleanup stuff back; remove '/' from prefix
+
 -need compression for ND push
--do not require 'http' prefix
+-memory breakdown for load tests
 -verify interfaces -- fix key/value
 -block align checks -- or add padding
--refactor binary data stuff
 -add some convenience functions
 -some warnings and meta checks
 -support label block calls (make a block binary blob)

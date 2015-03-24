@@ -1,50 +1,50 @@
 #include "DVIDServer.h"
 #include "DVIDException.h"
-#include <boost/network/protocol/http/client.hpp>
 #include "BinaryData.h"
+
 #include <json/json.h>
 
-using namespace boost::network;
-using namespace boost::network::http;
-//Json::Reader json_reader;
+using std::string;
 
 namespace libdvid {
 
-DVIDServer::DVIDServer(std::string addr_) : addr(addr_)
+DVIDServer::DVIDServer(std::string addr_) : connection(addr_)
 {
-    client::request requestobj(get_uri_root() + std::string("server/info"));
-    requestobj << header("Connection", "close");
-    client request_client;
-    client::response respdata = request_client.get(requestobj);
-    int status_code = status(respdata);
-    
+    string endpoint = "server/info";
+    string respdata;
+    BinaryDataPtr binary = BinaryData::create_binary_data(0,0);
+    int status_code = connection.make_request(endpoint, GET, BinaryDataPtr(),
+            binary, respdata, DEFAULT);
+
     if (status_code != 200) {
-        throw DVIDException(body(respdata), status_code);
+        throw DVIDException(respdata, status_code);
     }
 }
 
 std::string DVIDServer::create_new_repo(std::string alias, std::string description)
 {
-    client::request requestobj(get_uri_root() + std::string("repos"));
-    requestobj << header("Connection", "close");
-
-
-    client request_client;
-    std::string data = "{\"alias\": \"" + alias + "\", \"description\": \"" + description + "\"}";
-    client::response respdata = request_client.post(requestobj,
-            data, std::string("application/json"));
-
-    int status_code = status(respdata);
+    // JSON data to write
+    string string_data = "{\"alias\": \"" + alias + "\", \"description\": \""
+        + description + "\"}";
+    
+    string respdata;
+    BinaryDataPtr payload = BinaryData::create_binary_data(string_data.c_str(),
+            string_data.length());
+    BinaryDataPtr result = BinaryData::create_binary_data(0,0);
+   
+    // create new repo 
+    string endpoint = "repos";
+    int status_code = connection.make_request(endpoint, POST, payload, result,
+            respdata, JSON);
+   
     if (status_code != 200) {
-        throw DVIDException(body(respdata), status_code);
+        throw DVIDException(respdata, status_code);
     }
 
-    std::string rdata = body(respdata);
-    BinaryDataPtr binary = BinaryData::create_binary_data(rdata.c_str(), rdata.length());
-
+    // parse return binary
     Json::Reader json_reader;
     Json::Value jdata;
-    if (!json_reader.parse(binary->get_data(), jdata)) {
+    if (!json_reader.parse(result->get_data(), jdata)) {
         throw ErrMsg("Could not decode JSON");
     }
 

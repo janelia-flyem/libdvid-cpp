@@ -31,6 +31,11 @@ class BinaryData {
     {
         return data;
     }
+    int length()
+    {
+        return data.length();
+    }
+
     ~BinaryData() {}
   private:
     BinaryData(const char* data_, unsigned int length) : data(data_, length) {}
