@@ -1,50 +1,114 @@
 #ifndef DVIDVOXELS_H
 #define DVIDVOXELS_H
 
-#include <boost/shared_ptr.hpp>
+#include "BinaryData.h"
+#include "DVIDException.h"
 #include <string>
+#include <vector>
 
 namespace libdvid {
 
-template <typename T> 
+typedef unsigned long long uint64;
+typedef unsigned char uint8;
+typedef std::vector<unsigned int> Dims_t;
+
+
+/*!
+ * Wrapper for binary data that is part of an n-D array.  This
+ * just associates a shape with a binary blob.  Dim1, dim2, dim3
+ * typically refer to x,y,z with x being the lowest order byte 
+*/
+template <typename T, unsigned int N>
 class DVIDVoxels {
   public:
-    static boost::shared_ptr<DVIDVoxels<T> > get_dvid_voxels(T* array_)
-    {
-        return boost::shared_ptr<DVIDVoxels<T> >(new DVIDVoxels<T>(array_));
-    }
-    static boost::shared_ptr<DVIDVoxels<T> > get_dvid_voxels(std::string& data_str)
-    {
-        return boost::shared_ptr<DVIDVoxels<T> >(new DVIDVoxels<T>(data_str));
+    DVIDVoxels(T* array_, unsigned int length, Dims_t& dims_)
+               : dims(dims_) {
+        data = BinaryData::create_binary_data((const char*) array_,
+                                                length*sizeof(T));
+        
+        if (dims.size() != N) {
+            throw ErrMsg("Incorrect dimensions provided");
+        }
+        unsigned long long total = 0;
+        for (int i = 0; i < dims.size(); ++i) {
+            if (i == 0) {
+                total = dims[0];
+            } else {
+                total *= dims[i];
+            }
+        }
+        if (total*sizeof(T) != data->length()) {
+            throw ErrMsg("Dimension mismatch with buffer size");
+        }
     }
 
-    ~DVIDVoxels()
-    {
-        delete []array;
+    DVIDVoxels(BinaryDataPtr data_, Dims_t& dims_) :
+            data(data_), dims(dims_) {
+        
+        if (dims.size() != N) {
+            throw ErrMsg("Incorrect dimensions provided");
+        }
+        unsigned long long total = 0;
+        for (int i = 0; i < dims.size(); ++i) {
+            if (i == 0) {
+                total = dims[0];
+            } else {
+                total *= dims[i];
+            }
+        }
+        if (total*sizeof(T) != data->length()) {
+            throw ErrMsg("Dimension mismatch with buffer size");
+        }
     }
-    T* get_raw()
+
+    DVIDVoxels(Dims_t& dims_) : dims(dims_)
     {
-        return array;
+        if (dims.size() != N) {
+            throw ErrMsg("Incorrect dimensions provided");
+        }
+    }
+
+    void set_binary(BinaryDataPtr data_)
+    {
+        data = data_;
+        unsigned long long total = 0;
+        for (int i = 0; i < dims.size(); ++i) {
+            if (i == 0) {
+                total = dims[0];
+            } else {
+                total *= dims[i];
+            }
+        }
+        if (total*sizeof(T) != data->length()) {
+            throw ErrMsg("Dimension mismatch with buffer size");
+        }
+    }
+
+    BinaryDataPtr get_binary()
+    {
+        return data;
+    }
+
+    const T* get_raw() const
+    {
+        return (T*) data->get_raw();
+    }
+
+    Dims_t get_dims() const
+    {
+        return dims;
     }
 
   private:
-    DVIDVoxels(T* array_) : array(array_) {}
-    DVIDVoxels(std::string& data_str)
-    {
-        T * byte_array = (T*) data_str.c_str();
-        int incr = sizeof(T);
-        array = new T[data_str.size()];
-        for (int i = 0; i < (data_str.size()/incr); ++i) {
-            array[i] = T(byte_array[i]); 
-        }
-    }
-    
-    T* array;
+    BinaryDataPtr data;
+    Dims_t dims;
 };
 
+typedef DVIDVoxels<uint64, 3> Labels3D;
+typedef DVIDVoxels<uint8, 3> Grayscale3D;
 
-typedef boost::shared_ptr<DVIDVoxels<unsigned char> > DVIDGrayPtr;
-typedef boost::shared_ptr<DVIDVoxels<unsigned long long> > DVIDLabelPtr;
+typedef DVIDVoxels<uint64, 2> Labels2D;
+typedef DVIDVoxels<uint8, 2> Grayscale2D;
 
 }
 

@@ -1,4 +1,4 @@
-#include "DVIDServer.h"
+#include "DVIDServerService.h"
 #include "DVIDException.h"
 #include "BinaryData.h"
 
@@ -8,11 +8,11 @@ using std::string;
 
 namespace libdvid {
 
-DVIDServer::DVIDServer(std::string addr_) : connection(addr_)
+DVIDServerService::DVIDServerService(std::string addr_) : connection(addr_)
 {
-    string endpoint = "server/info";
+    string endpoint = "/server/info";
     string respdata;
-    BinaryDataPtr binary = BinaryData::create_binary_data(0,0);
+    BinaryDataPtr binary = BinaryData::create_binary_data();
     int status_code = connection.make_request(endpoint, GET, BinaryDataPtr(),
             binary, respdata, DEFAULT);
 
@@ -21,7 +21,7 @@ DVIDServer::DVIDServer(std::string addr_) : connection(addr_)
     }
 }
 
-std::string DVIDServer::create_new_repo(std::string alias, std::string description)
+std::string DVIDServerService::create_new_repo(std::string alias, std::string description)
 {
     // JSON data to write
     string string_data = "{\"alias\": \"" + alias + "\", \"description\": \""
@@ -30,10 +30,10 @@ std::string DVIDServer::create_new_repo(std::string alias, std::string descripti
     string respdata;
     BinaryDataPtr payload = BinaryData::create_binary_data(string_data.c_str(),
             string_data.length());
-    BinaryDataPtr result = BinaryData::create_binary_data(0,0);
+    BinaryDataPtr result = BinaryData::create_binary_data();
    
     // create new repo 
-    string endpoint = "repos";
+    string endpoint = string("/repos");
     int status_code = connection.make_request(endpoint, POST, payload, result,
             respdata, JSON);
    

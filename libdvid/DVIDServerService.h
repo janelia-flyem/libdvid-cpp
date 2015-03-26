@@ -1,14 +1,14 @@
-#ifndef DVIDSERVER_H
-#define DVIDSERVER_H
+#ifndef DVIDSERVERSERVICE_H
+#define DVIDSERVERSERVICE_H
 
 #include "DVIDConnection.h" 
 #include <string>
 
 namespace libdvid {
 
-class DVIDServer {
+class DVIDServerService {
   public:
-    DVIDServer(std::string addr_);
+    DVIDServerService(std::string addr_);
     
     std::string create_new_repo(std::string alias, std::string description);
     

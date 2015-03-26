@@ -39,7 +39,14 @@ class DVIDConnection {
      * Starts curl connection.
     */
     DVIDConnection(std::string addr_);
-    
+  
+    /*!
+     * Copy constructor to ensure that creation of curl connection
+     * is created and detroyed propertly per instance -- this will
+     * ensure that each copy is can be run in thread-safe manner.
+    */ 
+    DVIDConnection(const DVIDConnection& copy_connection);
+
     /*!
      * Destroys curl connection.
     */
@@ -63,7 +70,6 @@ class DVIDConnection {
             BinaryDataPtr results, std::string& error_msg, ConnectionType type=DEFAULT,
             int timeout=TIMEOUT); 
 
-
     /*!
      * Get the address for the DVID connection.
     */
@@ -81,6 +87,11 @@ class DVIDConnection {
     }
 
   private:
+    /*!
+     * Assignment doesn't really make much sense -- just disable.
+    */
+    DVIDConnection& operator=(const DVIDConnection& connection) {}
+
     //! reuse curl connection -- eventually make this thread static and
     //! initialize once (CURL typedef is actually a void*)
     void* curl_connection;

@@ -1,95 +1,79 @@
-#include "DVIDNode.h"
+#include "DVIDNodeService.h"
 #include "DVIDException.h"
+
+#include <png++/png.hpp>
 #include <json/json.h>
 #include <set>
 
-// std::string collides with a boost string
-using namespace boost::network::http;
-using namespace boost::network;
+using std::string; using std::vector;
 
 using std::ifstream; using std::set; using std::stringstream;
 //Json::Reader json_reader;
 
-const int TransactionLimit = 1000;
+static const int TransactionLimit = 1000;
+static const int BLOCK_SIZE = 32; // ?! dynamically determine
 
 namespace libdvid {
 
 
-DVIDNode::DVIDNode(DVIDServer web_addr_, UUID uuid_) : 
-    web_addr(web_addr_), uuid(uuid_)
+DVIDNodeService::DVIDNodeService(string web_addr_, UUID uuid_) :
+    connection(web_addr_), uuid(uuid_)
 {
-    client::request requestobj(web_addr.get_uri_root() + "repo/" + uuid + "/info");
-    requestobj << header("Connection", "close");
-    client::response respdata = request_client.get(requestobj);
-    int status_code = status(respdata);
+    string endpoint = "/repo/" + uuid + "/info";
+    string respdata;
+    BinaryDataPtr binary = BinaryData::create_binary_data();
+    int status_code = connection.make_request(endpoint, GET, BinaryDataPtr(),
+            binary, respdata, DEFAULT);
     if (status_code != 200) {
-        throw DVIDException(body(respdata), status_code);
+        throw DVIDException(respdata, status_code);
     }
 }
     
-bool DVIDNode::create_grayscale8(std::string datatype_name)
+bool DVIDNodeService::create_grayscale8(string datatype_name)
 {
     return create_datatype("uint8blk", datatype_name);
 }
 
-bool DVIDNode::create_labelblk(std::string datatype_name)
+bool DVIDNodeService::create_labelblk(string datatype_name)
 {
     return create_datatype("labelblk", datatype_name);
 }
 
-bool DVIDNode::create_keyvalue(std::string keyvalue)
+bool DVIDNodeService::create_keyvalue(string keyvalue)
 {
     return create_datatype("keyvalue", keyvalue);
 }
 
-bool DVIDNode::create_graph(std::string graph_name)
+bool DVIDNodeService::create_graph(string graph_name)
 {
     return create_datatype("labelgraph", graph_name);
 }
 
-void DVIDNode::put(std::string keyvalue, std::string key, BinaryDataPtr value, VertexTransactions& transactions, VertexSet& failed_vertices)
-{
-    client::request requestobj(web_addr.get_uri_root() + "node/" + uuid +
-            "/" + keyvalue + "/" + key);
-    requestobj << header("Connection", "close");
 
-    client::response respdata = request_client.post(requestobj,
-            value->get_data(), std::string("application/octet-stream"));
-    int status_code = status(respdata);
+BinaryDataPtr DVIDNodeService::custom_request(string endpoint, BinaryDataPtr payload,
+        ConnectionMethod method)
+{
+    string respdata;
+    string node_endpoint = "/node/" + uuid + endpoint;
+    BinaryDataPtr resp_binary = BinaryData::create_binary_data();
+    int status_code = connection.make_request(node_endpoint, method, payload,
+            resp_binary, respdata, BINARY);
     if (status_code != 200) {
-        throw DVIDException(body(respdata), status_code);
+        throw DVIDException(respdata, status_code);
     }
-    
-    std::string data = body(respdata);
-    BinaryDataPtr binary = BinaryData::create_binary_data(data.c_str(), data.length());
-    size_t byte_pos = load_transactions_from_binary(binary->get_data(),
-            transactions, failed_vertices);
+
+    return resp_binary; 
 }
 
 
-void DVIDNode::put(std::string keyvalue, std::string key, BinaryDataPtr value)
-{
-    client::request requestobj(web_addr.get_uri_root() + "node/" + uuid +
-            "/" + keyvalue + "/" + key);
-    requestobj << header("Connection", "close");
-
-    client::response respdata = request_client.post(requestobj,
-            value->get_data(), std::string("application/octet-stream"));
-
-    int status_code = status(respdata);
-    if (status_code != 200) {
-        throw DVIDException(body(respdata), status_code);
-    }
-}
-
-void DVIDNode::put(std::string keyvalue, std::string key, ifstream& fin)
+void DVIDNodeService::put(string keyvalue, string key, ifstream& fin)
 {
     BinaryDataPtr data = BinaryData::create_binary_data(fin);
     put(keyvalue, key, data);
 }
 
 
-void DVIDNode::put(std::string keyvalue, std::string key, Json::Value& data)
+void DVIDNodeService::put(string keyvalue, string key, Json::Value& data)
 {
     stringstream datastr;
     datastr << data;
@@ -97,98 +81,44 @@ void DVIDNode::put(std::string keyvalue, std::string key, Json::Value& data)
     put(keyvalue, key, bdata);
 }
 
-void DVIDNode::get(std::string keyvalue, std::string key, BinaryDataPtr& value, Json::Value& json_data)
+
+void DVIDNodeService::put(string keyvalue, string key, BinaryDataPtr value)
 {
-    client::request requestobj(web_addr.get_uri_root() + "node/" + uuid +
-            "/" + keyvalue + "/" + key);
-    requestobj << header("Connection", "close");
-
-    // write header so body is seen
-    stringstream datastr;
-    datastr << json_data;
-    stringstream strstream;
-    strstream << datastr.str().length();
-    requestobj << header("Content-Length", strstream.str());
-    requestobj << header("Content-Type", "application/json");
-    body(requestobj, datastr.str());
-
-    client::response respdata = request_client.get(requestobj);
-    int status_code = status(respdata);
-    if (status_code != 200) {
-        throw DVIDException(body(respdata), status_code);
-    }
-    std::string data = body(respdata);
-    
-    // ?! allow intialization to happen in constructor
-    value = BinaryData::create_binary_data(data.c_str(), data.length());
+    string endpoint = "/" + keyvalue + "/key/" + key;
+    custom_request(endpoint, value, POST);
 }
 
 
-void DVIDNode::get(std::string keyvalue, std::string key, BinaryDataPtr& value, BinaryDataPtr request_data)
+Json::Value DVIDNodeService::get_json(string keyvalue, string key)
 {
-    client::request requestobj(web_addr.get_uri_root() + "node/" + uuid +
-            "/" + keyvalue + "/" + key);
-    requestobj << header("Connection", "close");
-
-    // write header so body is seen
-    stringstream strstream;
-    strstream << request_data->get_data().length();
-    requestobj << header("Content-Length", strstream.str());
-    requestobj << header("Content-Type", "application/octet-stream");
-    body(requestobj, request_data->get_data());
-
-    client::response respdata = request_client.get(requestobj);
-    int status_code = status(respdata);
-    if (status_code != 200) {
-        throw DVIDException(body(respdata), status_code);
-    }
-    std::string data = body(respdata);
+    BinaryDataPtr binary = get(keyvalue, key);
     
-    // ?! allow intialization to happen in constructor
-    value = BinaryData::create_binary_data(data.c_str(), data.length());
+    Json::Value data;
+    Json::Reader json_reader;
+    if (!json_reader.parse(binary->get_data(), data)) {
+        throw ErrMsg("Could not decode JSON");
+    }
+    return data;
 }
 
-
-void DVIDNode::get(std::string keyvalue, std::string key, BinaryDataPtr& value)
+BinaryDataPtr DVIDNodeService::get(string keyvalue, string key)
 {
-    client::request requestobj(web_addr.get_uri_root() + "node/" + uuid +
-            "/" + keyvalue + "/" + key);
-    requestobj << header("Connection", "close");
-    client::response respdata = request_client.get(requestobj);
-    int status_code = status(respdata);
-    if (status_code != 200) {
-        throw DVIDException(body(respdata), status_code);
-    }
-    std::string data = body(respdata);
-    
-    // ?! allow intialization to happen in constructor
-    value = BinaryData::create_binary_data(data.c_str(), data.length());
+    return custom_request("/" + keyvalue + "/key/" + key, BinaryDataPtr(), GET);
 }
 
-
-void DVIDNode::get_typeinfo(std::string datatype_name, Json::Value& data)
+Json::Value DVIDNodeService::get_typeinfo(string datatype_name)
 {
-    BinaryDataPtr binary;
-    get(datatype_name, std::string("info"), binary);
-    
+    BinaryDataPtr binary = custom_request("/info", BinaryDataPtr(), GET);
+   
+    Json::Value data;
     Json::Reader json_reader;
     if (!json_reader.parse(binary->get_data(), data)) {
         throw ErrMsg("Could not decode JSON");
     }
 }
 
-void DVIDNode::get(std::string keyvalue, std::string key, Json::Value& data)
-{
-    BinaryDataPtr binary;
-    get(keyvalue, key, binary);
-    
-    Json::Reader json_reader;
-    if (!json_reader.parse(binary->get_data(), data)) {
-        throw ErrMsg("Could not decode JSON");
-    }
-}
 
-void DVIDNode::get_subgraph(std::string graph_name, std::vector<Vertex>& vertices, Graph& graph)
+void DVIDNodeService::get_subgraph(string graph_name, std::vector<Vertex>& vertices, Graph& graph)
 {
     // make temporary graph for query
     Graph temp_graph;
@@ -198,10 +128,13 @@ void DVIDNode::get_subgraph(std::string graph_name, std::vector<Vertex>& vertice
     Json::Value data;
     temp_graph.export_json(data);
 
-    // make request with json data
-    BinaryDataPtr binary;
+    stringstream datastr;
+    datastr << data;
+    BinaryDataPtr binary_data = BinaryData::create_binary_data(
+            datastr.str().c_str(), datastr.str().length());
 
-    get(graph_name, std::string("subgraph"), binary, data);
+    BinaryDataPtr binary = custom_request("/" + graph_name + "/subgraph",
+           binary_data, GET);
     
     Json::Reader json_reader;
     Json::Value returned_data;
@@ -211,14 +144,13 @@ void DVIDNode::get_subgraph(std::string graph_name, std::vector<Vertex>& vertice
     graph.import_json(returned_data);
 }
 
-void DVIDNode::get_vertex_neighbors(std::string graph_name, VertexID id, Graph& graph)
+void DVIDNodeService::get_vertex_neighbors(string graph_name, Vertex vertex, Graph& graph)
 {
-    BinaryDataPtr binary;
-
-    // use key/value functionality to make call
     stringstream uri_ending;
-    uri_ending << "neighbors/" << id;
-    get(graph_name, uri_ending.str(), binary);
+    uri_ending << "/neighbors/" << vertex.id;
+    
+    BinaryDataPtr binary = custom_request("/" + graph_name + uri_ending.str(),
+            BinaryDataPtr(), GET);
     
     Json::Reader json_reader;
     Json::Value data;
@@ -228,8 +160,9 @@ void DVIDNode::get_vertex_neighbors(std::string graph_name, VertexID id, Graph& 
     graph.import_json(data);
 }
 
+
 // vertex list is modified, just use a copy
-void DVIDNode::get_properties(std::string graph_name, std::vector<Vertex> vertices, std::string key,
+void DVIDNodeService::get_properties(string graph_name, std::vector<Vertex> vertices, string key,
             std::vector<BinaryDataPtr>& properties, VertexTransactions& transactions)
 {
     int num_examined = 0;
@@ -259,15 +192,15 @@ void DVIDNode::get_properties(std::string graph_name, std::vector<Vertex> vertic
             vertex_array[pos] = iter->first;
             ++pos;
         }
-        std::string& str_append = transaction_binary->get_data();
+        string& str_append = transaction_binary->get_data();
 
-        str_append += std::string((char*)vertex_array, (current_transactions.size()+1)*8);
+        str_append += string((char*)vertex_array, (current_transactions.size()+1)*8);
         
         delete []vertex_array;
 
         // get data associated with given graph and 'key'
-        BinaryDataPtr binary;
-        get(graph_name, "propertytransaction/vertices/" + key + "/", binary, transaction_binary);
+        BinaryDataPtr binary = custom_request("/" + graph_name +
+                "/propertytransaction/vertices/" + key + "/", transaction_binary, GET);
 
         VertexSet bad_vertices;
         size_t byte_pos = load_transactions_from_binary(binary->get_data(), transactions, bad_vertices);
@@ -304,8 +237,8 @@ void DVIDNode::get_properties(std::string graph_name, std::vector<Vertex> vertic
 }
 
 
-void DVIDNode::set_properties(std::string graph_name, std::vector<Vertex>& vertices,
-        std::string key, std::vector<BinaryDataPtr>& properties,
+void DVIDNodeService::set_properties(string graph_name, std::vector<Vertex>& vertices,
+        string key, std::vector<BinaryDataPtr>& properties,
         VertexTransactions& transactions, std::vector<Vertex>& leftover_vertices)
 {
     int num_examined = 0;
@@ -324,26 +257,29 @@ void DVIDNode::set_properties(std::string graph_name, std::vector<Vertex>& verti
         BinaryDataPtr binary = write_transactions_to_binary(temp_transactions);
 
         // write out number of trans
-        std::string& str_append = binary->get_data();
+        string& str_append = binary->get_data();
         unsigned long long num_trans = temp_transactions.size();
-        str_append += std::string((char*)&num_trans, 8);
+        str_append += string((char*)&num_trans, 8);
 
         for (; num_examined < max_size; ++num_examined) {
             unsigned long long id = vertices[num_examined].id;
             BinaryDataPtr databin = properties[num_examined];
-            std::string& data = databin->get_data();
+            string& data = databin->get_data();
             unsigned long long data_size = data.size();
 
-            str_append += std::string((char*)&id, 8);
-            str_append += std::string((char*)&data_size, 8);
+            str_append += string((char*)&id, 8);
+            str_append += string((char*)&data_size, 8);
             str_append += data;
         } 
 
         // put the data
         VertexSet failed_trans;
         VertexTransactions succ_trans;
-        put(graph_name, "propertytransaction/vertices/" + key + "/", binary, succ_trans, failed_trans);
-    
+        BinaryDataPtr result_binary = custom_request("/" + graph_name +
+                "/propertytransaction/vertices/" + key, binary, POST);
+        size_t byte_pos = load_transactions_from_binary(result_binary->get_data(),
+            succ_trans, failed_trans);
+
         // update transaction ids for successful trans
         for (VertexTransactions::iterator iter = succ_trans.begin();
                 iter != succ_trans.end(); ++iter) {
@@ -358,8 +294,8 @@ void DVIDNode::set_properties(std::string graph_name, std::vector<Vertex>& verti
     }
 }
 
-void DVIDNode::set_properties(std::string graph_name, std::vector<Edge>& edges,
-        std::string key, std::vector<BinaryDataPtr>& properties,
+void DVIDNodeService::set_properties(string graph_name, std::vector<Edge>& edges,
+        string key, std::vector<BinaryDataPtr>& properties,
         VertexTransactions& transactions, std::vector<Edge>& leftover_edges)
 {
     int num_examined = 0;
@@ -390,28 +326,31 @@ void DVIDNode::set_properties(std::string graph_name, std::vector<Edge>& edges,
         BinaryDataPtr binary = write_transactions_to_binary(current_transactions);
         
         // add vertex list and properties
-        std::string& str_append = binary->get_data();
+        string& str_append = binary->get_data();
         
         unsigned long long num_trans = num_current_edges;
-        str_append += std::string((char*)&num_trans, 8);
+        str_append += string((char*)&num_trans, 8);
 
         for (int iter = starting_num; iter < num_examined; ++iter) {
             unsigned long long id1 = edges[iter].id1;
             unsigned long long id2 = edges[iter].id2;
             BinaryDataPtr databin = properties[iter];
-            std::string& data = databin->get_data();
+            string& data = databin->get_data();
             unsigned long long data_size = data.size();
 
-            str_append += std::string((char*)&id1, 8);
-            str_append += std::string((char*)&id2, 8);
-            str_append += std::string((char*)&data_size, 8);
+            str_append += string((char*)&id1, 8);
+            str_append += string((char*)&id2, 8);
+            str_append += string((char*)&data_size, 8);
             str_append += data;
         } 
 
         // put the data
         VertexSet failed_trans;
         VertexTransactions succ_trans;
-        put(graph_name, "propertytransaction/edges/" + key + "/", binary, succ_trans, failed_trans);
+        BinaryDataPtr result_binary = custom_request("/" + graph_name +
+                "/propertytransaction/edges/" + key, binary, POST);
+        size_t byte_pos = load_transactions_from_binary(result_binary->get_data(),
+            succ_trans, failed_trans);
 
         // update transaction ids for successful trans
         for (VertexTransactions::iterator iter = succ_trans.begin();
@@ -431,7 +370,7 @@ void DVIDNode::set_properties(std::string graph_name, std::vector<Edge>& edges,
 }
 
 // edge list is modified, just use a copy
-void DVIDNode::get_properties(std::string graph_name, std::vector<Edge> edges, std::string key,
+void DVIDNodeService::get_properties(string graph_name, std::vector<Edge> edges, string key,
             std::vector<BinaryDataPtr>& properties, VertexTransactions& transactions)
 {
     int num_examined = 0;
@@ -476,13 +415,13 @@ void DVIDNode::get_properties(std::string graph_name, std::vector<Edge> edges, s
             edge_array[pos] = edges[iter].id2;
             ++pos;
         }
-        std::string& str_append = transaction_binary->get_data();
-        str_append += std::string((char*)edge_array, (num_current_edges*2+1)*8);
+        string& str_append = transaction_binary->get_data();
+        str_append += string((char*)edge_array, (num_current_edges*2+1)*8);
         delete []edge_array;
 
         // get data associated with given graph and 'key'
-        BinaryDataPtr binary;
-        get(graph_name, "propertytransaction/edges/" + key + "/", binary, transaction_binary);
+        BinaryDataPtr binary = custom_request("/" + graph_name +
+                "/propertytransaction/edges/" + key + "/", transaction_binary, GET);
 
         VertexSet bad_vertices;
         size_t byte_pos = load_transactions_from_binary(binary->get_data(), transactions, bad_vertices);
@@ -523,7 +462,7 @@ void DVIDNode::get_properties(std::string graph_name, std::vector<Edge> edges, s
 }
 
 
-void DVIDNode::update_vertices(std::string graph_name, std::vector<Vertex>& vertices)
+void DVIDNodeService::update_vertices(string graph_name, std::vector<Vertex>& vertices)
 {
     int num_examined = 0;
 
@@ -539,11 +478,15 @@ void DVIDNode::update_vertices(std::string graph_name, std::vector<Vertex>& vert
         Json::Value data;
         graph.export_json(data);
 
-        put(graph_name, std::string("weight"), data);
+        stringstream datastr;
+        datastr << data;
+        BinaryDataPtr binary = BinaryData::create_binary_data(
+                datastr.str().c_str(), datastr.str().length());
+        custom_request("/" + graph_name + "/weight", binary, POST);
     }
 }
     
-void DVIDNode::update_edges(std::string graph_name, std::vector<Edge>& edges)
+void DVIDNodeService::update_edges(string graph_name, std::vector<Edge>& edges)
 {
 
     int num_examined = 0;
@@ -567,103 +510,172 @@ void DVIDNode::update_edges(std::string graph_name, std::vector<Edge>& edges)
         Json::Value data;
         graph.export_json(data);
 
-        put(graph_name, std::string("weight"), data);
+        stringstream datastr;
+        datastr << data;
+        BinaryDataPtr binary = BinaryData::create_binary_data(
+                datastr.str().c_str(), datastr.str().length());
+        custom_request("/" + graph_name + "/weight", binary, POST);
     }
 }
-   
-void DVIDNode::get_tile_slice(std::string datatype_instance, std::string dims,
-            unsigned int scaling, tuple tcoords,
-            png::image<png::gray_pixel>& image)
-{
-    int status_code;
-    client::response respdata;
 
-    std::string uri = web_addr.get_uri_root() + "node/" + uuid + "/" + 
-        datatype_instance + "/tile/" + dims + "/";
+// can use libjpeg by just doing jpeg_mem_src
+Grayscale2D DVIDNodeService::get_tile_slice(string datatype_instance, Dims2D dims,
+            unsigned int scaling, vector<unsigned int> tile_loc)
+{
+    BinaryDataPtr binary_response = get_tile_slice_binary(datatype_instance, dims, scaling, tile_loc);
+
+    // ?! process PNG, JPEG, RAW
+//    if (1) {
+        // retrieve PNG
+        string& png_image = binary_response->get_data();
+        std::istringstream sstr2(png_image);
+        png::image<png::gray_pixel> image;         
+        image.read(sstr2);
+    
+        Dims_t dim_size;
+        dim_size.push_back(image.get_width());
+        dim_size.push_back(image.get_height());
+        Grayscale2D grayimage(dim_size);
+
+        // ?! very inefficient
+        uint8* buffer = new uint8[image.get_width()*image.get_height()];
+        uint8* ptr = buffer;
+        for (int y = 0; y < image.get_height(); ++y) {
+            for (int x = 0; x < image.get_width(); ++x) {
+                *ptr = image[y][x];
+                ++ptr;
+            }
+        }
+        BinaryDataPtr buffer_binary = BinaryData::create_binary_data((const char*) buffer, image.get_width()*image.get_height());
+        grayimage.set_binary(buffer_binary);
+        return grayimage;
+//    }
+
+}
+
+// can use libjpeg by just doing jpeg_mem_src
+BinaryDataPtr DVIDNodeService::get_tile_slice_binary(string datatype_instance, Dims2D dims,
+            unsigned int scaling, vector<unsigned int> tile_loc)
+{
+    if (tile_loc.size() != 3) {
+        throw ErrMsg("Tile identification requires 3 numbers");
+    }
+
+    string tileplane = "XY";
+    if (dims == XZ) {
+        tileplane = "XZ";
+    } else if (dims == YZ) {
+        tileplane = "YZ";
+    }
+
+    string uri =  "/" + datatype_instance + "/tile/" + tileplane + "/";
     stringstream sstr;
     sstr << uri;
-    sstr << scaling << "/" << tcoords[0];
-    for (int i = 1; i < tcoords.size(); ++i) {
-        sstr << "_" << tcoords[i];
+    sstr << scaling << "/" << tile_loc[0];
+    for (int i = 1; i < tile_loc.size(); ++i) {
+        sstr << "_" << tile_loc[i];
     }
 
-    client::request requestobj(sstr.str());
-    requestobj << header("Connection", "close");
-    respdata = request_client.get(requestobj);
-    status_code = status(respdata);
+    string endpoint = sstr.str();
+    return custom_request(endpoint, BinaryDataPtr(), GET);
+}
+
+
+
+// ?! ignore byte buffer for now
+Grayscale3D DVIDNodeService::get_gray3D(string datatype_instance, Dims_t sizes,
+        vector<unsigned int> offset, vector<unsigned int> channels,
+        bool throttle, char* byte_buffer)
+{
+    BinaryDataPtr data = get_volume3D(datatype_instance,
+            sizes, offset, channels, throttle, byte_buffer);
     
-    if (status_code != 200) {
-        throw DVIDException(body(respdata), status_code);
-    }
-
-    // retrieve PNG
-    std::string png_image = body(respdata);
-    std::istringstream sstr2(png_image);
-    image.read(sstr2);
+    Grayscale3D grayvol(sizes);
+    grayvol.set_binary(data); 
+    return grayvol; 
 }
 
-void DVIDNode::get_tile_slice(std::string datatype_instance, std::string dims,
-            unsigned int scaling, tuple tcoords,
-            png::image<png::rgba_pixel_16>& image)
+
+Grayscale3D DVIDNodeService::get_gray3D(string datatype_instance, Dims_t sizes,
+        vector<unsigned int> offset, bool throttle, char* byte_buffer)
 {
-    int status_code;
-    client::response respdata;
+    vector<unsigned int> channels;
+    channels.push_back(0); channels.push_back(1); channels.push_back(2);
+    return get_gray3D(datatype_instance, sizes, offset, channels,
+            throttle, byte_buffer);
+}
 
-    std::string uri = web_addr.get_uri_root() + "node/" + uuid + "/" + 
-        datatype_instance + "/tile/" + dims + "/";
-    stringstream sstr;
-    sstr << uri;
-    sstr << scaling << "/" << tcoords[0];
-    for (int i = 1; i < tcoords.size(); ++i) {
-        sstr << "_" << tcoords[i];
-    }
-
-    client::request requestobj(sstr.str());
-    requestobj << header("Connection", "close");
-    respdata = request_client.get(requestobj);
-    status_code = status(respdata);
+Labels3D DVIDNodeService::get_labels3D(string datatype_instance, Dims_t sizes,
+        vector<unsigned int> offset, vector<unsigned int> channels,
+        bool throttle, char* byte_buffer)
+{
+    BinaryDataPtr data = get_volume3D(datatype_instance,
+            sizes, offset, channels, throttle, byte_buffer);
     
-    if (status_code != 200) {
-        throw DVIDException(body(respdata), status_code);
+    Labels3D labels(sizes);
+    labels.set_binary(data); 
+    return labels; 
+}
+
+Labels3D DVIDNodeService::get_labels3D(string datatype_instance, Dims_t sizes,
+        vector<unsigned int> offset, bool throttle, char* byte_buffer)
+{
+    vector<unsigned int> channels;
+    channels.push_back(0); channels.push_back(1); channels.push_back(2);
+    return get_labels3D(datatype_instance, sizes, offset, channels,
+            throttle, byte_buffer);
+}
+
+// ?! ignore use_blocks for now
+void DVIDNodeService::put_labels3D(string datatype_instance, Labels3D& volume,
+            vector<unsigned int> offset, bool throttle, bool use_blocks)
+{
+    Dims_t sizes = volume.get_dims();
+    put_volume(datatype_instance, volume.get_binary(), sizes, offset, throttle, use_blocks);
+}
+
+
+void DVIDNodeService::put_gray3D(string datatype_instance, Grayscale3D& volume,
+            vector<unsigned int> offset, bool throttle, bool use_blocks)
+{
+    Dims_t sizes = volume.get_dims();
+    put_volume(datatype_instance, volume.get_binary(), sizes, offset, throttle, use_blocks);
+}
+// ******************** PRIVATE *******************************
+
+
+void DVIDNodeService::put_volume(string datatype_instance, BinaryDataPtr volume,
+            vector<unsigned int> sizes, vector<unsigned int> offset,
+            bool throttle, bool use_blocks)
+{
+    if ((sizes.size() != 3) || (offset.size() != 3)) {
+        throw ErrMsg("Did not correctly specify 3D volume");
+    }
+    
+    if ((offset[0] % BLOCK_SIZE != 0) || (offset[1] % BLOCK_SIZE != 0)
+            || (offset[2] % BLOCK_SIZE != 0)) {
+        throw ErrMsg("Label POST error: Not block aligned");
     }
 
-    // retrieve PNG
-    std::string png_image = body(respdata);
-    std::istringstream sstr2(png_image);
-    image.read(sstr2);
-}
+    if ((sizes[0] % BLOCK_SIZE != 0) || (sizes[1] % BLOCK_SIZE != 0)
+            || (sizes[2] % BLOCK_SIZE != 0)) {
+        throw ErrMsg("Label POST error: Region is not a multiple of block size");
+    }
 
 
-void DVIDNode::get_volume_roi(std::string datatype_instance, tuple start,
-        tuple sizes, tuple channels, DVIDGrayPtr& gray, bool throttle)
-{
-    std::string volume;
-    retrieve_volume(datatype_instance, start, sizes, channels, volume, throttle);
-    gray = DVIDVoxels<unsigned char>::get_dvid_voxels(volume); 
-}
-
-void DVIDNode::get_volume_roi(std::string datatype_instance, tuple start,
-        tuple sizes, tuple channels, DVIDLabelPtr& labels, bool throttle)
-{
-    std::string volume;
-    retrieve_volume(datatype_instance, start, sizes, channels, volume, throttle);
-    labels = DVIDVoxels<unsigned long long>::get_dvid_voxels(volume); 
-}
-
-void DVIDNode::write_volume_roi(std::string datatype_instance, tuple start,
-        tuple sizes, tuple channels, BinaryDataPtr data, bool throttle)
-{
     bool waiting = true;
     int status_code;
-    client::response respdata;
+    string respdata;
+    vector<unsigned int> channels;
+    channels.push_back(0); channels.push_back(1); channels.push_back(2); 
 
     while (waiting) {
-        client::request requestobj(construct_volume_uri(
-                    datatype_instance, start, sizes, channels, throttle));
-        requestobj << header("Connection", "close");
-        respdata = request_client.post(requestobj,
-                data->get_data(), std::string("application/octet-stream"));
-        status_code = status(respdata);
+        string endpoint =  construct_volume_uri(
+                    datatype_instance, sizes, offset, channels, throttle);
+       
+        BinaryDataPtr binary_result = BinaryData::create_binary_data();
+        status_code = connection.make_request(endpoint, POST, volume,
+                binary_result, respdata, BINARY);
 
         // wait 1 second if the server is busy
         if (status_code == 503) {
@@ -674,16 +686,21 @@ void DVIDNode::write_volume_roi(std::string datatype_instance, tuple start,
     }
 
     if (status_code != 200) {
-        throw DVIDException(body(respdata), status_code);
-    }
+        throw DVIDException(respdata, status_code);
+    } 
 }
 
-std::string DVIDNode::construct_volume_uri(std::string datatype_inst, tuple start, tuple sizes, tuple channels, bool throttle)
+
+
+
+
+string DVIDNodeService::construct_volume_uri(string datatype_inst, Dims_t sizes,
+        vector<unsigned int> offset, vector<unsigned int> channels, bool throttle)
 {
-    std::string uri = web_addr.get_uri_root() + "node/" + uuid + "/"
+    string uri = "/node/" + uuid + "/"
                     + datatype_inst + "/raw/";
     
-    if (start.size() < 3) {
+    if (offset.size() < 3) {
         throw ErrMsg("libdvid does not support 2D datatype instances");
     }
     if (channels.size() == 0) {
@@ -721,9 +738,9 @@ std::string DVIDNode::construct_volume_uri(std::string datatype_inst, tuple star
     for (int i = 1; i < sizes.size(); ++i) {
         sstr << "_" << sizes[i];
     }
-    sstr << "/" << start[0];
-    for (int i = 1; i < start.size(); ++i) {
-        sstr << "_" << start[i];
+    sstr << "/" << offset[0];
+    for (int i = 1; i < offset.size(); ++i) {
+        sstr << "_" << offset[i];
     }
 
     if (throttle) {
@@ -732,17 +749,25 @@ std::string DVIDNode::construct_volume_uri(std::string datatype_inst, tuple star
     return sstr.str();
 }
 
-void DVIDNode::retrieve_volume(std::string datatype_inst, tuple start, tuple sizes, tuple channels, std::string& volume, bool throttle)
+BinaryDataPtr DVIDNodeService::get_volume3D(string datatype_inst, Dims_t sizes,
+        vector<unsigned int> offset, vector<unsigned int> channels,
+        bool throttle, char* byte_buffer)
 {
     bool waiting = true;
     int status_code;
-    client::response respdata;
+    BinaryDataPtr binary_result = BinaryData::create_binary_data(); 
+    string respdata;
+
+    if ((sizes.size() != 3) || (offset.size() != 3) ||
+            (channels.size() != 3)) {
+        throw ErrMsg("Did not correctly specify 3D volume");
+    }
 
     while (waiting) {
-        client::request requestobj(construct_volume_uri(datatype_inst, start, sizes, channels, throttle));
-        requestobj << header("Connection", "close");
-        respdata = request_client.get(requestobj);
-        status_code = status(respdata);
+        string endpoint = construct_volume_uri(datatype_inst, sizes, offset, channels, throttle);
+        status_code = connection.make_request(endpoint, GET, BinaryDataPtr(),
+                binary_result, respdata, BINARY);
+        
         // wait 1 second if the server is busy
         if (status_code == 503) {
             sleep(1);
@@ -752,18 +777,21 @@ void DVIDNode::retrieve_volume(std::string datatype_inst, tuple start, tuple siz
     }
     
     if (status_code != 200) {
-        throw DVIDException(body(respdata), status_code);
+        throw DVIDException(respdata, status_code);
     }
-    volume = body(respdata);
+
+    return binary_result;
 }
 
-bool DVIDNode::exists(std::string uri)
+
+bool DVIDNodeService::exists(string datatype_endpoint)
 { 
     try {
-        client::request requestobj(uri);
-        requestobj << header("Connection", "close");
-        client::response respdata = request_client.get(requestobj);
-        int status_code = status(respdata);
+        string respdata;
+        BinaryDataPtr binary = BinaryData::create_binary_data();
+        int status_code = connection.make_request(datatype_endpoint,
+                GET, BinaryDataPtr(), binary, respdata, DEFAULT);
+    
         if (status_code != 200) {
             return false;
         }
@@ -774,23 +802,22 @@ bool DVIDNode::exists(std::string uri)
     return true;
 }
 
-bool DVIDNode::create_datatype(std::string datatype, std::string datatype_name)
+bool DVIDNodeService::create_datatype(string datatype, string datatype_name)
 {
-    if (exists(web_addr.get_uri_root() + "node/" + uuid + "/" + datatype_name + "/info")) {
+    if (exists("/node/" + uuid + "/" + datatype_name + "/info")) {
         return false;
     } 
+    string endpoint = "/repo/" + uuid + "/instance";
+    string respdata;
+    string data = "{\"typename\": \"" + datatype + "\", \"dataname\": \"" + datatype_name + "\"}";
+    BinaryDataPtr payload = BinaryData::create_binary_data(data.c_str(), data.length());
+    BinaryDataPtr binary = BinaryData::create_binary_data();
+    
+    int status_code = connection.make_request(endpoint,
+            POST, payload, binary, respdata, JSON);
 
-    client::request requestobj(web_addr.get_uri_root() + "repo/" + uuid +
-            "/instance");
-    requestobj << header("Connection", "close");
-
-    std::string data = "{\"typename\": \"" + datatype + "\", \"dataname\": \"" + datatype_name + "\"}";
-
-    client::response respdata = request_client.post(requestobj,
-            data, std::string("application/json"));
-    int status_code = status(respdata);
     if (status_code != 200) {
-        throw DVIDException(body(respdata), status_code);
+        throw DVIDException(respdata, status_code);
     }
 
     return true;

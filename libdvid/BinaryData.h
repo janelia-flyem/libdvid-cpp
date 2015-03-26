@@ -9,6 +9,10 @@ namespace libdvid {
 
 typedef unsigned char byte;
 
+// TODO: consider using a char* and size variable instead
+// and allow users to pass in buffer for read and write while
+// maintaining ownership of the pointer in some use cases
+
 class BinaryData;
 typedef boost::shared_ptr<BinaryData> BinaryDataPtr;
 
@@ -17,6 +21,10 @@ class BinaryData {
     static BinaryDataPtr create_binary_data(const char* data_, unsigned int length)
     {
         return BinaryDataPtr(new BinaryData(data_, length));
+    }
+    static BinaryDataPtr create_binary_data()
+    {
+        return BinaryDataPtr(new BinaryData(0, 0));
     }
     static BinaryDataPtr create_binary_data(std::ifstream& fin)
     {

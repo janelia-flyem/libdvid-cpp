@@ -1,8 +1,12 @@
+#include <libdvid/DVIDServerService.h>
+#include <libdvid/DVIDNodeService.h>
+
 #include <iostream>
-#include <libdvid/DVIDNode.h>
+#include <vector>
 
 using std::cerr; using std::cout; using std::endl;
 using namespace libdvid;
+using std::vector;
 
 using std::string;
 
@@ -47,9 +51,9 @@ int main(int argc, char** argv)
         return -1;
     }
     try {
-        DVIDServer server(argv[1]);
+        DVIDServerService server(argv[1]);
         string uuid = server.create_new_repo("newrepo", "This is my new repo");
-        DVIDNode dvid_node(server, uuid);
+        DVIDNodeService dvid_node(argv[1], uuid);
     
         string gray_datatype_name = "gray1";
         // ** Test creation of DVID datatypes **
@@ -76,21 +80,20 @@ int main(int argc, char** argv)
         }
 
         // create binary data string wrapper (no meta-data for now -- must explicitly create)
-        BinaryDataPtr graybin = BinaryData::create_binary_data((char*)(img_gray),
-                BLK_SIZE*BLK_SIZE*BLK_SIZE);
-        tuple start; start.push_back(0); start.push_back(0); start.push_back(0);
-        tuple sizes; sizes.push_back(BLK_SIZE); sizes.push_back(BLK_SIZE); sizes.push_back(BLK_SIZE);
-        tuple channels; channels.push_back(0); channels.push_back(1); channels.push_back(2);
+        vector<unsigned int> start;
+        start.push_back(0); start.push_back(0); start.push_back(0);
+        Dims_t sizes; sizes.push_back(BLK_SIZE); sizes.push_back(BLK_SIZE); sizes.push_back(BLK_SIZE);
+        Grayscale3D graybin(img_gray, BLK_SIZE*BLK_SIZE*BLK_SIZE, sizes);
 
         // post grayscale volume
         // one could also write 2D image slices but the starting location must
         // be at least an ND point where N is greater than 2
-        dvid_node.write_volume_roi(gray_datatype_name, start, sizes, channels, graybin);
+        
+        dvid_node.put_gray3D(gray_datatype_name, graybin, start);
 
         // retrieve the image volume and make sure it makes the posted volume
-        DVIDGrayPtr graycomp;
-        dvid_node.get_volume_roi(gray_datatype_name, start, sizes, channels, graycomp);
-        unsigned char* datacomp = graycomp->get_raw();
+        Grayscale3D graycomp = dvid_node.get_gray3D(gray_datatype_name, sizes, start);
+        const unsigned char* datacomp = graycomp.get_raw();
         for (int i = 0; i < (BLK_SIZE*BLK_SIZE*BLK_SIZE); ++i) {
             if (datacomp[i] != img_gray[i]) {
                 cerr << "Read/write mismatch" << endl;

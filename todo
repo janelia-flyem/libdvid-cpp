@@ -1,3 +1,31 @@
+??:
+
+
+-same DVID uuid when within a second?
+-seems like volume gets and puts are faster (probably because less copying)
+-seems like small graph calls are slower (why) is boost just faster than curl
+-- but I am decoding one thousand JSON at a time, it should be the same speed
+if anything as before since there should be no extra copies ?? -- maybe 20%
+slower ?? -- not a lot slower -- they actually should be comparable 
+
+
+remove dependency on cppnetlib; probably faster because more efficient buffer copy in most cases; cleaner separation in services and connection; allow easy generic calls to node; better documentation; regression tests; load tests; eventually support for multiple compression schemes (efficient?); block protection; more idiomatic N-D type -- still weird; eventually python too; removed unnecesary parameters in calls 
+
+
+new order:
+
+-finish basic refactor (insert libcurl everywhere, implement new DVIDNodeService API, check unit tests, commit) -- read channels ??
+-add tiling load test (must specify UUID as well); do a check between RAW and tile at the end (like a unit test) -- parallel load test -- 9 tiles per plane for instance do a scroll test through the volume for speed (do the same for segmentation fetch) !! -- add paramaters to enable flexible testing
+-implement jpeg
+-add tests for everything (mock tile server?)
+-make sure .cmake is good
+-make a constants file with all of the supported endpoints and allow sprintf modification of UUID, etc -- easy to view documentation !!!! -- add version number of API, add connectype as well (GET, PUT, etc)
+-error checking (asserts, exceptions, warnings, etc)
+-add comments to the rest
+-replace string with char* ?? -- measure performance
+
+
+
 order:
 
 X-fix broken interface stuff

@@ -29,10 +29,16 @@ WriteMemoryCallback(void *contents, size_t size, size_t nmemb, void *userp)
 
 namespace libdvid {
     
-string DVIDConnection::DVID_PREFIX = "/api/";
+string DVIDConnection::DVID_PREFIX = "/api";
 
 DVIDConnection::DVIDConnection(string addr_) : addr(addr_)
 {
+    curl_connection = curl_easy_init();
+}
+
+DVIDConnection::DVIDConnection(const DVIDConnection& copy_connection)
+{
+    addr = copy_connection.addr;
     curl_connection = curl_easy_init();
 }
 

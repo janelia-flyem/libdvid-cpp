@@ -1,5 +1,7 @@
+#include <libdvid/DVIDServerService.h>
+#include <libdvid/DVIDNodeService.h>
+
 #include <iostream>
-#include <libdvid/DVIDNode.h>
 
 using std::cerr; using std::cout; using std::endl;
 using namespace libdvid;
@@ -11,9 +13,9 @@ int main(int argc, char** argv)
         return -1;
     }
     try {
-        DVIDServer server(argv[1]);
+        DVIDServerService server(argv[1]);
         std::string uuid = server.create_new_repo("newrepo", "This is my new repo");
-        DVIDNode dvid_node(server, uuid);
+        DVIDNodeService dvid_node(argv[1], uuid);
     } catch (std::exception& e) {
         cerr << e.what() << endl;
         return -1;

@@ -1,9 +1,12 @@
-#include <iostream>
-#include <libdvid/DVIDNode.h>
+#include <libdvid/DVIDNodeService.h>
+#include <libdvid/DVIDServerService.h>
 #include "ScopeTime.h"
+
+#include <iostream>
 
 using std::cerr; using std::cout; using std::endl;
 using namespace libdvid;
+using std::vector;
 
 using std::string;
 
@@ -27,9 +30,9 @@ int main(int argc, char** argv)
     }
     try {
         ScopeTime overall_time;
-        DVIDServer server(argv[1]);
+        DVIDServerService server(argv[1]);
         string uuid = server.create_new_repo("newrepo", "This is my new repo");
-        DVIDNode dvid_node(server, uuid);
+        DVIDNodeService dvid_node(argv[1], uuid);
    
         cout << "Large volume dimension: " << VOLDIM << endl;
         cout << "Small volume dimension: " << SMALLFETCH << endl;
@@ -49,17 +52,19 @@ int main(int argc, char** argv)
             img_labels[i] = rand() % 1000000;
         }
 
-        tuple channels; channels.push_back(0); channels.push_back(1); channels.push_back(2);
         // create binary data string wrapper (64 bits per pixel)
         {
-            BinaryDataPtr labelbin = BinaryData::create_binary_data((char*)(img_labels), VOLDIM * VOLDIM * VOLDIM*sizeof(unsigned long long));
+            Dims_t dims;
+            dims.push_back(VOLDIM); dims.push_back(VOLDIM); dims.push_back(VOLDIM); 
+            Labels3D labelbin = Labels3D(img_labels,
+                VOLDIM * VOLDIM * VOLDIM, dims);
             delete []img_labels;
 
-            tuple start; start.push_back(0); start.push_back(0); start.push_back(0);
-            tuple lsizes; lsizes.push_back(VOLDIM); lsizes.push_back(VOLDIM); lsizes.push_back(VOLDIM);
+            vector<unsigned int> start;
+            start.push_back(0); start.push_back(0); start.push_back(0);
 
             ScopeTime post_timer(false);
-            dvid_node.write_volume_roi(label_datatype_name, start, lsizes, channels, labelbin);
+            dvid_node.put_labels3D(label_datatype_name, labelbin, start);
             double post_time = post_timer.getElapsed();
             cout << "Time to POST large label volume: " << post_time << " seconds" << endl;
             cout << int(VOLDIM * VOLDIM * VOLDIM  * sizeof(unsigned long long) / post_time)
@@ -68,12 +73,13 @@ int main(int argc, char** argv)
 
         // retrieve the image volume and make sure it makes the posted volume
         {
-            tuple start; start.push_back(0); start.push_back(0); start.push_back(0);
-            tuple lsizes; lsizes.push_back(VOLDIM); lsizes.push_back(VOLDIM); lsizes.push_back(VOLDIM);
-
-            DVIDLabelPtr labelcomp;
+            vector<unsigned int> start;
+            start.push_back(0); start.push_back(0); start.push_back(0);
+            Dims_t lsizes;
+            lsizes.push_back(VOLDIM); lsizes.push_back(VOLDIM); lsizes.push_back(VOLDIM);
+            
             ScopeTime get_timer(false);
-            dvid_node.get_volume_roi(label_datatype_name, start, lsizes, channels, labelcomp);
+            Labels3D labelcomp = dvid_node.get_labels3D(label_datatype_name, lsizes, start);
             double read_time = get_timer.getElapsed();
             cout << "Time to GET large label volume: " << read_time << " seconds" << endl;
             cout << int(VOLDIM * VOLDIM * VOLDIM * sizeof(unsigned long long)/ read_time)
@@ -86,17 +92,17 @@ int main(int argc, char** argv)
             ScopeTime get_timer(false);
             int max_val = VOLDIM - SMALLFETCH + 1;
 
-            tuple start;
+            vector<unsigned int> start;
             start.push_back(rand()%max_val);
             start.push_back(rand()%max_val);
             start.push_back(rand()%max_val);
-            tuple lsizes;
+            vector<unsigned int> lsizes;
             lsizes.push_back(SMALLFETCH);
             lsizes.push_back(SMALLFETCH);
             lsizes.push_back(SMALLFETCH);
             
-            DVIDLabelPtr labelcomp;
-            dvid_node.get_volume_roi(label_datatype_name, start, lsizes, channels, labelcomp);
+            Labels3D labelcomp =
+                dvid_node.get_labels3D(label_datatype_name, lsizes, start);
 
             double read_time = get_timer.getElapsed();
             cout << "Time to GET small label volume: " << read_time << " seconds" << endl;

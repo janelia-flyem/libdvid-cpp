@@ -1,6 +1,7 @@
-#include <iostream>
-#include <libdvid/DVIDNode.h>
+#include <libdvid/DVIDServerService.h>
+#include <libdvid/DVIDNodeService.h>
 
+#include <iostream>
 using std::cerr; using std::cout; using std::endl;
 using namespace libdvid;
 using std::string;
@@ -15,9 +16,9 @@ int main(int argc, char** argv)
         return -1;
     }
     try {
-        DVIDServer server(argv[1]);
+        DVIDServerService server(argv[1]);
         std::string uuid = server.create_new_repo("newrepo", "This is my new repo");
-        DVIDNode dvid_node(server, uuid);
+        DVIDNodeService dvid_node(argv[1], uuid);
 
         // name of key to use        
         string keyvalue_datatype_name = "keys";
@@ -37,9 +38,8 @@ int main(int argc, char** argv)
         // Test key value interface
         Json::Value data_init;
         data_init["hello"] = "world"; 
-        dvid_node.put(keyvalue_datatype_name, "key/spot0", data_init); 
-        Json::Value data_ret; 
-        dvid_node.get(keyvalue_datatype_name, "key/spot0", data_ret);
+        dvid_node.put(keyvalue_datatype_name, "spot0", data_init); 
+        Json::Value data_ret = dvid_node.get_json(keyvalue_datatype_name, "spot0");
         std::string data_str = data_ret["hello"].asString();
         if (data_str != "world") {
             cerr << "Key value not stored properly" << endl;

@@ -1,12 +1,14 @@
 #ifndef DVIDGRAPH_H
 #define DVIDGRAPH_H
 
+#include "BinaryData.h"
+
 #include <vector>
 #include <tr1/unordered_map>
 #include <tr1/unordered_set>
 #include <json/json.h>
-#include "BinaryData.h"
 #include <boost/functional/hash.hpp>
+#include <json/json.h>
 
 namespace libdvid {
 
@@ -18,7 +20,8 @@ typedef unsigned long long TransactionID;
 struct Vertex {
     Vertex(VertexID id_, double weight_) : id(id_), weight(weight_) {}
     Vertex(Json::Value& data);
-    
+    Vertex(VertexID id_) : id(id_), weight(0) {}
+
     void export_json(Json::Value& data);
 
     VertexID id;

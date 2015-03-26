@@ -1,9 +1,13 @@
+#include <libdvid/DVIDServerService.h>
+#include <libdvid/DVIDNodeService.h>
+
 #include <iostream>
-#include <libdvid/DVIDNode.h>
+#include <vector>
 
 using std::cerr; using std::cout; using std::endl;
 using namespace libdvid;
 
+using std::vector;
 using std::string;
 
 // assume all blocks are BLK_SIZE in each dimension
@@ -32,9 +36,9 @@ int main(int argc, char** argv)
         return -1;
     }
     try {
-        DVIDServer server(argv[1]);
+        DVIDServerService server(argv[1]);
         string uuid = server.create_new_repo("newrepo", "This is my new repo");
-        DVIDNode dvid_node(server, uuid);
+        DVIDNodeService dvid_node(argv[1], uuid);
     
         string label_datatype_name = "labels1";
         // ** Test creation of DVID datatypes **
@@ -60,21 +64,19 @@ int main(int argc, char** argv)
         }
 
         // create binary data string wrapper (64 bits per pixel)
-        BinaryDataPtr labelbin = BinaryData::create_binary_data((char*)(img_labels), BLK_SIZE*BLK_SIZE*BLK_SIZE*sizeof(unsigned long long));
-        
-        tuple start; start.push_back(0); start.push_back(0); start.push_back(0);
-        tuple channels; channels.push_back(0); channels.push_back(1); channels.push_back(2);
+        vector<unsigned int> start; start.push_back(0); start.push_back(0); start.push_back(0);
 
         // post labels volume
         // one could also write 2D image slices but the starting location must
         // be at least an ND point where N is greater than 2
-        tuple lsizes; lsizes.push_back(BLK_SIZE); lsizes.push_back(BLK_SIZE); lsizes.push_back(BLK_SIZE);
-        dvid_node.write_volume_roi(label_datatype_name, start, lsizes, channels, labelbin);
+        Dims_t lsizes; lsizes.push_back(BLK_SIZE); lsizes.push_back(BLK_SIZE); lsizes.push_back(BLK_SIZE);
+        Labels3D labelsbin(img_labels, BLK_SIZE*BLK_SIZE*BLK_SIZE, lsizes);
+        dvid_node.put_labels3D(label_datatype_name, labelsbin, start);
 
         // retrieve the image volume and make sure it makes the posted volume
-        DVIDLabelPtr labelcomp;
-        dvid_node.get_volume_roi(label_datatype_name, start, lsizes, channels, labelcomp);
-        unsigned long long* labeldatacomp = labelcomp->get_raw();
+        Labels3D labelcomp = dvid_node.get_labels3D(label_datatype_name, lsizes, start);
+        
+        const unsigned long long* labeldatacomp = labelcomp.get_raw();
         for (int i = 0; i < BLK_SIZE*BLK_SIZE*BLK_SIZE; ++i) {
             if (labeldatacomp[i] != img_labels[i]) {
                 cerr << "Read/write mismatch" << endl;

@@ -1,5 +1,7 @@
+#include <libdvid/DVIDServerService.h>
+#include <libdvid/DVIDNodeService.h>
+
 #include <iostream>
-#include <libdvid/DVIDNode.h>
 #include <vector>
 
 using std::cerr; using std::cout; using std::endl;
@@ -17,9 +19,9 @@ int main(int argc, char** argv)
         return -1;
     }
     try {
-        DVIDServer server(argv[1]);
+        DVIDServerService server(argv[1]);
         std::string uuid = server.create_new_repo("newrepo", "This is my new repo");
-        DVIDNode dvid_node(server, uuid);
+        DVIDNodeService dvid_node(argv[1], uuid);
 
         // name of graph to use        
         string graph_datatype_name = "graphtest";
