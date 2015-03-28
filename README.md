@@ -1,81 +1,94 @@
 # libdvid-cpp [![Picture](https://raw.github.com/janelia-flyem/janelia-flyem.github.com/master/images/gray_janelia_logo.png)](http://janelia.org/)
 
-libdvid-cpp provides a c++ wrapper to HTTP calls to [DVID](https://github.com/janelia-flyem/dvid).
-It exposes only part of the DVID REST API allowing the setting and
-retrieving of nd-data and key-value pairs.
+libdvid-cpp provides a c++ wrapper to HTTP calls to
+[DVID](https://github.com/janelia-flyem/dvid).
+It exposes only part of the DVID REST API.  Extra functionality
+will be added as needed.
 
 ## Installation
 
-The primary dependencies are Boost (>=1.54), cpp-netlib, and jsoncpp.  These dependencies are
-resolved automatically if building with [buildem](https://github.com/janelia-flyem/buildem).
+The primary dependencies are:
 
-There are two preferred ways to build libdvid-cpp both use buildem: 1) build the library directly using buildem (see following) or 2) build the library as a buildem dependency when building your application (see next section).
+* Boost
+* [jsoncpp](https://github.com/open-source-parsers/jsoncpp.git)
+* libpng
+* libcurl
 
-### buildem installation
-    
-    % mkdir build; cd build;
-    % cmake .. -DBUILDEM_DIR=/user-defined/path/to/build/directory
-    % make -j num_processors
+### standalone installation
 
-This will install the libray to ${BUILDEM_DIR}/lib and cmake modules to ${BUILDEM_DIR}/lib/libdvid.
-
-### stand-alone installation
+To install libdvid:
 
     % mkdir build; cd build;
     % cmake ..
     % make; make install
 
-cpp-netlib must be installed and in the cmake search path.  jsoncpp must also be installed.
+This will install the library libdvidcpp.a.
+
+### buildem instanllation
+
+We also enable installation using [buildem](https://github.com/janelia-flyem/buildem).
+Buildem automatically builds all of libdvid dependencies and installs
+the library to ${BUILDEM_DIR}/lib and cmake modules to ${BUILDEM_DIR}/lib/libdvid. 
+The downside are that programs that use the library must be built
+in this environment.
+
+    % mkdir build; cd build;
+    % cmake .. -DBUILDEM_DIR=/user-defined/path/to/build/directory
+    % make -j num_processors
+
 
 ## Building an application
 
-It would be trivial to install and use libdvid-cpp except that the cppnetlib dependency requires
-a version of boost that might be newer than currently installed on most machines.  If building a
-newer version of boost is impractical, definitely install with buildem.  Once the library
-is built, linking it to myapp.cpp can be done by the following steps
+Building an application is easy with libdvid.  The following shows the libraries
+that need to be linked:
 
-    % g++ -I{BUILDEM_DIR}/include -L${BUILDEM_DIR}/lib -L${BUILDEM_DIR}/lib64 myapp.cpp -ldvidcpp -ljsoncpp -lcppnetlib-uri -lcppnetlib-client-connections -lcppnetlib-server-parsers  -lboost_system -lboost_thread -lssl -lcrypto
-    % export LD_LIBRARY_PATH=${BUILDEM_DIR}/lib:${BUILDEM_DIR}/lib64
+    % g++ myapp.cpp -ldvidcpp -ljsoncpp -lboost_system -lpng -lcurl
 
-## Building an application with CMAKE
-
-There are two recommended ways for linking lidvid-cpp.  Both are demonstrated in *example/CmakeLists.txt*.  Once libdvid-cpp is found or loaded the following should be added to your CMakeLists.txt:
-
-    % include_directories(${LIBDVIDCPP_INCLUDE_DIRS})
-    % target_link_libraries(MYAPP ${LIBLOC}/libjsoncpp.so ${LIBDVIDCPP_LIBRARIES} ${CPPNETLIB_LIBRARIES} ${LIBLOC}/libboost_system.so ${LIBLOC}/libboost_thread.so ${LIBLOC}/libssl.so ${LIBLOC}/libcrypto.so
-
-Where MYAPP is the app you are building and LIBLOC is the location(s) of the listed libraries.
-
-### Find with CMake
-
-Add the following lines to your CMakelists.txt file
-
-    % find_package ( cppnetlib 0.11.0 REQUIRED )
-    % find_package ( libdvidcpp 0.1.0 REQUIRED )
+libdvid works well with cmake.  To find the package, add the following to the cmake file:
     
-### buildem application
+    % find_package ( libdvidcpp )
 
-Follow the documentation in [buildem](https://github.com/janelia-flyem/buildem) and the example in this package to load buildem and add the following lines your CMakeLists.txt:
+libdvid also has Buildem bindings.  When building a Buildem application,
+add the following to the cmake file:
     
-    % set (LIBLOC ${BUILDEM_DIR}/lib) 
-    % include (cppnetlib)
     % include (libdvidcpp)
-    % add_dependencies (MYAPP ${libdvidcpp_NAME} ${cppnetlib_NAME})
-    
-The advantage of this approach is that you never have to explicitly build libdvid-cpp.  It is automatically built by buildem as an explicit dependency of your application.
-    
-## Example application
 
-Consult the application in *example* to see many of the API features exercised.  Applications should include \<libdvid/DVIDNode.h\>.  The API requires the creation of a DVID server type and a DVID node type corresponding to the htpp address where DVID is running and the UUID for the version of the desired repository.  Beyond this state, all API calls are stateless.
-    
+
+## Overview of Library
+DVID provides an HTTP REST interface.  There is a concept of DVID server
+that hosts several repositories (or datasets).  Each repository, contains
+several different version nodes.  This is analogous to GIT except that
+each version node contains different datatypes with specific interfaces.
+
+libdvid implements an API for the different types of DVID interface.  Currently,
+it supports DVIDServerService and DVIDNodeService to access some REST
+calls at the server level and version node level respectively.  For example,
+libdvid can call the DVID server through the server service to
+create a new repository.
+
+    %  DVIDServerService server(http://mydvidserver);
+    %  string uuid = server.create_new_repo("newrepo", "This is my new repo");
+
+For some simple examples of using libdvid, please review *tests/*.  For
+detailed explanation of available API, please examined DVIDNodeService.h
+and DVIDServerService.h.
+
+*(Note: To use this library in a multi-threaded environment,
+instantiate a new service variable for each thread)*
+   
+## Testing the Package
+libdvid contains unit tests under *tests/* and load tests under *load_tests/*.
+The unit tests can be run by:
+
+    % cd make
+    % make test
+
+A DVID server needs to be running on 127.0.0.1:8000.  It is important
+that the libdvid installation matches the DVID installation.
+
 ## TODO
 
-* Add test regressions and more documentation
-* Improve performance of streaming large amounts of data by eliminating unnecessary copying.
-* Expand support to more datatype instances in DVID (like sparse volumes) and handling DVID meta-data
-* Simpler package linking
+* Add Python bindings
 
-## Notes
-    
-* Will not work if datatype instance is 2D (all requests for 2D use the DVID ND interface)
-* Currently communicates using uncompressed binary streams
+* Expand support to more datatype instances in DVID (like sparse volumes) and handling DVID meta-data
+

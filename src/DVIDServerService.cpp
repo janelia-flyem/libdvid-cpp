@@ -49,7 +49,6 @@ std::string DVIDServerService::create_new_repo(std::string alias, std::string de
     }
 
     return jdata["root"].asString();
-
 }
 
 }

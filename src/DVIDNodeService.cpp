@@ -10,11 +10,13 @@ using std::string; using std::vector;
 using std::ifstream; using std::set; using std::stringstream;
 //Json::Reader json_reader;
 
+//! Gives the limit for how many vertice can be operated on in one call
 static const int TransactionLimit = 1000;
-static const int BLOCK_SIZE = 32; // ?! dynamically determine
+
+//! The size of the DVID block (TODO: set dynamically)
+static const int BLOCK_SIZE = 32; 
 
 namespace libdvid {
-
 
 DVIDNodeService::DVIDNodeService(string web_addr_, UUID uuid_) :
     connection(web_addr_), uuid(uuid_)
@@ -49,10 +51,13 @@ bool DVIDNodeService::create_graph(string graph_name)
     return create_datatype("labelgraph", graph_name);
 }
 
-// ?! check for initial '/'
-BinaryDataPtr DVIDNodeService::custom_request(string endpoint, BinaryDataPtr payload,
-        ConnectionMethod method)
+BinaryDataPtr DVIDNodeService::custom_request(string endpoint,
+        BinaryDataPtr payload, ConnectionMethod method)
 {
+    // append '/' to the endpoint if it is not provided
+    if (!endpoint.empty() && (endpoint[0] != '/')) {
+        endpoint = '/' + endpoint;
+    }
     string respdata;
     string node_endpoint = "/node/" + uuid + endpoint;
     BinaryDataPtr resp_binary = BinaryData::create_binary_data();
@@ -65,7 +70,6 @@ BinaryDataPtr DVIDNodeService::custom_request(string endpoint, BinaryDataPtr pay
     return resp_binary; 
 }
 
-
 void DVIDNodeService::put(string keyvalue, string key, ifstream& fin)
 {
     BinaryDataPtr data = BinaryData::create_binary_data(fin);
@@ -77,7 +81,8 @@ void DVIDNodeService::put(string keyvalue, string key, Json::Value& data)
 {
     stringstream datastr;
     datastr << data;
-    BinaryDataPtr bdata = BinaryData::create_binary_data(datastr.str().c_str(), datastr.str().length());
+    BinaryDataPtr bdata = BinaryData::create_binary_data(datastr.str().c_str(),
+            datastr.str().length());
     put(keyvalue, key, bdata);
 }
 
@@ -92,7 +97,8 @@ void DVIDNodeService::put(string keyvalue, string key, BinaryDataPtr value)
 Json::Value DVIDNodeService::get_json(string keyvalue, string key)
 {
     BinaryDataPtr binary = get(keyvalue, key);
-    
+   
+    // read into json from binary string 
     Json::Value data;
     Json::Reader json_reader;
     if (!json_reader.parse(binary->get_data(), data)) {
@@ -110,13 +116,13 @@ Json::Value DVIDNodeService::get_typeinfo(string datatype_name)
 {
     BinaryDataPtr binary = custom_request("/info", BinaryDataPtr(), GET);
    
+    // read into json from binary string 
     Json::Value data;
     Json::Reader json_reader;
     if (!json_reader.parse(binary->get_data(), data)) {
         throw ErrMsg("Could not decode JSON");
     }
 }
-
 
 void DVIDNodeService::get_subgraph(string graph_name,
         const std::vector<Vertex>& vertices, Graph& graph)
@@ -136,7 +142,8 @@ void DVIDNodeService::get_subgraph(string graph_name,
 
     BinaryDataPtr binary = custom_request("/" + graph_name + "/subgraph",
            binary_data, GET);
-    
+
+    // read json from binary string into graph    
     Json::Reader json_reader;
     Json::Value returned_data;
     if (!json_reader.parse(binary->get_data(), returned_data)) {
@@ -154,6 +161,7 @@ void DVIDNodeService::get_vertex_neighbors(string graph_name, Vertex vertex,
     BinaryDataPtr binary = custom_request("/" + graph_name + uri_ending.str(),
             BinaryDataPtr(), GET);
     
+    // read into json from binary string 
     Json::Reader json_reader;
     Json::Value data;
     if (!json_reader.parse(binary->get_data(), data)) {
@@ -161,7 +169,6 @@ void DVIDNodeService::get_vertex_neighbors(string graph_name, Vertex vertex,
     }
     graph.import_json(data);
 }
-
 
 // vertex list is modified, just use a copy
 void DVIDNodeService::get_properties(string graph_name, std::vector<Vertex> vertices, string key,
@@ -500,7 +507,10 @@ void DVIDNodeService::update_edges(string graph_name,
         
         for (; num_examined < edges.size(); ++num_examined) {
             // break if it is not possible to add another edge transaction
-            // (assuming that both vertices of that edge will be new vertices)
+            // (assuming that both vertices of that edge will be new vertices
+            // for simplicity
+            // for simplicity
+            // for simplicity)
             if (examined_vertices.size() >= (TransactionLimit - 1)) {
                 break;
             }
@@ -522,14 +532,13 @@ void DVIDNodeService::update_edges(string graph_name,
     }
 }
 
-// can use libjpeg by just doing jpeg_mem_src
+// ?! add JPEG support (can use libjpeg by just doing jpeg_mem_src)
 Grayscale2D DVIDNodeService::get_tile_slice(string datatype_instance, Slice2D slice,
             unsigned int scaling, vector<unsigned int> tile_loc)
 {
     BinaryDataPtr binary_response = get_tile_slice_binary(datatype_instance,
             slice, scaling, tile_loc);
 
-    // ?! process PNG, JPEG, RAW
 //    if (1) {
         // retrieve PNG
         string& png_image = binary_response->get_data();
@@ -541,7 +550,7 @@ Grayscale2D DVIDNodeService::get_tile_slice(string datatype_instance, Slice2D sl
         dim_size.push_back(image.get_width());
         dim_size.push_back(image.get_height());
 
-        // ?! very inefficient
+        // inefficient extra copy into binary buffer
         uint8* buffer = new uint8[image.get_width()*image.get_height()];
         uint8* ptr = buffer;
         for (int y = 0; y < image.get_height(); ++y) {
@@ -557,7 +566,6 @@ Grayscale2D DVIDNodeService::get_tile_slice(string datatype_instance, Slice2D sl
 
 }
 
-// can use libjpeg by just doing jpeg_mem_src
 BinaryDataPtr DVIDNodeService::get_tile_slice_binary(string datatype_instance, Slice2D slice,
             unsigned int scaling, vector<unsigned int> tile_loc)
 {
@@ -585,8 +593,6 @@ BinaryDataPtr DVIDNodeService::get_tile_slice_binary(string datatype_instance, S
 }
 
 
-
-// ?! ignore byte buffer for now
 Grayscale3D DVIDNodeService::get_gray3D(string datatype_instance, Dims_t sizes,
         vector<unsigned int> offset, vector<unsigned int> channels,
         bool throttle)
@@ -642,13 +648,14 @@ void DVIDNodeService::put_gray3D(string datatype_instance, Grayscale3D& volume,
     Dims_t sizes = volume.get_dims();
     put_volume(datatype_instance, volume.get_binary(), sizes, offset, throttle);
 }
-// ******************** PRIVATE *******************************
 
+// ******************** PRIVATE HELPER FUNCTIONS *******************************
 
 void DVIDNodeService::put_volume(string datatype_instance, BinaryDataPtr volume,
             vector<unsigned int> sizes, vector<unsigned int> offset,
             bool throttle)
 {
+    // make sure volume specified is legal and block aligned
     if ((sizes.size() != 3) || (offset.size() != 3)) {
         throw ErrMsg("Did not correctly specify 3D volume");
     }
@@ -663,13 +670,13 @@ void DVIDNodeService::put_volume(string datatype_instance, BinaryDataPtr volume,
         throw ErrMsg("Label POST error: Region is not a multiple of block size");
     }
 
-
     bool waiting = true;
     int status_code;
     string respdata;
     vector<unsigned int> channels;
     channels.push_back(0); channels.push_back(1); channels.push_back(2); 
 
+    // try posting until DVID is available (no contention)
     while (waiting) {
         string endpoint =  construct_volume_uri(
                     datatype_instance, sizes, offset, channels, throttle);
@@ -691,22 +698,13 @@ void DVIDNodeService::put_volume(string datatype_instance, BinaryDataPtr volume,
     } 
 }
 
-
-
-
-
 string DVIDNodeService::construct_volume_uri(string datatype_inst, Dims_t sizes,
         vector<unsigned int> offset, vector<unsigned int> channels, bool throttle)
 {
     string uri = "/node/" + uuid + "/"
                     + datatype_inst + "/raw/";
-    
-    if (offset.size() < 3) {
-        throw ErrMsg("libdvid does not support 2D datatype instances");
-    }
-    if (channels.size() == 0) {
-        throw ErrMsg("must specify more than one channel");
-    }
+   
+    // verifies the legality of the call 
     if (sizes.size() != channels.size()) {
         throw ErrMsg("number of size dimensions does not match the number of channels");
     }
@@ -759,11 +757,13 @@ BinaryDataPtr DVIDNodeService::get_volume3D(string datatype_inst, Dims_t sizes,
     BinaryDataPtr binary_result = BinaryData::create_binary_data(); 
     string respdata;
 
+    // ensure volume is 3D
     if ((sizes.size() != 3) || (offset.size() != 3) ||
             (channels.size() != 3)) {
         throw ErrMsg("Did not correctly specify 3D volume");
     }
 
+    // try get until DVID is available (no contention)
     while (waiting) {
         string endpoint = construct_volume_uri(datatype_inst, sizes, offset, channels, throttle);
         status_code = connection.make_request(endpoint, GET, BinaryDataPtr(),
@@ -783,7 +783,6 @@ BinaryDataPtr DVIDNodeService::get_volume3D(string datatype_inst, Dims_t sizes,
 
     return binary_result;
 }
-
 
 bool DVIDNodeService::exists(string datatype_endpoint)
 { 
@@ -810,6 +809,8 @@ bool DVIDNodeService::create_datatype(string datatype, string datatype_name)
     } 
     string endpoint = "/repo/" + uuid + "/instance";
     string respdata;
+
+    // serialize as a JSON string
     string data = "{\"typename\": \"" + datatype + "\", \"dataname\": \"" + datatype_name + "\"}";
     BinaryDataPtr payload = BinaryData::create_binary_data(data.c_str(), data.length());
     BinaryDataPtr binary = BinaryData::create_binary_data();

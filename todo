@@ -1,37 +1,27 @@
--documentation, add some error checking, doxygen
 -implement jpeg / refactor image handling
--is DVID UUID the same within a second; fix error printing for libcurl
+-is DVID UUID the same within a second; fix error printing for libcurl; fix error for deleting curl
 -add check for jpeg / png correctness in load test
 -lz4 for grayscale and labels
 -add load test for volume gets using compression
 -simple block get and put (need structure for array of blocks -- very simple include of binaryptr and that is it -- can typedef blocksize there)
--make a constants file with all of the supported endpoints and allow sprintf modification of UUID, etc -- easy to view documentation !!!! -- add version number of API, add connectype as well (GET, PUT, etc)
--fix c++ warnings and memory leaks
+-fix c++ warnings and any memory leaks
 -fix buildem, jsoncpp for 64 bit, etc
 
--broadcast
+-private broadcast
 
 -add better parameters for the load test
 -improve test coverage
 -incorporate user opinions
+-support ROI
 -python bindings
 -python tests
 -API versioning and checking
 
--public broadcast
+-public release
 
 -create a repo service
 -add metadata parsing -- add meta information in service memory
--support ROI
+-make a constants file with all of the supported endpoints and allow sprintf modification of UUID, etc -- add version number of API, add transaction limit, add connectype as well (GET, PUT, etc)? -- do not document, refer users to service APIs for more details
 -fast user buffer support
-
-
-
-
-
-
-
-
-
 
 
