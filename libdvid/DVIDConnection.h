@@ -31,7 +31,7 @@ enum ConnectionType {DEFAULT, JSON, BINARY};
  * for multiple threads.  Users should instantiate multiple services
  * to access DVID rather than reusing the same one.  This problem will
  * be fixed when the curl connection is given thread-level scope as
- * available in c++11.
+ * available in C++11.
 */
 class DVIDConnection {
   public:

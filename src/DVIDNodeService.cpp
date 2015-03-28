@@ -49,7 +49,7 @@ bool DVIDNodeService::create_graph(string graph_name)
     return create_datatype("labelgraph", graph_name);
 }
 
-
+// ?! check for initial '/'
 BinaryDataPtr DVIDNodeService::custom_request(string endpoint, BinaryDataPtr payload,
         ConnectionMethod method)
 {
@@ -118,7 +118,8 @@ Json::Value DVIDNodeService::get_typeinfo(string datatype_name)
 }
 
 
-void DVIDNodeService::get_subgraph(string graph_name, std::vector<Vertex>& vertices, Graph& graph)
+void DVIDNodeService::get_subgraph(string graph_name,
+        const std::vector<Vertex>& vertices, Graph& graph)
 {
     // make temporary graph for query
     Graph temp_graph;
@@ -144,7 +145,8 @@ void DVIDNodeService::get_subgraph(string graph_name, std::vector<Vertex>& verti
     graph.import_json(returned_data);
 }
 
-void DVIDNodeService::get_vertex_neighbors(string graph_name, Vertex vertex, Graph& graph)
+void DVIDNodeService::get_vertex_neighbors(string graph_name, Vertex vertex,
+        Graph& graph)
 {
     stringstream uri_ending;
     uri_ending << "/neighbors/" << vertex.id;
@@ -213,7 +215,7 @@ void DVIDNodeService::get_properties(string graph_name, std::vector<Vertex> vert
         }
 
         // load properties
-        unsigned char* bytearray = binary->get_raw();
+        const unsigned char* bytearray = binary->get_raw();
        
         // get number of properties
         unsigned long long* num_transactions = (unsigned long long *)(bytearray+byte_pos);
@@ -436,7 +438,7 @@ void DVIDNodeService::get_properties(string graph_name, std::vector<Edge> edges,
         }
         
         // load properties
-        unsigned char* bytearray = binary->get_raw();
+        const unsigned char* bytearray = binary->get_raw();
         
         // get number of properties
         unsigned long long* num_transactions = (unsigned long long *)(bytearray+byte_pos);
@@ -462,7 +464,8 @@ void DVIDNodeService::get_properties(string graph_name, std::vector<Edge> edges,
 }
 
 
-void DVIDNodeService::update_vertices(string graph_name, std::vector<Vertex>& vertices)
+void DVIDNodeService::update_vertices(string graph_name,
+        const std::vector<Vertex>& vertices)
 {
     int num_examined = 0;
 
@@ -486,7 +489,8 @@ void DVIDNodeService::update_vertices(string graph_name, std::vector<Vertex>& ve
     }
 }
     
-void DVIDNodeService::update_edges(string graph_name, std::vector<Edge>& edges)
+void DVIDNodeService::update_edges(string graph_name,
+        const std::vector<Edge>& edges)
 {
 
     int num_examined = 0;
@@ -519,10 +523,11 @@ void DVIDNodeService::update_edges(string graph_name, std::vector<Edge>& edges)
 }
 
 // can use libjpeg by just doing jpeg_mem_src
-Grayscale2D DVIDNodeService::get_tile_slice(string datatype_instance, Dims2D dims,
+Grayscale2D DVIDNodeService::get_tile_slice(string datatype_instance, Slice2D slice,
             unsigned int scaling, vector<unsigned int> tile_loc)
 {
-    BinaryDataPtr binary_response = get_tile_slice_binary(datatype_instance, dims, scaling, tile_loc);
+    BinaryDataPtr binary_response = get_tile_slice_binary(datatype_instance,
+            slice, scaling, tile_loc);
 
     // ?! process PNG, JPEG, RAW
 //    if (1) {
@@ -535,7 +540,6 @@ Grayscale2D DVIDNodeService::get_tile_slice(string datatype_instance, Dims2D dim
         Dims_t dim_size;
         dim_size.push_back(image.get_width());
         dim_size.push_back(image.get_height());
-        Grayscale2D grayimage(dim_size);
 
         // ?! very inefficient
         uint8* buffer = new uint8[image.get_width()*image.get_height()];
@@ -547,14 +551,14 @@ Grayscale2D DVIDNodeService::get_tile_slice(string datatype_instance, Dims2D dim
             }
         }
         BinaryDataPtr buffer_binary = BinaryData::create_binary_data((const char*) buffer, image.get_width()*image.get_height());
-        grayimage.set_binary(buffer_binary);
+        Grayscale2D grayimage(buffer_binary, dim_size);
         return grayimage;
 //    }
 
 }
 
 // can use libjpeg by just doing jpeg_mem_src
-BinaryDataPtr DVIDNodeService::get_tile_slice_binary(string datatype_instance, Dims2D dims,
+BinaryDataPtr DVIDNodeService::get_tile_slice_binary(string datatype_instance, Slice2D slice,
             unsigned int scaling, vector<unsigned int> tile_loc)
 {
     if (tile_loc.size() != 3) {
@@ -562,9 +566,9 @@ BinaryDataPtr DVIDNodeService::get_tile_slice_binary(string datatype_instance, D
     }
 
     string tileplane = "XY";
-    if (dims == XZ) {
+    if (slice == XZ) {
         tileplane = "XZ";
-    } else if (dims == YZ) {
+    } else if (slice == YZ) {
         tileplane = "YZ";
     }
 
@@ -585,68 +589,65 @@ BinaryDataPtr DVIDNodeService::get_tile_slice_binary(string datatype_instance, D
 // ?! ignore byte buffer for now
 Grayscale3D DVIDNodeService::get_gray3D(string datatype_instance, Dims_t sizes,
         vector<unsigned int> offset, vector<unsigned int> channels,
-        bool throttle, char* byte_buffer)
+        bool throttle)
 {
     BinaryDataPtr data = get_volume3D(datatype_instance,
-            sizes, offset, channels, throttle, byte_buffer);
+            sizes, offset, channels, throttle);
     
-    Grayscale3D grayvol(sizes);
-    grayvol.set_binary(data); 
+    Grayscale3D grayvol(data, sizes);
     return grayvol; 
 }
 
 
 Grayscale3D DVIDNodeService::get_gray3D(string datatype_instance, Dims_t sizes,
-        vector<unsigned int> offset, bool throttle, char* byte_buffer)
+        vector<unsigned int> offset, bool throttle)
 {
     vector<unsigned int> channels;
     channels.push_back(0); channels.push_back(1); channels.push_back(2);
     return get_gray3D(datatype_instance, sizes, offset, channels,
-            throttle, byte_buffer);
+            throttle);
 }
 
 Labels3D DVIDNodeService::get_labels3D(string datatype_instance, Dims_t sizes,
         vector<unsigned int> offset, vector<unsigned int> channels,
-        bool throttle, char* byte_buffer)
+        bool throttle)
 {
     BinaryDataPtr data = get_volume3D(datatype_instance,
-            sizes, offset, channels, throttle, byte_buffer);
+            sizes, offset, channels, throttle);
     
-    Labels3D labels(sizes);
-    labels.set_binary(data); 
+    Labels3D labels(data, sizes);
     return labels; 
 }
 
 Labels3D DVIDNodeService::get_labels3D(string datatype_instance, Dims_t sizes,
-        vector<unsigned int> offset, bool throttle, char* byte_buffer)
+        vector<unsigned int> offset, bool throttle)
 {
     vector<unsigned int> channels;
     channels.push_back(0); channels.push_back(1); channels.push_back(2);
     return get_labels3D(datatype_instance, sizes, offset, channels,
-            throttle, byte_buffer);
+            throttle);
 }
 
-// ?! ignore use_blocks for now
 void DVIDNodeService::put_labels3D(string datatype_instance, Labels3D& volume,
-            vector<unsigned int> offset, bool throttle, bool use_blocks)
+            vector<unsigned int> offset, bool throttle)
 {
     Dims_t sizes = volume.get_dims();
-    put_volume(datatype_instance, volume.get_binary(), sizes, offset, throttle, use_blocks);
+    put_volume(datatype_instance, volume.get_binary(), sizes, offset, throttle);
 }
 
 
 void DVIDNodeService::put_gray3D(string datatype_instance, Grayscale3D& volume,
-            vector<unsigned int> offset, bool throttle, bool use_blocks)
+            vector<unsigned int> offset, bool throttle)
 {
     Dims_t sizes = volume.get_dims();
-    put_volume(datatype_instance, volume.get_binary(), sizes, offset, throttle, use_blocks);
+    put_volume(datatype_instance, volume.get_binary(), sizes, offset, throttle);
 }
 // ******************** PRIVATE *******************************
 
 
 void DVIDNodeService::put_volume(string datatype_instance, BinaryDataPtr volume,
             vector<unsigned int> sizes, vector<unsigned int> offset,
-            bool throttle, bool use_blocks)
+            bool throttle)
 {
     if ((sizes.size() != 3) || (offset.size() != 3)) {
         throw ErrMsg("Did not correctly specify 3D volume");
@@ -751,7 +752,7 @@ string DVIDNodeService::construct_volume_uri(string datatype_inst, Dims_t sizes,
 
 BinaryDataPtr DVIDNodeService::get_volume3D(string datatype_inst, Dims_t sizes,
         vector<unsigned int> offset, vector<unsigned int> channels,
-        bool throttle, char* byte_buffer)
+        bool throttle)
 {
     bool waiting = true;
     int status_code;

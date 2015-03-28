@@ -6,27 +6,27 @@ namespace libdvid {
 
 Vertex::Vertex(Json::Value& data)
 {
-    id = data["Id"].asUInt();
+    id = data["Id"].asUInt64();
     weight = data["Weight"].asDouble();
 }
 
 void Vertex::export_json(Json::Value& data)
 {
-    data["Id"] = (unsigned int)(id);
+    data["Id"] = id;
     data["Weight"] = weight;
 }
 
 Edge::Edge(Json::Value& data)
 {
-    id1 = data["Id1"].asUInt();
-    id2 = data["Id2"].asUInt();
+    id1 = data["Id1"].asUInt64();
+    id2 = data["Id2"].asUInt64();
     weight = data["Weight"].asDouble();
 }
 
 void Edge::export_json(Json::Value& data)
 {
-    data["Id1"] = (unsigned int)(id1);
-    data["Id2"] = (unsigned int)(id2);
+    data["Id1"] = id1;
+    data["Id2"] = id2;
     data["Weight"] = weight;
 }
 
