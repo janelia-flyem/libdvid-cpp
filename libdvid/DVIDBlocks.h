@@ -34,11 +34,20 @@ class DVIDBlocks {
     */
     DVIDBlocks(const T* array_, int num_blocks_) : num_blocks(num_blocks_)
     {
-        uint64 total_size = uint64(N)*uint64(N)*uint64(N)*uint64(sizeof(T)); 
+        uint64 total_size = uint64(N)*uint64(N)*uint64(N)*
+            uint64(sizeof(T))*uint64(num_blocks); 
         if (total_size > INT_MAX) {
             throw ErrMsg("Cannot allocate larger than INT_MAX");
         }
         data = BinaryData::create_binary_data((const char*) array_, total_size);
+    }
+
+    /*!
+     * Empty constructor.
+    */
+    DVIDBlocks() : num_blocks(0)
+    {
+        data = BinaryData::create_binary_data();
     }
 
     /*!
@@ -70,7 +79,7 @@ class DVIDBlocks {
         if (index >= num_blocks) {
             throw ErrMsg("Block index out-of-bounds");
         }
-        return data->get_raw()[N*N*N*sizeof(T)*index];
+        return (const T*) &(data->get_raw()[N*N*N*sizeof(T)*index]);
     }
 
     /*!
@@ -79,11 +88,13 @@ class DVIDBlocks {
     */
     void push_back(const T* block)
     {
+        uint64 total_size = uint64(num_blocks+1)*uint64(N)*uint64(N)*
+            uint64(N)*uint64(sizeof(T)); 
+        
         std::string& dataint = data->get_data();
-        dataint.append(block, N*N*N*sizeof(T));
+        dataint.append((char*) block, N*N*N*sizeof(T));
         ++num_blocks;
 
-        uint64 total_size = uint64(N)*uint64(N)*uint64(N)*uint64(sizeof(T)); 
         if (total_size > INT_MAX) {
             throw ErrMsg("Cannot allocate larger than INT_MAX");
         }

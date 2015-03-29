@@ -43,7 +43,7 @@ in this environment.
 Building an application is easy with libdvid.  The following shows the libraries
 that need to be linked:
 
-    % g++ myapp.cpp -ldvidcpp -ljsoncpp -lboost_system -lpng -lcurl
+    % g++ myapp.cpp -ldvidcpp -ljsoncpp -lboost_system -lpng -lcurl -ljpeg -llz4
 
 libdvid works well with cmake.  To find the package, add the following to the cmake file:
     
