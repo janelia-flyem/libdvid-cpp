@@ -62,18 +62,20 @@ if (NOT ${BUILDEM_DIR} STREQUAL "None")
 
     include (jsoncpp)
     include (libpng)
+    include (libjpeg)
+    include (libcurl)
+    include (lz4)
 
     set (LIBDVID_DEPS ${jsoncpp_NAME} ${libpng_NAME})
-    set (boost_LIBS ${BUILDEM_LIB_DIR}/libboost_system.so
-        ${BUILDEM_LIB_DIR}/libboost_thread.so)
-    set (support_LIBS ${json_LIB} ${boost_LIBS} ${BUILDEM_LIB_DIR}/libpng.so curl)
+    set (boost_LIBS ${BUILDEM_LIB_DIR}/libboost_system.so)
+    set (support_LIBS ${json_LIB} ${boost_LIBS} ${BUILDEM_LIB_DIR}/libpng.so ${BUILDEM_LIB_DIR}/libcurl.so ${BUILDEM_LIB_DIR}/libjpeg.so ${BUILDEM_LIB_DIR}/liblz4.so )
     #set (support_LIBS ${json_LIB} ${CPPNETLIB_LIBRARIES} ${boost_LIBS} ${BUILDEM_LIB_DIR}/libssl.so ${BUILDEM_LIB_DIR}/libcrypto.so ${BUILDEM_LIB_DIR}/libpng.so curl)
 else ()
-    FIND_PACKAGE(Boost 1.54)
+    FIND_PACKAGE(Boost)
     include_directories(${Boost_INCLUDE_DIRS})
     set (json_LIB jsoncpp)
-    set (boost_LIBS boost_thread boost_system)
-    set (support_LIBS ${json_LIB} ${boost_LIBS} png curl)
+    set (boost_LIBS boost_system)
+    set (support_LIBS ${json_LIB} ${boost_LIBS} png curl jpeg lz4)
     #set (support_LIBS ${json_LIB} ${CPPNETLIB_LIBRARIES} ${boost_LIBS} ssl crypto png curl)
     #set (LIBDVID_EXT_LIBS ${CPPNETLIB_LIBRARIES})
 endif (NOT ${BUILDEM_DIR} STREQUAL "None")
@@ -81,7 +83,7 @@ endif (NOT ${BUILDEM_DIR} STREQUAL "None")
 include_directories (BEFORE ${CMAKE_SOURCE_DIR}/libdvid ${CMAKE_SOURCE_DIR})
 
 # Compile libdvidcpp library components
-add_library (dvidcpp src/DVIDNodeService.cpp src/DVIDServerService.cpp src/DVIDConnection.cpp src/DVIDException.cpp src/DVIDGraph.cpp)
+add_library (dvidcpp src/DVIDNodeService.cpp src/DVIDServerService.cpp src/DVIDConnection.cpp src/DVIDException.cpp src/DVIDGraph.cpp src/BinaryData.cpp)
 target_link_libraries (dvidcpp ${LIBDVID_EXT_LIBS})
 if (NOT ${BUILDEM_DIR} STREQUAL "None")
     add_dependencies (dvidcpp ${LIBDVID_DEPS})
@@ -137,6 +139,12 @@ target_link_libraries(dvidtest_keyvalue dvidcpp ${support_LIBS})
 add_executable(dvidtest_labelgraph "tests/test_labelgraph.cpp")
 target_link_libraries(dvidtest_labelgraph dvidcpp ${support_LIBS})
 
+add_executable(dvidtest_compression "tests/test_compression.cpp")
+target_link_libraries(dvidtest_compression dvidcpp ${support_LIBS})
+
+add_executable(dvidtest_blocks "tests/test_blocks.cpp")
+target_link_libraries(dvidtest_blocks dvidcpp ${support_LIBS})
+
 add_executable(dvidloadtest_labelblk "load_tests/loadtest_labelblk.cpp")
 target_link_libraries(dvidloadtest_labelblk dvidcpp ${support_LIBS})
 
@@ -177,3 +185,14 @@ add_test(
     labelgraph 
     dvidtest_labelgraph http://127.0.0.1:8000
 )
+
+add_test(
+    compression 
+    dvidtest_compression sample/image.jpeg sample/image.png sample.binary 
+)
+
+add_test(
+    blocks 
+    dvidtest_blocks http://127.0.0.1:8000
+)
+

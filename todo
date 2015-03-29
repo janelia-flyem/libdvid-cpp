@@ -1,112 +1,27 @@
-??:
+-fix buildem (json, lz4)
+-finish compression and block unit tests
+-document load test
 
+-is DVID UUID the same within a second; fix error for deleting curl
+-fix c++ warnings and any memory leaks
 
--same DVID uuid when within a second?
--seems like volume gets and puts are faster (probably because less copying)
--seems like small graph calls are slower (why) is boost just faster than curl
--- but I am decoding one thousand JSON at a time, it should be the same speed
-if anything as before since there should be no extra copies ?? -- maybe 20%
-slower ?? -- not a lot slower -- they actually should be comparable 
+-private broadcast
 
-
-remove dependency on cppnetlib; probably faster because more efficient buffer copy in most cases; cleaner separation in services and connection; allow easy generic calls to node; better documentation; regression tests; load tests; eventually support for multiple compression schemes (efficient?); block protection; more idiomatic N-D type -- still weird; eventually python too; removed unnecesary parameters in calls 
-
-
-new order:
-
--finish basic refactor (insert libcurl everywhere, implement new DVIDNodeService API, check unit tests, commit) -- read channels ??
--add tiling load test (must specify UUID as well); do a check between RAW and tile at the end (like a unit test) -- parallel load test -- 9 tiles per plane for instance do a scroll test through the volume for speed (do the same for segmentation fetch) !! -- add paramaters to enable flexible testing
--implement jpeg
--add tests for everything (mock tile server?)
--make sure .cmake is good
--make a constants file with all of the supported endpoints and allow sprintf modification of UUID, etc -- easy to view documentation !!!! -- add version number of API, add connectype as well (GET, PUT, etc)
--error checking (asserts, exceptions, warnings, etc)
--add comments to the rest
--replace string with char* ?? -- measure performance
-
-
-
-order:
-
-X-fix broken interface stuff
-X-add code to create a new repo (add for all my tests so there is a fresh one; assume one DVID server for now but could point to a config file that has the value set alternatively; definitely could use the config file for the load tests but that will be under a different executable set)
-X-add simple unit tests and be idiomatic
-X-performance tests for big accesses, random small accesses
-X-libcurl refactor
-X-do not require 'http' prefix
-
--refactor binary data stuff
--add curl cleanup stuff back; remove '/' from prefix
-
--need compression for ND push
--memory breakdown for load tests
--verify interfaces -- fix key/value
--block align checks -- or add padding
--add some convenience functions
--some warnings and meta checks
--support label block calls (make a block binary blob)
--support jpeg and lz4? -- lz4 probably easy
--code clean/refactor
--code comment/doxygen
--might need to have a build without libpng, etc for compilation purposes with QT
--add tiling test (inline tile create code?) -- need some way to create tiles
-
-
-fix:
-
--fix broken DVID stuff (mostly type creation)
-
-testing:
-
--simple unit tests for interface
--dump static files for use in DVID load
--write load tests
--dump memory and runtime information for load tests
--create tiling tests (need to do before refactoring tiles, replacing with libcurl, and parallelization) 
-            // need to create tiles first
-            //png::image<png::gray_pixel> image;
-            //dvid_node.get_tile_slice(std::string("tiles"), std::string("xy"), 1, start, image);
-            //cout << "PNG width: " << image.get_width() << endl;        
-
-
-
-
-refactoring:
-
--binary data should be a base class of image types probably and one should be able to post directly
--each Node instance should be single threaded but can have multiple nodes; also parallelize tile command if it is blocking since that needs to be fast
--add convenience functions for building volume
--make it easy to change API
--reader/writer protection?
--make exceptions more idiomatic
--check meta-data for warnings/errors (depending on flag)
--add a lot of comments and make doxygen compliant documentation
--create doxygen file 
-
-code additions:
-
--support ROI (custom class)
--support sparsevol
+-add compression for blocks when available
+-add load test for volume gets using compression (dependent on Bill)
+-improve test coverage
+-incorporate user opinions
+-support ROI
 -python bindings
--add jpeg support
--add lz4/snappy support
+-python tests
+-API versioning and checking
 
+-public release
 
-
-
-other:
-
--documentation/fix label pushing ??
-
--be careful about 0/nulls
--find datatype_instance function
--automatically include cppnet and boost libraries in build ??
--load datatype_instance info in dataset objects
--capabilities (DVID interface and meta information)
--performance (string buffer copying)
-
-
-
-
+-create a repo service
+-add metadata parsing -- add meta information in service memory
+-make a constants file with all of the supported endpoints and allow sprintf modification of UUID, etc -- add version number of API, add transaction limit, add GET/PUT data limit, add connectype as well (GET, PUT, etc)? -- do not document, refer users to service APIs for more details
+-add better parameters for the load test
+-fast user buffer support
 
 

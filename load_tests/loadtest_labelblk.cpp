@@ -1,3 +1,11 @@
+/*!
+ * This file tests the performance of creating a large
+ * label volume, adding it to DVID, and then doing a
+ * series of label blk fetches.
+ *
+ * \author Stephen Plaza (plazas@janelia.hhmi.org)
+*/
+
 #include <libdvid/DVIDNodeService.h>
 #include <libdvid/DVIDServerService.h>
 #include "ScopeTime.h"
@@ -13,10 +21,13 @@ using std::string;
 // assume all blocks are BLK_SIZE in each dimension
 int BLK_SIZE = 32;
 
+// size of the segmentation to be created
 int VOLDIM = 512;
 
+// number of random fetches to do
 int NUM_FETCHES = 100;
 
+// size of the small volume gets 
 int SMALLFETCH = 128;
 
 /*!
@@ -53,6 +64,7 @@ int main(int argc, char** argv)
         }
 
         // create binary data string wrapper (64 bits per pixel)
+        // calculate time to post volume
         {
             Dims_t dims;
             dims.push_back(VOLDIM); dims.push_back(VOLDIM); dims.push_back(VOLDIM); 
@@ -71,7 +83,8 @@ int main(int argc, char** argv)
                 << " bytes posted per second for large label volume" << endl;
         }
 
-        // retrieve the image volume and make sure it makes the posted volume
+        // retrieve the image volume
+        // this might be artifically fast as it might be completely in DVID's cache
         {
             vector<unsigned int> start;
             start.push_back(0); start.push_back(0); start.push_back(0);
@@ -86,12 +99,13 @@ int main(int argc, char** argv)
                 << " bytes read per second for large label volume" << endl;
         }
 
-        // do a lot of small requests
+        // do a lot of small requests (like already in DVID cache)
         double total_time = 0.0;
         for (int i = 0; i < NUM_FETCHES; ++i) {
             ScopeTime get_timer(false);
             int max_val = VOLDIM - SMALLFETCH + 1;
-
+            
+            // grab random small cube
             vector<unsigned int> start;
             start.push_back(rand()%max_val);
             start.push_back(rand()%max_val);

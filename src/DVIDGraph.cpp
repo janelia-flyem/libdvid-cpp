@@ -6,27 +6,28 @@ namespace libdvid {
 
 Vertex::Vertex(Json::Value& data)
 {
-    id = data["Id"].asUInt();
+    // DVID vertex id are 64 bit
+    id = data["Id"].asUInt64();
     weight = data["Weight"].asDouble();
 }
 
 void Vertex::export_json(Json::Value& data)
 {
-    data["Id"] = (unsigned int)(id);
+    data["Id"] = id;
     data["Weight"] = weight;
 }
 
 Edge::Edge(Json::Value& data)
 {
-    id1 = data["Id1"].asUInt();
-    id2 = data["Id2"].asUInt();
+    id1 = data["Id1"].asUInt64();
+    id2 = data["Id2"].asUInt64();
     weight = data["Weight"].asDouble();
 }
 
 void Edge::export_json(Json::Value& data)
 {
-    data["Id1"] = (unsigned int)(id1);
-    data["Id2"] = (unsigned int)(id2);
+    data["Id1"] = id1;
+    data["Id2"] = id2;
     data["Weight"] = weight;
 }
 
@@ -72,24 +73,31 @@ void Graph::export_json(Json::Value& data)
 
 BinaryDataPtr write_transactions_to_binary(VertexTransactions& transactions)
 {
-    unsigned long long * trans_array = new unsigned long long [(transactions.size()*2+1)];
+    unsigned long long * trans_array =
+        new unsigned long long [(transactions.size()*2+1)];
+    
+    //serialize the number of transactions
     int pos = 0;
     trans_array[pos] = transactions.size();
     ++pos;
 
-    for (VertexTransactions::iterator iter = transactions.begin(); iter != transactions.end(); ++iter) {
+    // serialize transactions (vertex and transaction number) 
+    for (VertexTransactions::iterator iter = transactions.begin();
+            iter != transactions.end(); ++iter) {
         trans_array[pos] = iter->first;
         ++pos;
         trans_array[pos] = iter->second;
         ++pos;
     }
     
-    BinaryDataPtr ptr = BinaryData::create_binary_data((char*)trans_array, (transactions.size()*2+1)*8);
+    BinaryDataPtr ptr = BinaryData::create_binary_data((char*)trans_array,
+            (transactions.size()*2+1)*8);
     delete []trans_array;
     return ptr;
 }
 
-size_t load_transactions_from_binary(string& data, VertexTransactions& transactions, VertexSet& bad_vertices)
+size_t load_transactions_from_binary(string& data,
+        VertexTransactions& transactions, VertexSet& bad_vertices)
 {
     char* bytearray = (char*) data.c_str();
     size_t byte_pos = 0;
@@ -116,7 +124,8 @@ size_t load_transactions_from_binary(string& data, VertexTransactions& transacti
         byte_pos += 8;
         bad_vertices.insert(*vertex_id);
     }
-   
+  
+    // byte position indicates the location of the rest of the binary payload 
     return byte_pos; 
 } 
 

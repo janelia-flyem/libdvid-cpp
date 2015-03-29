@@ -1,3 +1,11 @@
+/*!
+ * This file gives a simple example of creating
+ * a grayscale instance.  It stores some data, retrieves
+ * the data, and checks that the data is equal.
+ *
+ * \author Stephen Plaza (plazas@janelia.hhmi.org)
+*/
+
 #include <libdvid/DVIDServerService.h>
 #include <libdvid/DVIDNodeService.h>
 
@@ -11,6 +19,7 @@ using std::vector;
 using std::string;
 
 // assume all blocks are 32 in each dimension
+// (graysale posts must be block aligned)
 int BLK_SIZE = 32;
 
 // sample grayscale to write
@@ -27,7 +36,7 @@ unsigned char img1_mask[] = {
     0,0,1,0,0,1,0,1,1,1,1,0,1,1,1,1,0,1,1,1,1,0,0,0,1,1,0,0,
     0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
 
-// image 2 mask
+// more grayscale to write
 unsigned char img2_mask[] = {
     0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
     0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,
@@ -56,7 +65,6 @@ int main(int argc, char** argv)
         DVIDNodeService dvid_node(argv[1], uuid);
     
         string gray_datatype_name = "gray1";
-        // ** Test creation of DVID datatypes **
         
         // should be a new instance
         if(!dvid_node.create_grayscale8(gray_datatype_name)) {
@@ -85,10 +93,7 @@ int main(int argc, char** argv)
         Dims_t sizes; sizes.push_back(BLK_SIZE); sizes.push_back(BLK_SIZE); sizes.push_back(BLK_SIZE);
         Grayscale3D graybin(img_gray, BLK_SIZE*BLK_SIZE*BLK_SIZE, sizes);
 
-        // post grayscale volume
-        // one could also write 2D image slices but the starting location must
-        // be at least an ND point where N is greater than 2
-        
+        // post grayscale volume (note: that it is block aligned)
         dvid_node.put_gray3D(gray_datatype_name, graybin, start);
 
         // retrieve the image volume and make sure it makes the posted volume

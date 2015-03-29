@@ -1,3 +1,10 @@
+/*!
+ * This file measures the performance of loading and reading
+ * a large DVID labelgraph.
+ *
+ * \author Stephen Plaza (plazas@janelia.hhmi.org)
+*/
+
 #include <libdvid/DVIDServerService.h>
 #include <libdvid/DVIDNodeService.h>
 
@@ -17,7 +24,8 @@ using std::vector;
 using std::ifstream;
 
 /*!
- * Test labelgraph vertex and edge creation and the setting of properties.
+ * Measure performance of reading a large graph
+ * (example graph in input folder). 
 */
 int main(int argc, char** argv)
 {
@@ -29,7 +37,8 @@ int main(int argc, char** argv)
         ScopeTime overall_time;
         
         DVIDServerService server(argv[1]);
-        std::string uuid = server.create_new_repo("newrepo", "This is my new repo");
+        std::string uuid = server.create_new_repo("newrepo",
+                "This is my new repo");
         DVIDNodeService dvid_node(argv[1], uuid);
 
         // name of graph to use        
@@ -40,9 +49,8 @@ int main(int argc, char** argv)
             cerr << graph_datatype_name << " already exists" << endl;
             return -1;
         }
-       
-        // ?! read file
-        // ?! get num nodes, edges
+        
+        // read graph
         ifstream fin(argv[2]);
         Json::Reader json_reader;
         Json::Value json_graph;

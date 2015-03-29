@@ -28,7 +28,8 @@ WriteMemoryCallback(void *contents, size_t size, size_t nmemb, void *userp)
 }
 
 namespace libdvid {
-    
+
+//! Defines DVID prefix -- this might have a version ID eventually 
 string DVIDConnection::DVID_PREFIX = "/api";
 
 DVIDConnection::DVIDConnection(string addr_) : addr(addr_)
@@ -44,7 +45,8 @@ DVIDConnection::DVIDConnection(const DVIDConnection& copy_connection)
 
 DVIDConnection::~DVIDConnection()
 {
-//    curl_easy_cleanup(curl_connection);
+    // currently causing a memory fault so commenting out
+    // curl_easy_cleanup(curl_connection);
 }
 
 int DVIDConnection::make_request(string endpoint, ConnectionMethod method,
