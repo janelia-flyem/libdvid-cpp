@@ -1,4 +1,4 @@
-# libdvid-cpp [![Picture](https://raw.github.com/janelia-flyem/janelia-flyem.github.com/master/images/gray_janelia_logo.png)](http://janelia.org/)
+# libdvid-cpp [![Picture](https://raw.github.com/janelia-flyem/janelia-flyem.github.com/master/images/HHMI_Janelia_Color_Alternate_180x40.png)](http://www.janelia.org)
 
 libdvid-cpp provides a c++ wrapper to HTTP calls to
 [DVID](https://github.com/janelia-flyem/dvid).
@@ -66,8 +66,14 @@ calls at the server level and version node level respectively.  For example,
 libdvid can call the DVID server through the server service to
 create a new repository.
 
-    %  DVIDServerService server(http://mydvidserver);
-    %  string uuid = server.create_new_repo("newrepo", "This is my new repo");
+    DVIDServerService server("http://mydvidserver");
+    string uuid = server.create_new_repo("newrepo", "This is my new repo");
+
+The following retrieves a 3D segmentation with dimension sizes indicates by a vector
+DIMS and spatial offset by a vector given by OFFSET:
+
+    DVIDNodeService node("http://mydvidserver", UUID);
+    Labels3D segmentation = node.get_labels3D("segmentation", DIMS, OFFSET);
 
 For some simple examples of using libdvid, please review *tests/*.  For
 detailed explanation of available API, please examined DVIDNodeService.h
