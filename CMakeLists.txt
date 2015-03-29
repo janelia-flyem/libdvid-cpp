@@ -143,6 +143,9 @@ target_link_libraries(dvidloadtest_labelblk dvidcpp ${support_LIBS})
 add_executable(dvidloadtest_labelgraph "load_tests/loadtest_labelgraph.cpp")
 target_link_libraries(dvidloadtest_labelgraph dvidcpp ${support_LIBS})
 
+add_executable(dvidloadtest_tile "load_tests/loadtest_tile.cpp")
+target_link_libraries(dvidloadtest_tile dvidcpp ${support_LIBS})
+
 enable_testing()
 
 add_test(

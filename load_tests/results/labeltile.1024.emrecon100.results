@@ -1,0 +1,1514 @@
+# 250-300 ms for many seg planes, goes up to 500 ms sometimes
+# consistent fetch similar to emdata1 which is the fast server
+# grayscale fetch is slower every 32 than seg?? 600 or 700 ms (average is 150ms)
+# ssds and client pre-fetch one plane would help
+
+Starting Location: 3072, 3072, 5600
+*** Tile Fetching (Single Thread 9 Tiles Per Slice) ***
+Read 24936 bytes (9 tiles) in 0.0528281 seconds
+Read 24936 bytes (9 tiles) in 0.038357 seconds
+Read 24936 bytes (9 tiles) in 0.0437548 seconds
+Read 24936 bytes (9 tiles) in 0.0350411 seconds
+Read 24936 bytes (9 tiles) in 0.0518 seconds
+Read 24936 bytes (9 tiles) in 0.0351441 seconds
+Read 24936 bytes (9 tiles) in 0.043699 seconds
+Read 24936 bytes (9 tiles) in 0.0516429 seconds
+Read 24936 bytes (9 tiles) in 0.040746 seconds
+Read 24936 bytes (9 tiles) in 0.0452049 seconds
+Read 24936 bytes (9 tiles) in 0.046051 seconds
+Read 24936 bytes (9 tiles) in 0.040267 seconds
+Read 24936 bytes (9 tiles) in 0.0545452 seconds
+Read 24936 bytes (9 tiles) in 0.0397499 seconds
+Read 24936 bytes (9 tiles) in 0.0330269 seconds
+Read 24936 bytes (9 tiles) in 0.051249 seconds
+Read 24936 bytes (9 tiles) in 0.0365541 seconds
+Read 24936 bytes (9 tiles) in 0.0383549 seconds
+Read 24936 bytes (9 tiles) in 0.0460849 seconds
+Read 24936 bytes (9 tiles) in 0.0430009 seconds
+Read 24936 bytes (9 tiles) in 0.054879 seconds
+Read 24936 bytes (9 tiles) in 0.0374749 seconds
+Read 24936 bytes (9 tiles) in 0.0347059 seconds
+Read 24936 bytes (9 tiles) in 0.046885 seconds
+Read 24936 bytes (9 tiles) in 0.04125 seconds
+Read 24936 bytes (9 tiles) in 0.044991 seconds
+Read 24936 bytes (9 tiles) in 0.046217 seconds
+Read 24936 bytes (9 tiles) in 0.0362928 seconds
+Read 24936 bytes (9 tiles) in 0.0391331 seconds
+Read 24936 bytes (9 tiles) in 0.047152 seconds
+Read 24936 bytes (9 tiles) in 0.043339 seconds
+Read 24936 bytes (9 tiles) in 0.042933 seconds
+Read 24936 bytes (9 tiles) in 0.045177 seconds
+Read 24936 bytes (9 tiles) in 0.057555 seconds
+Read 24936 bytes (9 tiles) in 0.0388288 seconds
+Read 24936 bytes (9 tiles) in 0.0397999 seconds
+Read 24936 bytes (9 tiles) in 0.046844 seconds
+Read 24936 bytes (9 tiles) in 0.0379539 seconds
+Read 24936 bytes (9 tiles) in 0.0417461 seconds
+Read 24936 bytes (9 tiles) in 0.0465429 seconds
+Read 24936 bytes (9 tiles) in 0.0432611 seconds
+Read 24936 bytes (9 tiles) in 0.0420089 seconds
+Read 24936 bytes (9 tiles) in 0.050154 seconds
+Read 24936 bytes (9 tiles) in 0.040812 seconds
+Read 24936 bytes (9 tiles) in 0.046627 seconds
+Read 24936 bytes (9 tiles) in 0.0337291 seconds
+Read 24936 bytes (9 tiles) in 0.0395021 seconds
+Read 24936 bytes (9 tiles) in 0.0444379 seconds
+Read 24936 bytes (9 tiles) in 0.0424309 seconds
+Read 24936 bytes (9 tiles) in 0.0430601 seconds
+Read 24936 bytes (9 tiles) in 0.0468481 seconds
+Read 24936 bytes (9 tiles) in 0.034008 seconds
+Read 24936 bytes (9 tiles) in 0.040946 seconds
+Read 24936 bytes (9 tiles) in 0.038691 seconds
+Read 24936 bytes (9 tiles) in 0.036428 seconds
+Read 24936 bytes (9 tiles) in 0.0439239 seconds
+Read 24936 bytes (9 tiles) in 0.0444372 seconds
+Read 24936 bytes (9 tiles) in 0.042017 seconds
+Read 24936 bytes (9 tiles) in 0.0416329 seconds
+Read 24936 bytes (9 tiles) in 0.0406401 seconds
+Read 24936 bytes (9 tiles) in 0.037255 seconds
+Read 24936 bytes (9 tiles) in 0.0382769 seconds
+Read 24936 bytes (9 tiles) in 0.0398951 seconds
+Read 24936 bytes (9 tiles) in 0.051332 seconds
+Read 24936 bytes (9 tiles) in 0.038856 seconds
+Read 24936 bytes (9 tiles) in 0.0426269 seconds
+Read 24936 bytes (9 tiles) in 0.0346739 seconds
+Read 24936 bytes (9 tiles) in 0.0426261 seconds
+Read 24936 bytes (9 tiles) in 0.039449 seconds
+Read 24936 bytes (9 tiles) in 0.042114 seconds
+Read 24936 bytes (9 tiles) in 0.036298 seconds
+Read 24936 bytes (9 tiles) in 0.0453122 seconds
+Read 24936 bytes (9 tiles) in 0.0349581 seconds
+Read 24936 bytes (9 tiles) in 0.045933 seconds
+Read 24936 bytes (9 tiles) in 0.0401371 seconds
+Read 24936 bytes (9 tiles) in 0.0402989 seconds
+Read 24936 bytes (9 tiles) in 0.041887 seconds
+Read 24936 bytes (9 tiles) in 0.0437911 seconds
+Read 24936 bytes (9 tiles) in 0.0399959 seconds
+Read 24936 bytes (9 tiles) in 0.051707 seconds
+Read 24936 bytes (9 tiles) in 0.035898 seconds
+Read 24936 bytes (9 tiles) in 0.0443161 seconds
+Read 24936 bytes (9 tiles) in 0.0379689 seconds
+Read 24936 bytes (9 tiles) in 0.0418851 seconds
+Read 24936 bytes (9 tiles) in 0.0475161 seconds
+Read 24936 bytes (9 tiles) in 0.0351992 seconds
+Read 24936 bytes (9 tiles) in 0.0379531 seconds
+Read 24936 bytes (9 tiles) in 0.040936 seconds
+Read 24936 bytes (9 tiles) in 0.036298 seconds
+Read 24936 bytes (9 tiles) in 0.0463171 seconds
+Read 24936 bytes (9 tiles) in 0.0417669 seconds
+Read 24936 bytes (9 tiles) in 0.0419781 seconds
+Read 24936 bytes (9 tiles) in 0.053731 seconds
+Read 24936 bytes (9 tiles) in 0.0404961 seconds
+Read 24936 bytes (9 tiles) in 0.0369718 seconds
+Read 24936 bytes (9 tiles) in 0.0382659 seconds
+Read 24936 bytes (9 tiles) in 0.0350189 seconds
+Read 24936 bytes (9 tiles) in 0.0403709 seconds
+Read 24936 bytes (9 tiles) in 0.0423639 seconds
+Read 24936 bytes (9 tiles) in 0.033756 seconds
+Read 24936 bytes (9 tiles) in 0.0363169 seconds
+Read 24936 bytes (9 tiles) in 0.0337739 seconds
+Read 24936 bytes (9 tiles) in 0.0481241 seconds
+Read 24936 bytes (9 tiles) in 0.0433941 seconds
+Read 24936 bytes (9 tiles) in 0.0404749 seconds
+Read 24936 bytes (9 tiles) in 0.0442431 seconds
+Read 24936 bytes (9 tiles) in 0.046093 seconds
+Read 24936 bytes (9 tiles) in 0.0466011 seconds
+Read 24936 bytes (9 tiles) in 0.0489099 seconds
+Read 24936 bytes (9 tiles) in 0.0401349 seconds
+Read 24936 bytes (9 tiles) in 0.042172 seconds
+Read 24936 bytes (9 tiles) in 0.0377462 seconds
+Read 24936 bytes (9 tiles) in 0.0329289 seconds
+Read 24936 bytes (9 tiles) in 0.0373652 seconds
+Read 24936 bytes (9 tiles) in 0.036783 seconds
+Read 24936 bytes (9 tiles) in 0.043232 seconds
+Read 24936 bytes (9 tiles) in 0.0447071 seconds
+Read 24936 bytes (9 tiles) in 0.035382 seconds
+Read 24936 bytes (9 tiles) in 0.0372691 seconds
+Read 24936 bytes (9 tiles) in 0.048492 seconds
+Read 24936 bytes (9 tiles) in 0.0355258 seconds
+Read 24936 bytes (9 tiles) in 0.0376351 seconds
+Read 24936 bytes (9 tiles) in 0.04252 seconds
+Read 24936 bytes (9 tiles) in 0.0494518 seconds
+Read 24936 bytes (9 tiles) in 0.0390179 seconds
+Read 24936 bytes (9 tiles) in 0.0392091 seconds
+Read 24936 bytes (9 tiles) in 0.03408 seconds
+Read 24936 bytes (9 tiles) in 0.0434539 seconds
+Read 24936 bytes (9 tiles) in 0.043443 seconds
+Read 24936 bytes (9 tiles) in 0.047555 seconds
+Read 24936 bytes (9 tiles) in 0.046901 seconds
+Read 24936 bytes (9 tiles) in 0.0355828 seconds
+Read 24936 bytes (9 tiles) in 0.0423839 seconds
+Read 24936 bytes (9 tiles) in 0.042269 seconds
+Read 24936 bytes (9 tiles) in 0.036207 seconds
+Read 24936 bytes (9 tiles) in 0.041775 seconds
+Read 24936 bytes (9 tiles) in 0.0370998 seconds
+Read 24936 bytes (9 tiles) in 0.0460629 seconds
+Read 24936 bytes (9 tiles) in 0.044426 seconds
+Read 24936 bytes (9 tiles) in 0.032706 seconds
+Read 24936 bytes (9 tiles) in 0.0475609 seconds
+Read 24936 bytes (9 tiles) in 0.038703 seconds
+Read 24936 bytes (9 tiles) in 0.041785 seconds
+Read 24936 bytes (9 tiles) in 0.0473509 seconds
+Read 24936 bytes (9 tiles) in 0.035162 seconds
+Read 24936 bytes (9 tiles) in 0.044682 seconds
+Read 24936 bytes (9 tiles) in 0.052151 seconds
+Read 24936 bytes (9 tiles) in 0.0407958 seconds
+Read 24936 bytes (9 tiles) in 0.052243 seconds
+Read 24936 bytes (9 tiles) in 0.0380139 seconds
+Read 24936 bytes (9 tiles) in 0.0391531 seconds
+Read 24936 bytes (9 tiles) in 0.0373111 seconds
+Read 24936 bytes (9 tiles) in 0.0425289 seconds
+Read 24936 bytes (9 tiles) in 0.038259 seconds
+Read 24936 bytes (9 tiles) in 0.041564 seconds
+Read 24936 bytes (9 tiles) in 0.0386992 seconds
+Read 24936 bytes (9 tiles) in 0.0536339 seconds
+Read 24936 bytes (9 tiles) in 0.0361369 seconds
+Read 24936 bytes (9 tiles) in 0.0337131 seconds
+Read 24936 bytes (9 tiles) in 0.0459242 seconds
+Read 24936 bytes (9 tiles) in 0.0429211 seconds
+Read 24936 bytes (9 tiles) in 0.0405102 seconds
+Read 24936 bytes (9 tiles) in 0.0434282 seconds
+Read 24936 bytes (9 tiles) in 0.0351131 seconds
+Read 24936 bytes (9 tiles) in 0.04001 seconds
+Read 24936 bytes (9 tiles) in 0.038249 seconds
+Read 24936 bytes (9 tiles) in 0.041821 seconds
+Read 24936 bytes (9 tiles) in 0.043669 seconds
+Read 24936 bytes (9 tiles) in 0.0394559 seconds
+Read 24936 bytes (9 tiles) in 0.041683 seconds
+Read 24936 bytes (9 tiles) in 0.0422781 seconds
+Read 24936 bytes (9 tiles) in 0.042841 seconds
+Read 24936 bytes (9 tiles) in 0.0444 seconds
+Read 24936 bytes (9 tiles) in 0.0371771 seconds
+Read 24936 bytes (9 tiles) in 0.0380201 seconds
+Read 24936 bytes (9 tiles) in 0.041929 seconds
+Read 24936 bytes (9 tiles) in 0.036679 seconds
+Read 24936 bytes (9 tiles) in 0.047966 seconds
+Read 24936 bytes (9 tiles) in 0.046649 seconds
+Read 24936 bytes (9 tiles) in 0.0385411 seconds
+Read 24936 bytes (9 tiles) in 0.051862 seconds
+Read 24936 bytes (9 tiles) in 0.0397041 seconds
+Read 24936 bytes (9 tiles) in 0.0427492 seconds
+Read 24936 bytes (9 tiles) in 0.051594 seconds
+Read 24936 bytes (9 tiles) in 0.042912 seconds
+Read 24936 bytes (9 tiles) in 0.043932 seconds
+Read 24936 bytes (9 tiles) in 0.0456319 seconds
+Read 24936 bytes (9 tiles) in 0.0413189 seconds
+Read 24936 bytes (9 tiles) in 0.047276 seconds
+Read 24936 bytes (9 tiles) in 0.0370989 seconds
+Read 24936 bytes (9 tiles) in 0.0424271 seconds
+Read 24936 bytes (9 tiles) in 0.0414472 seconds
+Read 24936 bytes (9 tiles) in 0.041853 seconds
+Read 24936 bytes (9 tiles) in 0.0420499 seconds
+Read 24936 bytes (9 tiles) in 0.0388808 seconds
+Read 24936 bytes (9 tiles) in 0.0399411 seconds
+Read 24936 bytes (9 tiles) in 0.0573962 seconds
+Read 24936 bytes (9 tiles) in 0.0332491 seconds
+Read 24936 bytes (9 tiles) in 0.0461791 seconds
+Read 24936 bytes (9 tiles) in 0.0460649 seconds
+Read 24936 bytes (9 tiles) in 0.0431459 seconds
+Read 24936 bytes (9 tiles) in 0.0425229 seconds
+Read 24936 bytes (9 tiles) in 0.0402019 seconds
+Read 24936 bytes (9 tiles) in 0.040571 seconds
+Read 24936 bytes (9 tiles) in 0.0381341 seconds
+Read 24936 bytes (9 tiles) in 0.0330081 seconds
+Read 24936 bytes (9 tiles) in 0.037246 seconds
+Read 24936 bytes (9 tiles) in 0.0509341 seconds
+Read 24936 bytes (9 tiles) in 0.0405312 seconds
+Read 24936 bytes (9 tiles) in 0.042624 seconds
+Read 24936 bytes (9 tiles) in 0.047605 seconds
+Read 24936 bytes (9 tiles) in 0.0367029 seconds
+Read 24936 bytes (9 tiles) in 0.0409319 seconds
+Read 24936 bytes (9 tiles) in 0.03616 seconds
+Read 24936 bytes (9 tiles) in 0.035265 seconds
+Read 24936 bytes (9 tiles) in 0.0487628 seconds
+Read 24936 bytes (9 tiles) in 0.0413949 seconds
+Read 24936 bytes (9 tiles) in 0.04549 seconds
+Read 24936 bytes (9 tiles) in 0.045578 seconds
+Read 24936 bytes (9 tiles) in 0.038161 seconds
+Read 24936 bytes (9 tiles) in 0.0485179 seconds
+Read 24936 bytes (9 tiles) in 0.0386579 seconds
+Read 24936 bytes (9 tiles) in 0.0422699 seconds
+Read 24936 bytes (9 tiles) in 0.0553131 seconds
+Read 24936 bytes (9 tiles) in 0.0437732 seconds
+Read 24936 bytes (9 tiles) in 0.0421669 seconds
+Read 24936 bytes (9 tiles) in 0.0388479 seconds
+Read 24936 bytes (9 tiles) in 0.0380039 seconds
+Read 24936 bytes (9 tiles) in 0.0516059 seconds
+Read 24936 bytes (9 tiles) in 0.032609 seconds
+Read 24936 bytes (9 tiles) in 0.0407059 seconds
+Read 24936 bytes (9 tiles) in 0.0398619 seconds
+Read 24936 bytes (9 tiles) in 0.044286 seconds
+Read 24936 bytes (9 tiles) in 0.041893 seconds
+Read 24936 bytes (9 tiles) in 0.0439801 seconds
+Read 24936 bytes (9 tiles) in 0.037544 seconds
+Read 24936 bytes (9 tiles) in 0.0383389 seconds
+Read 24936 bytes (9 tiles) in 0.0412169 seconds
+Read 24936 bytes (9 tiles) in 0.0395322 seconds
+Read 24936 bytes (9 tiles) in 0.049335 seconds
+Read 24936 bytes (9 tiles) in 0.033829 seconds
+Read 24936 bytes (9 tiles) in 0.0570562 seconds
+Read 24936 bytes (9 tiles) in 0.040482 seconds
+Read 24936 bytes (9 tiles) in 0.037266 seconds
+Read 24936 bytes (9 tiles) in 0.0487552 seconds
+Read 24936 bytes (9 tiles) in 0.0423322 seconds
+Read 24936 bytes (9 tiles) in 0.0403051 seconds
+Read 24936 bytes (9 tiles) in 0.0415671 seconds
+Read 24936 bytes (9 tiles) in 0.0370531 seconds
+Read 24936 bytes (9 tiles) in 0.041903 seconds
+Read 24936 bytes (9 tiles) in 0.0463481 seconds
+Read 24936 bytes (9 tiles) in 0.0340621 seconds
+Read 24936 bytes (9 tiles) in 0.0413601 seconds
+Read 24936 bytes (9 tiles) in 0.0402539 seconds
+Read 24936 bytes (9 tiles) in 0.0371881 seconds
+Read 24936 bytes (9 tiles) in 0.0451131 seconds
+Read 24936 bytes (9 tiles) in 0.035156 seconds
+Read 24936 bytes (9 tiles) in 0.046406 seconds
+Read 24936 bytes (9 tiles) in 0.0464921 seconds
+Read 24936 bytes (9 tiles) in 0.0359831 seconds
+Read 24936 bytes (9 tiles) in 0.0387299 seconds
+Read 24936 bytes (9 tiles) in 0.0401211 seconds
+Read 24936 bytes (9 tiles) in 0.040905 seconds
+Read 24936 bytes (9 tiles) in 0.0408549 seconds
+Read 24936 bytes (9 tiles) in 0.036391 seconds
+Read 24936 bytes (9 tiles) in 0.04512 seconds
+Read 24936 bytes (9 tiles) in 0.0434499 seconds
+Read 24936 bytes (9 tiles) in 0.0349979 seconds
+Read 24936 bytes (9 tiles) in 0.0383649 seconds
+Read 24936 bytes (9 tiles) in 0.0398819 seconds
+Read 24936 bytes (9 tiles) in 0.0417719 seconds
+Read 24936 bytes (9 tiles) in 0.0424302 seconds
+Read 24936 bytes (9 tiles) in 0.045131 seconds
+Read 24936 bytes (9 tiles) in 0.04584 seconds
+Read 24936 bytes (9 tiles) in 0.0392599 seconds
+Read 24936 bytes (9 tiles) in 0.039917 seconds
+Read 24936 bytes (9 tiles) in 0.0511909 seconds
+Read 24936 bytes (9 tiles) in 0.0358739 seconds
+Read 24936 bytes (9 tiles) in 0.0403559 seconds
+Read 24936 bytes (9 tiles) in 0.0387461 seconds
+Read 24936 bytes (9 tiles) in 0.0394251 seconds
+Read 24936 bytes (9 tiles) in 0.0449569 seconds
+Read 24936 bytes (9 tiles) in 0.039319 seconds
+Read 24936 bytes (9 tiles) in 0.0330372 seconds
+Read 24936 bytes (9 tiles) in 0.0436211 seconds
+Read 24936 bytes (9 tiles) in 0.0337789 seconds
+Read 24936 bytes (9 tiles) in 0.039016 seconds
+Read 24936 bytes (9 tiles) in 0.0480931 seconds
+Read 24936 bytes (9 tiles) in 0.041292 seconds
+Read 24936 bytes (9 tiles) in 0.052036 seconds
+Read 24936 bytes (9 tiles) in 0.0425551 seconds
+Read 24936 bytes (9 tiles) in 0.043427 seconds
+Read 24936 bytes (9 tiles) in 0.0409851 seconds
+Read 24936 bytes (9 tiles) in 0.037792 seconds
+Read 24936 bytes (9 tiles) in 0.0354609 seconds
+Read 24936 bytes (9 tiles) in 0.0457771 seconds
+Read 24936 bytes (9 tiles) in 0.038208 seconds
+Read 24936 bytes (9 tiles) in 0.0375171 seconds
+Read 24936 bytes (9 tiles) in 0.047262 seconds
+Read 24936 bytes (9 tiles) in 0.039928 seconds
+Read 24936 bytes (9 tiles) in 0.046339 seconds
+Read 24936 bytes (9 tiles) in 0.03879 seconds
+Read 24936 bytes (9 tiles) in 0.042063 seconds
+Read 24936 bytes (9 tiles) in 0.041883 seconds
+Read 24936 bytes (9 tiles) in 0.0402682 seconds
+Read 24936 bytes (9 tiles) in 0.037818 seconds
+Read 24936 bytes (9 tiles) in 0.0404532 seconds
+Read 24936 bytes (9 tiles) in 0.048454 seconds
+Read 24936 bytes (9 tiles) in 0.040055 seconds
+Read 24936 bytes (9 tiles) in 0.0337522 seconds
+Read 24936 bytes (9 tiles) in 0.0368521 seconds
+Read 24936 bytes (9 tiles) in 0.052465 seconds
+Read 24936 bytes (9 tiles) in 0.0366569 seconds
+Read 24936 bytes (9 tiles) in 0.0408351 seconds
+Read 24936 bytes (9 tiles) in 0.04408 seconds
+Read 24936 bytes (9 tiles) in 0.034332 seconds
+Read 24936 bytes (9 tiles) in 0.03808 seconds
+Read 24936 bytes (9 tiles) in 0.0427079 seconds
+Read 24936 bytes (9 tiles) in 0.034128 seconds
+Read 24936 bytes (9 tiles) in 0.043874 seconds
+Read 24936 bytes (9 tiles) in 0.043021 seconds
+Read 24936 bytes (9 tiles) in 0.0470698 seconds
+Read 24936 bytes (9 tiles) in 0.0447931 seconds
+Read 24936 bytes (9 tiles) in 0.0317709 seconds
+Read 24936 bytes (9 tiles) in 0.0458629 seconds
+Read 24936 bytes (9 tiles) in 0.0385029 seconds
+Read 24936 bytes (9 tiles) in 0.039098 seconds
+Read 24936 bytes (9 tiles) in 0.0503969 seconds
+Read 24936 bytes (9 tiles) in 0.040251 seconds
+Read 24936 bytes (9 tiles) in 0.0376861 seconds
+Read 24936 bytes (9 tiles) in 0.0472581 seconds
+Read 24936 bytes (9 tiles) in 0.036777 seconds
+Read 24936 bytes (9 tiles) in 0.0481479 seconds
+Read 24936 bytes (9 tiles) in 0.04024 seconds
+Read 24936 bytes (9 tiles) in 0.0414462 seconds
+Read 24936 bytes (9 tiles) in 0.0483999 seconds
+Read 24936 bytes (9 tiles) in 0.034966 seconds
+Read 24936 bytes (9 tiles) in 0.0435729 seconds
+Read 24936 bytes (9 tiles) in 0.046381 seconds
+Read 24936 bytes (9 tiles) in 0.0396969 seconds
+Read 24936 bytes (9 tiles) in 0.0462599 seconds
+Read 24936 bytes (9 tiles) in 0.0336289 seconds
+Read 24936 bytes (9 tiles) in 0.037113 seconds
+Read 24936 bytes (9 tiles) in 0.0462751 seconds
+Read 24936 bytes (9 tiles) in 0.0436912 seconds
+Read 24936 bytes (9 tiles) in 0.0472991 seconds
+Read 24936 bytes (9 tiles) in 0.0452359 seconds
+Read 24936 bytes (9 tiles) in 0.0452042 seconds
+Read 24936 bytes (9 tiles) in 0.0468612 seconds
+Read 24936 bytes (9 tiles) in 0.0391831 seconds
+Read 24936 bytes (9 tiles) in 0.037158 seconds
+Read 24936 bytes (9 tiles) in 0.0416541 seconds
+Read 24936 bytes (9 tiles) in 0.030503 seconds
+Read 24936 bytes (9 tiles) in 0.0362849 seconds
+Read 24936 bytes (9 tiles) in 0.0520661 seconds
+Read 24936 bytes (9 tiles) in 0.046037 seconds
+Read 24936 bytes (9 tiles) in 0.0438001 seconds
+Read 24936 bytes (9 tiles) in 0.0322051 seconds
+Read 24936 bytes (9 tiles) in 0.045197 seconds
+Read 24936 bytes (9 tiles) in 0.0817111 seconds
+Read 24936 bytes (9 tiles) in 0.0408139 seconds
+Read 24936 bytes (9 tiles) in 0.0414109 seconds
+Read 24936 bytes (9 tiles) in 0.0489521 seconds
+Read 24936 bytes (9 tiles) in 0.0405951 seconds
+Read 24936 bytes (9 tiles) in 0.055351 seconds
+Read 24936 bytes (9 tiles) in 0.0354922 seconds
+Read 24936 bytes (9 tiles) in 0.0379732 seconds
+Read 24936 bytes (9 tiles) in 0.0356562 seconds
+Read 24936 bytes (9 tiles) in 0.0426681 seconds
+Read 24936 bytes (9 tiles) in 0.048718 seconds
+Read 24936 bytes (9 tiles) in 0.0492148 seconds
+Read 24936 bytes (9 tiles) in 0.0357451 seconds
+Read 24936 bytes (9 tiles) in 0.046684 seconds
+Read 24936 bytes (9 tiles) in 0.033499 seconds
+Read 24936 bytes (9 tiles) in 0.0563722 seconds
+Read 24936 bytes (9 tiles) in 0.0436041 seconds
+Read 24936 bytes (9 tiles) in 0.0378761 seconds
+Read 24936 bytes (9 tiles) in 0.0483119 seconds
+Read 24936 bytes (9 tiles) in 0.04371 seconds
+Read 24936 bytes (9 tiles) in 0.0455132 seconds
+Read 24936 bytes (9 tiles) in 0.0409288 seconds
+Read 24936 bytes (9 tiles) in 0.033026 seconds
+Read 24936 bytes (9 tiles) in 0.0365801 seconds
+Read 24936 bytes (9 tiles) in 0.0413349 seconds
+Read 24936 bytes (9 tiles) in 0.0356541 seconds
+Read 24936 bytes (9 tiles) in 0.0412052 seconds
+Read 24936 bytes (9 tiles) in 0.0416651 seconds
+Read 24936 bytes (9 tiles) in 0.034117 seconds
+Read 24936 bytes (9 tiles) in 0.048769 seconds
+Read 24936 bytes (9 tiles) in 0.0404491 seconds
+Read 24936 bytes (9 tiles) in 0.039854 seconds
+Read 24936 bytes (9 tiles) in 0.0469251 seconds
+Read 24936 bytes (9 tiles) in 0.0415251 seconds
+Read 24936 bytes (9 tiles) in 0.047133 seconds
+Read 24936 bytes (9 tiles) in 0.044553 seconds
+Read 24936 bytes (9 tiles) in 0.0369711 seconds
+Read 24936 bytes (9 tiles) in 0.0362 seconds
+Read 24936 bytes (9 tiles) in 0.042613 seconds
+Read 24936 bytes (9 tiles) in 0.0397179 seconds
+Read 24936 bytes (9 tiles) in 0.043303 seconds
+Read 24936 bytes (9 tiles) in 0.0365062 seconds
+Read 24936 bytes (9 tiles) in 0.0473301 seconds
+Read 24936 bytes (9 tiles) in 0.0354149 seconds
+Read 24936 bytes (9 tiles) in 0.041034 seconds
+Read 24936 bytes (9 tiles) in 0.044102 seconds
+Read 24936 bytes (9 tiles) in 0.0423698 seconds
+Read 24936 bytes (9 tiles) in 0.043257 seconds
+Read 24936 bytes (9 tiles) in 0.0468001 seconds
+Read 24936 bytes (9 tiles) in 0.034528 seconds
+Read 24936 bytes (9 tiles) in 0.0449359 seconds
+Read 24936 bytes (9 tiles) in 0.0443161 seconds
+Read 24936 bytes (9 tiles) in 0.0372808 seconds
+Read 24936 bytes (9 tiles) in 0.038516 seconds
+Read 24936 bytes (9 tiles) in 0.0339799 seconds
+Read 24936 bytes (9 tiles) in 0.0379291 seconds
+Read 24936 bytes (9 tiles) in 0.0494821 seconds
+Read 24936 bytes (9 tiles) in 0.0381219 seconds
+Read 24936 bytes (9 tiles) in 0.0423138 seconds
+Read 24936 bytes (9 tiles) in 0.0481219 seconds
+Read 24936 bytes (9 tiles) in 0.0322862 seconds
+Read 24936 bytes (9 tiles) in 0.0392439 seconds
+Read 24936 bytes (9 tiles) in 0.033076 seconds
+Read 24936 bytes (9 tiles) in 0.036715 seconds
+Read 24936 bytes (9 tiles) in 0.0430501 seconds
+Read 24936 bytes (9 tiles) in 0.036624 seconds
+Read 24936 bytes (9 tiles) in 0.0461791 seconds
+Read 24936 bytes (9 tiles) in 0.045655 seconds
+Read 24936 bytes (9 tiles) in 0.0382051 seconds
+Read 24936 bytes (9 tiles) in 0.0445011 seconds
+Read 24936 bytes (9 tiles) in 0.0442429 seconds
+Read 24936 bytes (9 tiles) in 0.0356781 seconds
+Read 24936 bytes (9 tiles) in 0.0469291 seconds
+Read 24936 bytes (9 tiles) in 0.040339 seconds
+Read 24936 bytes (9 tiles) in 0.0445518 seconds
+Read 24936 bytes (9 tiles) in 0.0550721 seconds
+Read 24936 bytes (9 tiles) in 0.0415649 seconds
+Read 24936 bytes (9 tiles) in 0.0418491 seconds
+Read 24936 bytes (9 tiles) in 0.0390892 seconds
+Read 24936 bytes (9 tiles) in 0.0368631 seconds
+Read 24936 bytes (9 tiles) in 0.044385 seconds
+Read 24936 bytes (9 tiles) in 0.0348608 seconds
+Read 24936 bytes (9 tiles) in 0.0404651 seconds
+Read 24936 bytes (9 tiles) in 0.0500262 seconds
+Read 24936 bytes (9 tiles) in 0.0379782 seconds
+Read 24936 bytes (9 tiles) in 0.0478001 seconds
+Read 24936 bytes (9 tiles) in 0.0424581 seconds
+Read 24936 bytes (9 tiles) in 0.0436928 seconds
+Read 24936 bytes (9 tiles) in 0.047179 seconds
+Read 24936 bytes (9 tiles) in 0.0335701 seconds
+Read 24936 bytes (9 tiles) in 0.0463979 seconds
+Read 24936 bytes (9 tiles) in 0.044383 seconds
+Read 24936 bytes (9 tiles) in 0.0345161 seconds
+Read 24936 bytes (9 tiles) in 0.0440512 seconds
+Read 24936 bytes (9 tiles) in 0.039711 seconds
+Read 24936 bytes (9 tiles) in 0.0444839 seconds
+Read 24936 bytes (9 tiles) in 0.0537388 seconds
+Read 24936 bytes (9 tiles) in 0.037935 seconds
+Read 24936 bytes (9 tiles) in 0.0413539 seconds
+Read 24936 bytes (9 tiles) in 0.0358899 seconds
+Read 24936 bytes (9 tiles) in 0.0426199 seconds
+Read 24936 bytes (9 tiles) in 0.0421829 seconds
+Read 24936 bytes (9 tiles) in 0.03754 seconds
+Read 24936 bytes (9 tiles) in 0.042057 seconds
+Read 24936 bytes (9 tiles) in 0.048115 seconds
+Read 24936 bytes (9 tiles) in 0.042028 seconds
+Read 24936 bytes (9 tiles) in 0.0366218 seconds
+Read 24936 bytes (9 tiles) in 0.0373359 seconds
+Read 24936 bytes (9 tiles) in 0.0450151 seconds
+Read 24936 bytes (9 tiles) in 0.0409551 seconds
+Read 24936 bytes (9 tiles) in 0.0352402 seconds
+Read 24936 bytes (9 tiles) in 0.035315 seconds
+Read 24936 bytes (9 tiles) in 0.0384579 seconds
+Read 24936 bytes (9 tiles) in 0.0338171 seconds
+Read 24936 bytes (9 tiles) in 0.0424001 seconds
+Read 24936 bytes (9 tiles) in 0.0366049 seconds
+Read 24936 bytes (9 tiles) in 0.037941 seconds
+Read 24936 bytes (9 tiles) in 0.0438139 seconds
+Read 24936 bytes (9 tiles) in 0.0442071 seconds
+Read 24936 bytes (9 tiles) in 0.0710442 seconds
+Read 24936 bytes (9 tiles) in 0.042599 seconds
+Read 24936 bytes (9 tiles) in 0.048816 seconds
+Read 24936 bytes (9 tiles) in 0.035898 seconds
+Read 24936 bytes (9 tiles) in 0.0462511 seconds
+Read 24936 bytes (9 tiles) in 0.0370271 seconds
+Read 24936 bytes (9 tiles) in 0.036752 seconds
+Read 24936 bytes (9 tiles) in 0.0400481 seconds
+Read 24936 bytes (9 tiles) in 0.0408158 seconds
+Read 24936 bytes (9 tiles) in 0.042661 seconds
+Read 24936 bytes (9 tiles) in 0.0380011 seconds
+Read 24936 bytes (9 tiles) in 0.048197 seconds
+Read 24936 bytes (9 tiles) in 0.0424781 seconds
+Read 24936 bytes (9 tiles) in 0.0367162 seconds
+Read 24936 bytes (9 tiles) in 0.0486009 seconds
+Read 24936 bytes (9 tiles) in 0.038877 seconds
+Read 24936 bytes (9 tiles) in 0.0387421 seconds
+Read 24936 bytes (9 tiles) in 0.0470281 seconds
+Read 24936 bytes (9 tiles) in 0.033689 seconds
+Read 24936 bytes (9 tiles) in 0.0401602 seconds
+Read 24936 bytes (9 tiles) in 0.039336 seconds
+Read 24936 bytes (9 tiles) in 0.029808 seconds
+Read 12468000 bytes (500 tile planes) in 20.9036 seconds
+Frame rate: 41.8072 milliseconds
+Read 8388608 bytes in 0.44954 seconds
+Read 8388608 bytes in 0.265115 seconds
+Read 8388608 bytes in 0.270812 seconds
+Read 8388608 bytes in 0.281582 seconds
+Read 8388608 bytes in 0.259871 seconds
+Read 8388608 bytes in 0.253872 seconds
+Read 8388608 bytes in 0.26924 seconds
+Read 8388608 bytes in 0.259831 seconds
+Read 8388608 bytes in 0.258843 seconds
+Read 8388608 bytes in 0.268617 seconds
+Read 8388608 bytes in 0.269348 seconds
+Read 8388608 bytes in 0.272649 seconds
+Read 8388608 bytes in 0.271288 seconds
+Read 8388608 bytes in 0.270745 seconds
+Read 8388608 bytes in 0.271702 seconds
+Read 8388608 bytes in 0.265401 seconds
+Read 8388608 bytes in 0.25506 seconds
+Read 8388608 bytes in 0.257199 seconds
+Read 8388608 bytes in 0.275788 seconds
+Read 8388608 bytes in 0.2726 seconds
+Read 8388608 bytes in 0.255758 seconds
+Read 8388608 bytes in 0.271057 seconds
+Read 8388608 bytes in 0.279897 seconds
+Read 8388608 bytes in 0.26448 seconds
+Read 8388608 bytes in 0.26446 seconds
+Read 8388608 bytes in 0.270651 seconds
+Read 8388608 bytes in 0.268544 seconds
+Read 8388608 bytes in 0.267859 seconds
+Read 8388608 bytes in 0.256552 seconds
+Read 8388608 bytes in 0.262061 seconds
+Read 8388608 bytes in 0.274399 seconds
+Read 8388608 bytes in 0.263288 seconds
+Read 8388608 bytes in 0.479515 seconds
+Read 8388608 bytes in 0.274208 seconds
+Read 8388608 bytes in 0.262953 seconds
+Read 8388608 bytes in 0.268684 seconds
+Read 8388608 bytes in 0.263699 seconds
+Read 8388608 bytes in 0.268448 seconds
+Read 8388608 bytes in 0.264499 seconds
+Read 8388608 bytes in 0.265675 seconds
+Read 8388608 bytes in 0.276367 seconds
+Read 8388608 bytes in 0.266801 seconds
+Read 8388608 bytes in 0.262867 seconds
+Read 8388608 bytes in 0.270103 seconds
+Read 8388608 bytes in 0.268868 seconds
+Read 8388608 bytes in 0.26509 seconds
+Read 8388608 bytes in 0.267411 seconds
+Read 8388608 bytes in 0.257471 seconds
+Read 8388608 bytes in 0.268879 seconds
+Read 8388608 bytes in 0.268096 seconds
+Read 8388608 bytes in 0.271574 seconds
+Read 8388608 bytes in 0.270946 seconds
+Read 8388608 bytes in 0.261161 seconds
+Read 8388608 bytes in 0.284538 seconds
+Read 8388608 bytes in 0.270652 seconds
+Read 8388608 bytes in 0.260933 seconds
+Read 8388608 bytes in 0.263269 seconds
+Read 8388608 bytes in 0.255719 seconds
+Read 8388608 bytes in 0.265765 seconds
+Read 8388608 bytes in 0.263674 seconds
+Read 8388608 bytes in 0.272254 seconds
+Read 8388608 bytes in 0.262684 seconds
+Read 8388608 bytes in 0.255402 seconds
+Read 8388608 bytes in 0.267556 seconds
+Read 8388608 bytes in 0.479539 seconds
+Read 8388608 bytes in 0.268347 seconds
+Read 8388608 bytes in 0.269523 seconds
+Read 8388608 bytes in 0.273971 seconds
+Read 8388608 bytes in 0.265931 seconds
+Read 8388608 bytes in 0.267294 seconds
+Read 8388608 bytes in 0.263123 seconds
+Read 8388608 bytes in 0.281119 seconds
+Read 8388608 bytes in 0.270988 seconds
+Read 8388608 bytes in 0.285774 seconds
+Read 8388608 bytes in 0.277283 seconds
+Read 8388608 bytes in 0.255297 seconds
+Read 8388608 bytes in 0.265232 seconds
+Read 8388608 bytes in 0.266801 seconds
+Read 8388608 bytes in 0.276487 seconds
+Read 8388608 bytes in 0.256583 seconds
+Read 8388608 bytes in 0.275021 seconds
+Read 8388608 bytes in 0.261561 seconds
+Read 8388608 bytes in 0.274381 seconds
+Read 8388608 bytes in 0.26787 seconds
+Read 8388608 bytes in 0.25595 seconds
+Read 8388608 bytes in 0.270889 seconds
+Read 8388608 bytes in 0.273829 seconds
+Read 8388608 bytes in 0.25666 seconds
+Read 8388608 bytes in 0.274355 seconds
+Read 8388608 bytes in 0.249836 seconds
+Read 8388608 bytes in 0.286159 seconds
+Read 8388608 bytes in 0.261211 seconds
+Read 8388608 bytes in 0.262616 seconds
+Read 8388608 bytes in 0.279094 seconds
+Read 8388608 bytes in 0.273624 seconds
+Read 8388608 bytes in 0.260942 seconds
+Read 8388608 bytes in 0.45088 seconds
+Read 8388608 bytes in 0.261899 seconds
+Read 8388608 bytes in 0.264419 seconds
+Read 8388608 bytes in 0.268097 seconds
+Read 8388608 bytes in 0.268203 seconds
+Read 8388608 bytes in 0.270671 seconds
+Read 8388608 bytes in 0.272728 seconds
+Read 8388608 bytes in 0.269179 seconds
+Read 8388608 bytes in 0.255118 seconds
+Read 8388608 bytes in 0.267207 seconds
+Read 8388608 bytes in 0.275243 seconds
+Read 8388608 bytes in 0.265786 seconds
+Read 8388608 bytes in 0.268858 seconds
+Read 8388608 bytes in 0.263139 seconds
+Read 8388608 bytes in 0.261933 seconds
+Read 8388608 bytes in 0.289716 seconds
+Read 8388608 bytes in 0.260841 seconds
+Read 8388608 bytes in 0.264751 seconds
+Read 8388608 bytes in 0.25603 seconds
+Read 8388608 bytes in 0.26411 seconds
+Read 8388608 bytes in 0.283863 seconds
+Read 8388608 bytes in 0.267082 seconds
+Read 8388608 bytes in 0.258848 seconds
+Read 8388608 bytes in 0.268664 seconds
+Read 8388608 bytes in 0.276598 seconds
+Read 8388608 bytes in 0.258508 seconds
+Read 8388608 bytes in 0.260384 seconds
+Read 8388608 bytes in 0.274131 seconds
+Read 8388608 bytes in 0.266559 seconds
+Read 8388608 bytes in 0.269582 seconds
+Read 8388608 bytes in 0.269409 seconds
+Read 8388608 bytes in 0.272781 seconds
+Read 8388608 bytes in 0.463992 seconds
+Read 8388608 bytes in 0.264597 seconds
+Read 8388608 bytes in 0.273585 seconds
+Read 8388608 bytes in 0.265251 seconds
+Read 8388608 bytes in 0.275805 seconds
+Read 8388608 bytes in 0.27723 seconds
+Read 8388608 bytes in 0.261774 seconds
+Read 8388608 bytes in 0.255397 seconds
+Read 8388608 bytes in 0.253945 seconds
+Read 8388608 bytes in 0.271 seconds
+Read 8388608 bytes in 0.264028 seconds
+Read 8388608 bytes in 0.279502 seconds
+Read 8388608 bytes in 0.264281 seconds
+Read 8388608 bytes in 0.265215 seconds
+Read 8388608 bytes in 0.262944 seconds
+Read 8388608 bytes in 0.265521 seconds
+Read 8388608 bytes in 0.262665 seconds
+Read 8388608 bytes in 0.260405 seconds
+Read 8388608 bytes in 0.273758 seconds
+Read 8388608 bytes in 0.25968 seconds
+Read 8388608 bytes in 0.271778 seconds
+Read 8388608 bytes in 0.272838 seconds
+Read 8388608 bytes in 0.27075 seconds
+Read 8388608 bytes in 0.264585 seconds
+Read 8388608 bytes in 0.269726 seconds
+Read 8388608 bytes in 0.257478 seconds
+Read 8388608 bytes in 0.264035 seconds
+Read 8388608 bytes in 0.267836 seconds
+Read 8388608 bytes in 0.261879 seconds
+Read 8388608 bytes in 0.274669 seconds
+Read 8388608 bytes in 0.267576 seconds
+Read 8388608 bytes in 0.264014 seconds
+Read 8388608 bytes in 0.492431 seconds
+Read 8388608 bytes in 0.267584 seconds
+Read 8388608 bytes in 0.271677 seconds
+Read 8388608 bytes in 0.272239 seconds
+Read 8388608 bytes in 0.278155 seconds
+Read 8388608 bytes in 0.260483 seconds
+Read 8388608 bytes in 0.259646 seconds
+Read 8388608 bytes in 0.281944 seconds
+Read 8388608 bytes in 0.268595 seconds
+Read 8388608 bytes in 0.272327 seconds
+Read 8388608 bytes in 0.271964 seconds
+Read 8388608 bytes in 0.268302 seconds
+Read 8388608 bytes in 0.262486 seconds
+Read 8388608 bytes in 0.276892 seconds
+Read 8388608 bytes in 0.262474 seconds
+Read 8388608 bytes in 0.275085 seconds
+Read 8388608 bytes in 0.267638 seconds
+Read 8388608 bytes in 0.268398 seconds
+Read 8388608 bytes in 0.265818 seconds
+Read 8388608 bytes in 0.267111 seconds
+Read 8388608 bytes in 0.273777 seconds
+Read 8388608 bytes in 0.267523 seconds
+Read 8388608 bytes in 0.261162 seconds
+Read 8388608 bytes in 0.26405 seconds
+Read 8388608 bytes in 0.273785 seconds
+Read 8388608 bytes in 0.264653 seconds
+Read 8388608 bytes in 0.268662 seconds
+Read 8388608 bytes in 0.264435 seconds
+Read 8388608 bytes in 0.258471 seconds
+Read 8388608 bytes in 0.26349 seconds
+Read 8388608 bytes in 0.26027 seconds
+Read 8388608 bytes in 0.271243 seconds
+Read 8388608 bytes in 0.479871 seconds
+Read 8388608 bytes in 0.27755 seconds
+Read 8388608 bytes in 0.274644 seconds
+Read 8388608 bytes in 0.266093 seconds
+Read 8388608 bytes in 0.279201 seconds
+Read 8388608 bytes in 0.274006 seconds
+Read 8388608 bytes in 0.269961 seconds
+Read 8388608 bytes in 0.266863 seconds
+Read 8388608 bytes in 0.27102 seconds
+Read 8388608 bytes in 0.272278 seconds
+Read 8388608 bytes in 0.274979 seconds
+Read 8388608 bytes in 0.258515 seconds
+Read 8388608 bytes in 0.275814 seconds
+Read 8388608 bytes in 0.271168 seconds
+Read 8388608 bytes in 0.264711 seconds
+Read 8388608 bytes in 0.258074 seconds
+Read 8388608 bytes in 0.265538 seconds
+Read 8388608 bytes in 0.280082 seconds
+Read 8388608 bytes in 0.258831 seconds
+Read 8388608 bytes in 0.275874 seconds
+Read 8388608 bytes in 0.283986 seconds
+Read 8388608 bytes in 0.275448 seconds
+Read 8388608 bytes in 0.269258 seconds
+Read 8388608 bytes in 0.26573 seconds
+Read 8388608 bytes in 0.265823 seconds
+Read 8388608 bytes in 0.274095 seconds
+Read 8388608 bytes in 0.263935 seconds
+Read 8388608 bytes in 0.268855 seconds
+Read 8388608 bytes in 0.264727 seconds
+Read 8388608 bytes in 0.269435 seconds
+Read 8388608 bytes in 0.276023 seconds
+Read 8388608 bytes in 0.264566 seconds
+Read 8388608 bytes in 0.46929 seconds
+Read 8388608 bytes in 0.270543 seconds
+Read 8388608 bytes in 0.264901 seconds
+Read 8388608 bytes in 0.269371 seconds
+Read 8388608 bytes in 0.271798 seconds
+Read 8388608 bytes in 0.262376 seconds
+Read 8388608 bytes in 0.27436 seconds
+Read 8388608 bytes in 0.277761 seconds
+Read 8388608 bytes in 0.266785 seconds
+Read 8388608 bytes in 0.263439 seconds
+Read 8388608 bytes in 0.270917 seconds
+Read 8388608 bytes in 0.268514 seconds
+Read 8388608 bytes in 0.264831 seconds
+Read 8388608 bytes in 0.29107 seconds
+Read 8388608 bytes in 0.263133 seconds
+Read 8388608 bytes in 0.264763 seconds
+Read 8388608 bytes in 0.264271 seconds
+Read 8388608 bytes in 0.261242 seconds
+Read 8388608 bytes in 0.273948 seconds
+Read 8388608 bytes in 0.271119 seconds
+Read 8388608 bytes in 0.258247 seconds
+Read 8388608 bytes in 0.265146 seconds
+Read 8388608 bytes in 0.276493 seconds
+Read 8388608 bytes in 0.260401 seconds
+Read 8388608 bytes in 0.264836 seconds
+Read 8388608 bytes in 0.276208 seconds
+Read 8388608 bytes in 0.269412 seconds
+Read 8388608 bytes in 0.264619 seconds
+Read 8388608 bytes in 0.278356 seconds
+Read 8388608 bytes in 0.273838 seconds
+Read 8388608 bytes in 0.267056 seconds
+Read 8388608 bytes in 0.286441 seconds
+Read 8388608 bytes in 0.470177 seconds
+Read 8388608 bytes in 0.27477 seconds
+Read 8388608 bytes in 0.269302 seconds
+Read 8388608 bytes in 0.271076 seconds
+Read 8388608 bytes in 0.26629 seconds
+Read 8388608 bytes in 0.263606 seconds
+Read 8388608 bytes in 0.263203 seconds
+Read 8388608 bytes in 0.268052 seconds
+Read 8388608 bytes in 0.273085 seconds
+Read 8388608 bytes in 0.273383 seconds
+Read 8388608 bytes in 0.263523 seconds
+Read 8388608 bytes in 0.268479 seconds
+Read 8388608 bytes in 0.266604 seconds
+Read 8388608 bytes in 0.279747 seconds
+Read 8388608 bytes in 0.270379 seconds
+Read 8388608 bytes in 0.264477 seconds
+Read 8388608 bytes in 0.271862 seconds
+Read 8388608 bytes in 0.274499 seconds
+Read 8388608 bytes in 0.27052 seconds
+Read 8388608 bytes in 0.273495 seconds
+Read 8388608 bytes in 0.272423 seconds
+Read 8388608 bytes in 0.266374 seconds
+Read 8388608 bytes in 0.27007 seconds
+Read 8388608 bytes in 0.268805 seconds
+Read 8388608 bytes in 0.261932 seconds
+Read 8388608 bytes in 0.261707 seconds
+Read 8388608 bytes in 0.268642 seconds
+Read 8388608 bytes in 0.263579 seconds
+Read 8388608 bytes in 0.264749 seconds
+Read 8388608 bytes in 0.259263 seconds
+Read 8388608 bytes in 0.270861 seconds
+Read 8388608 bytes in 0.269272 seconds
+Read 8388608 bytes in 0.48651 seconds
+Read 8388608 bytes in 0.267718 seconds
+Read 8388608 bytes in 0.268126 seconds
+Read 8388608 bytes in 0.259702 seconds
+Read 8388608 bytes in 0.263479 seconds
+Read 8388608 bytes in 0.267426 seconds
+Read 8388608 bytes in 0.263929 seconds
+Read 8388608 bytes in 0.27587 seconds
+Read 8388608 bytes in 0.267438 seconds
+Read 8388608 bytes in 0.269797 seconds
+Read 8388608 bytes in 0.259769 seconds
+Read 8388608 bytes in 0.264568 seconds
+Read 8388608 bytes in 0.265748 seconds
+Read 8388608 bytes in 0.264369 seconds
+Read 8388608 bytes in 0.265122 seconds
+Read 8388608 bytes in 0.274867 seconds
+Read 8388608 bytes in 0.268345 seconds
+Read 8388608 bytes in 0.275681 seconds
+Read 8388608 bytes in 0.265296 seconds
+Read 8388608 bytes in 0.264051 seconds
+Read 8388608 bytes in 0.280887 seconds
+Read 8388608 bytes in 0.277071 seconds
+Read 8388608 bytes in 0.269097 seconds
+Read 8388608 bytes in 0.2746 seconds
+Read 8388608 bytes in 0.271293 seconds
+Read 8388608 bytes in 0.264597 seconds
+Read 8388608 bytes in 0.273719 seconds
+Read 8388608 bytes in 0.26559 seconds
+Read 8388608 bytes in 0.283714 seconds
+Read 8388608 bytes in 0.266944 seconds
+Read 8388608 bytes in 0.265517 seconds
+Read 8388608 bytes in 0.274767 seconds
+Read 8388608 bytes in 0.432546 seconds
+Read 8388608 bytes in 0.262655 seconds
+Read 8388608 bytes in 0.274213 seconds
+Read 8388608 bytes in 0.261264 seconds
+Read 8388608 bytes in 0.264663 seconds
+Read 8388608 bytes in 0.260558 seconds
+Read 8388608 bytes in 0.260601 seconds
+Read 8388608 bytes in 0.272637 seconds
+Read 8388608 bytes in 0.271709 seconds
+Read 8388608 bytes in 0.266256 seconds
+Read 8388608 bytes in 0.266066 seconds
+Read 8388608 bytes in 0.265441 seconds
+Read 8388608 bytes in 0.267851 seconds
+Read 8388608 bytes in 0.277876 seconds
+Read 8388608 bytes in 0.278532 seconds
+Read 8388608 bytes in 0.270004 seconds
+Read 8388608 bytes in 0.268678 seconds
+Read 8388608 bytes in 0.262327 seconds
+Read 8388608 bytes in 0.264142 seconds
+Read 8388608 bytes in 0.264703 seconds
+Read 8388608 bytes in 0.267933 seconds
+Read 8388608 bytes in 0.267191 seconds
+Read 8388608 bytes in 0.274121 seconds
+Read 8388608 bytes in 0.265678 seconds
+Read 8388608 bytes in 0.274221 seconds
+Read 8388608 bytes in 0.276458 seconds
+Read 8388608 bytes in 0.270132 seconds
+Read 8388608 bytes in 0.274098 seconds
+Read 8388608 bytes in 0.270525 seconds
+Read 8388608 bytes in 0.262026 seconds
+Read 8388608 bytes in 0.274136 seconds
+Read 8388608 bytes in 0.25838 seconds
+Read 8388608 bytes in 0.492031 seconds
+Read 8388608 bytes in 0.293056 seconds
+Read 8388608 bytes in 0.268646 seconds
+Read 8388608 bytes in 0.266537 seconds
+Read 8388608 bytes in 0.281027 seconds
+Read 8388608 bytes in 0.268059 seconds
+Read 8388608 bytes in 0.274172 seconds
+Read 8388608 bytes in 0.267139 seconds
+Read 8388608 bytes in 0.27537 seconds
+Read 8388608 bytes in 0.263448 seconds
+Read 8388608 bytes in 0.274486 seconds
+Read 8388608 bytes in 0.267183 seconds
+Read 8388608 bytes in 0.270635 seconds
+Read 8388608 bytes in 0.267257 seconds
+Read 8388608 bytes in 0.271499 seconds
+Read 8388608 bytes in 0.275976 seconds
+Read 8388608 bytes in 0.271062 seconds
+Read 8388608 bytes in 0.268515 seconds
+Read 8388608 bytes in 0.260365 seconds
+Read 8388608 bytes in 0.278584 seconds
+Read 8388608 bytes in 0.259362 seconds
+Read 8388608 bytes in 0.267997 seconds
+Read 8388608 bytes in 0.265484 seconds
+Read 8388608 bytes in 0.270187 seconds
+Read 8388608 bytes in 0.265954 seconds
+Read 8388608 bytes in 0.267519 seconds
+Read 8388608 bytes in 0.266608 seconds
+Read 8388608 bytes in 0.267437 seconds
+Read 8388608 bytes in 0.271503 seconds
+Read 8388608 bytes in 0.274243 seconds
+Read 8388608 bytes in 0.264954 seconds
+Read 8388608 bytes in 0.268735 seconds
+Read 8388608 bytes in 0.5553 seconds
+Read 8388608 bytes in 0.271236 seconds
+Read 8388608 bytes in 0.270263 seconds
+Read 8388608 bytes in 0.260558 seconds
+Read 8388608 bytes in 0.271708 seconds
+Read 8388608 bytes in 0.275817 seconds
+Read 8388608 bytes in 0.259817 seconds
+Read 8388608 bytes in 0.269868 seconds
+Read 8388608 bytes in 0.259545 seconds
+Read 8388608 bytes in 0.269805 seconds
+Read 8388608 bytes in 0.265844 seconds
+Read 8388608 bytes in 0.260513 seconds
+Read 8388608 bytes in 0.268099 seconds
+Read 8388608 bytes in 0.260807 seconds
+Read 8388608 bytes in 0.26627 seconds
+Read 8388608 bytes in 0.27302 seconds
+Read 8388608 bytes in 0.267222 seconds
+Read 8388608 bytes in 0.263341 seconds
+Read 8388608 bytes in 0.263586 seconds
+Read 8388608 bytes in 0.263906 seconds
+Read 8388608 bytes in 0.266369 seconds
+Read 8388608 bytes in 0.268604 seconds
+Read 8388608 bytes in 0.272873 seconds
+Read 8388608 bytes in 0.259523 seconds
+Read 8388608 bytes in 0.260939 seconds
+Read 8388608 bytes in 0.265741 seconds
+Read 8388608 bytes in 0.263723 seconds
+Read 8388608 bytes in 0.263844 seconds
+Read 8388608 bytes in 0.261877 seconds
+Read 8388608 bytes in 0.261977 seconds
+Read 8388608 bytes in 0.263571 seconds
+Read 8388608 bytes in 0.276011 seconds
+Read 8388608 bytes in 0.478781 seconds
+Read 8388608 bytes in 0.261904 seconds
+Read 8388608 bytes in 0.265776 seconds
+Read 8388608 bytes in 0.263832 seconds
+Read 8388608 bytes in 0.263688 seconds
+Read 8388608 bytes in 0.264393 seconds
+Read 8388608 bytes in 0.265996 seconds
+Read 8388608 bytes in 0.266232 seconds
+Read 8388608 bytes in 0.27651 seconds
+Read 8388608 bytes in 0.264214 seconds
+Read 8388608 bytes in 0.26511 seconds
+Read 8388608 bytes in 0.263104 seconds
+Read 8388608 bytes in 0.265525 seconds
+Read 8388608 bytes in 0.273534 seconds
+Read 8388608 bytes in 0.257664 seconds
+Read 8388608 bytes in 0.264138 seconds
+Read 8388608 bytes in 0.270446 seconds
+Read 8388608 bytes in 0.255919 seconds
+Read 8388608 bytes in 0.25653 seconds
+Read 8388608 bytes in 0.272038 seconds
+Read 8388608 bytes in 0.266202 seconds
+Read 8388608 bytes in 0.271285 seconds
+Read 8388608 bytes in 0.261668 seconds
+Read 8388608 bytes in 0.267595 seconds
+Read 8388608 bytes in 0.264933 seconds
+Read 8388608 bytes in 0.272315 seconds
+Read 8388608 bytes in 0.257204 seconds
+Read 8388608 bytes in 0.264426 seconds
+Read 8388608 bytes in 0.248583 seconds
+Read 8388608 bytes in 0.264317 seconds
+Read 8388608 bytes in 0.270418 seconds
+Read 8388608 bytes in 0.259508 seconds
+Read 8388608 bytes in 0.446988 seconds
+Read 8388608 bytes in 0.24621 seconds
+Read 8388608 bytes in 0.271066 seconds
+Read 8388608 bytes in 0.265776 seconds
+Read 8388608 bytes in 0.268952 seconds
+Read 8388608 bytes in 0.27968 seconds
+Read 8388608 bytes in 0.265652 seconds
+Read 8388608 bytes in 0.259549 seconds
+Read 8388608 bytes in 0.269255 seconds
+Read 8388608 bytes in 0.264621 seconds
+Read 8388608 bytes in 0.267208 seconds
+Read 8388608 bytes in 0.274564 seconds
+Read 8388608 bytes in 0.260319 seconds
+Read 8388608 bytes in 0.265324 seconds
+Read 8388608 bytes in 0.266434 seconds
+Read 8388608 bytes in 0.257635 seconds
+Read 8388608 bytes in 0.277575 seconds
+Read 8388608 bytes in 0.26597 seconds
+Read 8388608 bytes in 0.265669 seconds
+Read 8388608 bytes in 0.278965 seconds
+Read 8388608 bytes in 0.261848 seconds
+Read 8388608 bytes in 0.265414 seconds
+Read 8388608 bytes in 0.267729 seconds
+Read 8388608 bytes in 0.270935 seconds
+Read 8388608 bytes in 0.26101 seconds
+Read 8388608 bytes in 0.27713 seconds
+Read 8388608 bytes in 0.262534 seconds
+Read 8388608 bytes in 0.265356 seconds
+Read 8388608 bytes in 0.257712 seconds
+Read 8388608 bytes in 0.262115 seconds
+Read 8388608 bytes in 0.26353 seconds
+Read 8388608 bytes in 0.270295 seconds
+Read 8388608 bytes in 0.458615 seconds
+Read 8388608 bytes in 0.270743 seconds
+Read 8388608 bytes in 0.266314 seconds
+Read 8388608 bytes in 0.256109 seconds
+Read 8388608 bytes in 0.252606 seconds
+Read 8388608 bytes in 0.263334 seconds
+Read 8388608 bytes in 0.262092 seconds
+Read 8388608 bytes in 0.272523 seconds
+Read 8388608 bytes in 0.265911 seconds
+Read 8388608 bytes in 0.260736 seconds
+Read 8388608 bytes in 0.251881 seconds
+Read 8388608 bytes in 0.268858 seconds
+Read 8388608 bytes in 0.285794 seconds
+Read 8388608 bytes in 0.260203 seconds
+Read 8388608 bytes in 0.274883 seconds
+Read 8388608 bytes in 0.26031 seconds
+Read 8388608 bytes in 0.265158 seconds
+Read 8388608 bytes in 0.275225 seconds
+Read 8388608 bytes in 0.276042 seconds
+Read 8388608 bytes in 0.263889 seconds
+Read -100663296 bytes (500 segmentation 1024x1024 planes) in 137.467 seconds
+Frame rate: 274.934 milliseconds
+Read 1048576 bytes in 0.655631 seconds
+Read 1048576 bytes in 0.128755 seconds
+Read 1048576 bytes in 0.125401 seconds
+Read 1048576 bytes in 0.130074 seconds
+Read 1048576 bytes in 0.138657 seconds
+Read 1048576 bytes in 0.141567 seconds
+Read 1048576 bytes in 0.140574 seconds
+Read 1048576 bytes in 0.128849 seconds
+Read 1048576 bytes in 0.141632 seconds
+Read 1048576 bytes in 0.127639 seconds
+Read 1048576 bytes in 0.130836 seconds
+Read 1048576 bytes in 0.135983 seconds
+Read 1048576 bytes in 0.14238 seconds
+Read 1048576 bytes in 0.12999 seconds
+Read 1048576 bytes in 0.13421 seconds
+Read 1048576 bytes in 0.148805 seconds
+Read 1048576 bytes in 0.146323 seconds
+Read 1048576 bytes in 0.126854 seconds
+Read 1048576 bytes in 0.135407 seconds
+Read 1048576 bytes in 0.137001 seconds
+Read 1048576 bytes in 0.13867 seconds
+Read 1048576 bytes in 0.13627 seconds
+Read 1048576 bytes in 0.132527 seconds
+Read 1048576 bytes in 0.132352 seconds
+Read 1048576 bytes in 0.124986 seconds
+Read 1048576 bytes in 0.144374 seconds
+Read 1048576 bytes in 0.11764 seconds
+Read 1048576 bytes in 0.133061 seconds
+Read 1048576 bytes in 0.134926 seconds
+Read 1048576 bytes in 0.130831 seconds
+Read 1048576 bytes in 0.122392 seconds
+Read 1048576 bytes in 0.142216 seconds
+Read 1048576 bytes in 0.751528 seconds
+Read 1048576 bytes in 0.130855 seconds
+Read 1048576 bytes in 0.114661 seconds
+Read 1048576 bytes in 0.131919 seconds
+Read 1048576 bytes in 0.132222 seconds
+Read 1048576 bytes in 0.131417 seconds
+Read 1048576 bytes in 0.132599 seconds
+Read 1048576 bytes in 0.137543 seconds
+Read 1048576 bytes in 0.132873 seconds
+Read 1048576 bytes in 0.139734 seconds
+Read 1048576 bytes in 0.130254 seconds
+Read 1048576 bytes in 0.138252 seconds
+Read 1048576 bytes in 0.12904 seconds
+Read 1048576 bytes in 0.146032 seconds
+Read 1048576 bytes in 0.131944 seconds
+Read 1048576 bytes in 0.124653 seconds
+Read 1048576 bytes in 0.126274 seconds
+Read 1048576 bytes in 0.135933 seconds
+Read 1048576 bytes in 0.128753 seconds
+Read 1048576 bytes in 0.130022 seconds
+Read 1048576 bytes in 0.142004 seconds
+Read 1048576 bytes in 0.11493 seconds
+Read 1048576 bytes in 0.142676 seconds
+Read 1048576 bytes in 0.13491 seconds
+Read 1048576 bytes in 0.124543 seconds
+Read 1048576 bytes in 0.126463 seconds
+Read 1048576 bytes in 0.140358 seconds
+Read 1048576 bytes in 0.135985 seconds
+Read 1048576 bytes in 0.122914 seconds
+Read 1048576 bytes in 0.139044 seconds
+Read 1048576 bytes in 0.135414 seconds
+Read 1048576 bytes in 0.127482 seconds
+Read 1048576 bytes in 0.667966 seconds
+Read 1048576 bytes in 0.136696 seconds
+Read 1048576 bytes in 0.132418 seconds
+Read 1048576 bytes in 0.13959 seconds
+Read 1048576 bytes in 0.133426 seconds
+Read 1048576 bytes in 0.135057 seconds
+Read 1048576 bytes in 0.137451 seconds
+Read 1048576 bytes in 0.12537 seconds
+Read 1048576 bytes in 0.134191 seconds
+Read 1048576 bytes in 0.124338 seconds
+Read 1048576 bytes in 0.142405 seconds
+Read 1048576 bytes in 0.134549 seconds
+Read 1048576 bytes in 0.134774 seconds
+Read 1048576 bytes in 0.141916 seconds
+Read 1048576 bytes in 0.133178 seconds
+Read 1048576 bytes in 0.139559 seconds
+Read 1048576 bytes in 0.13216 seconds
+Read 1048576 bytes in 0.141581 seconds
+Read 1048576 bytes in 0.137257 seconds
+Read 1048576 bytes in 0.126923 seconds
+Read 1048576 bytes in 0.137325 seconds
+Read 1048576 bytes in 0.134023 seconds
+Read 1048576 bytes in 0.121908 seconds
+Read 1048576 bytes in 0.132302 seconds
+Read 1048576 bytes in 0.14787 seconds
+Read 1048576 bytes in 0.133025 seconds
+Read 1048576 bytes in 0.133773 seconds
+Read 1048576 bytes in 0.134935 seconds
+Read 1048576 bytes in 0.137157 seconds
+Read 1048576 bytes in 0.129556 seconds
+Read 1048576 bytes in 0.135626 seconds
+Read 1048576 bytes in 0.138889 seconds
+Read 1048576 bytes in 0.662531 seconds
+Read 1048576 bytes in 0.130324 seconds
+Read 1048576 bytes in 0.114707 seconds
+Read 1048576 bytes in 0.129857 seconds
+Read 1048576 bytes in 0.14336 seconds
+Read 1048576 bytes in 0.129589 seconds
+Read 1048576 bytes in 0.120642 seconds
+Read 1048576 bytes in 0.142633 seconds
+Read 1048576 bytes in 0.134075 seconds
+Read 1048576 bytes in 0.134335 seconds
+Read 1048576 bytes in 0.132014 seconds
+Read 1048576 bytes in 0.135063 seconds
+Read 1048576 bytes in 0.135741 seconds
+Read 1048576 bytes in 0.118242 seconds
+Read 1048576 bytes in 0.138442 seconds
+Read 1048576 bytes in 0.146073 seconds
+Read 1048576 bytes in 0.116741 seconds
+Read 1048576 bytes in 0.123573 seconds
+Read 1048576 bytes in 0.133483 seconds
+Read 1048576 bytes in 0.130714 seconds
+Read 1048576 bytes in 0.139256 seconds
+Read 1048576 bytes in 0.138964 seconds
+Read 1048576 bytes in 0.130331 seconds
+Read 1048576 bytes in 0.134691 seconds
+Read 1048576 bytes in 0.145867 seconds
+Read 1048576 bytes in 0.128651 seconds
+Read 1048576 bytes in 0.136739 seconds
+Read 1048576 bytes in 0.122167 seconds
+Read 1048576 bytes in 0.122412 seconds
+Read 1048576 bytes in 0.1264 seconds
+Read 1048576 bytes in 0.121564 seconds
+Read 1048576 bytes in 0.138472 seconds
+Read 1048576 bytes in 0.776659 seconds
+Read 1048576 bytes in 0.13371 seconds
+Read 1048576 bytes in 0.137956 seconds
+Read 1048576 bytes in 0.134801 seconds
+Read 1048576 bytes in 0.136876 seconds
+Read 1048576 bytes in 0.14409 seconds
+Read 1048576 bytes in 0.135326 seconds
+Read 1048576 bytes in 0.125847 seconds
+Read 1048576 bytes in 0.13841 seconds
+Read 1048576 bytes in 0.143294 seconds
+Read 1048576 bytes in 0.124993 seconds
+Read 1048576 bytes in 0.121395 seconds
+Read 1048576 bytes in 0.142241 seconds
+Read 1048576 bytes in 0.116935 seconds
+Read 1048576 bytes in 0.123517 seconds
+Read 1048576 bytes in 0.127406 seconds
+Read 1048576 bytes in 0.129835 seconds
+Read 1048576 bytes in 0.131372 seconds
+Read 1048576 bytes in 0.137962 seconds
+Read 1048576 bytes in 0.134837 seconds
+Read 1048576 bytes in 0.139288 seconds
+Read 1048576 bytes in 0.141518 seconds
+Read 1048576 bytes in 0.143182 seconds
+Read 1048576 bytes in 0.128803 seconds
+Read 1048576 bytes in 0.114723 seconds
+Read 1048576 bytes in 0.143626 seconds
+Read 1048576 bytes in 0.122157 seconds
+Read 1048576 bytes in 0.125763 seconds
+Read 1048576 bytes in 0.128212 seconds
+Read 1048576 bytes in 0.14698 seconds
+Read 1048576 bytes in 0.12761 seconds
+Read 1048576 bytes in 0.129808 seconds
+Read 1048576 bytes in 0.668811 seconds
+Read 1048576 bytes in 0.128867 seconds
+Read 1048576 bytes in 0.129884 seconds
+Read 1048576 bytes in 0.140869 seconds
+Read 1048576 bytes in 0.134627 seconds
+Read 1048576 bytes in 0.125488 seconds
+Read 1048576 bytes in 0.136199 seconds
+Read 1048576 bytes in 0.125317 seconds
+Read 1048576 bytes in 0.127571 seconds
+Read 1048576 bytes in 0.12613 seconds
+Read 1048576 bytes in 0.141046 seconds
+Read 1048576 bytes in 0.134051 seconds
+Read 1048576 bytes in 0.128029 seconds
+Read 1048576 bytes in 0.134459 seconds
+Read 1048576 bytes in 0.138799 seconds
+Read 1048576 bytes in 0.137614 seconds
+Read 1048576 bytes in 0.134229 seconds
+Read 1048576 bytes in 0.116269 seconds
+Read 1048576 bytes in 0.122128 seconds
+Read 1048576 bytes in 0.132396 seconds
+Read 1048576 bytes in 0.136873 seconds
+Read 1048576 bytes in 0.129509 seconds
+Read 1048576 bytes in 0.138762 seconds
+Read 1048576 bytes in 0.123872 seconds
+Read 1048576 bytes in 0.127078 seconds
+Read 1048576 bytes in 0.129407 seconds
+Read 1048576 bytes in 0.129061 seconds
+Read 1048576 bytes in 0.138635 seconds
+Read 1048576 bytes in 0.118189 seconds
+Read 1048576 bytes in 0.135814 seconds
+Read 1048576 bytes in 0.139298 seconds
+Read 1048576 bytes in 0.126452 seconds
+Read 1048576 bytes in 0.65289 seconds
+Read 1048576 bytes in 0.139124 seconds
+Read 1048576 bytes in 0.127616 seconds
+Read 1048576 bytes in 0.139572 seconds
+Read 1048576 bytes in 0.140818 seconds
+Read 1048576 bytes in 0.12733 seconds
+Read 1048576 bytes in 0.114064 seconds
+Read 1048576 bytes in 0.124364 seconds
+Read 1048576 bytes in 0.130501 seconds
+Read 1048576 bytes in 0.121276 seconds
+Read 1048576 bytes in 0.133002 seconds
+Read 1048576 bytes in 0.14533 seconds
+Read 1048576 bytes in 0.129395 seconds
+Read 1048576 bytes in 0.123046 seconds
+Read 1048576 bytes in 0.126708 seconds
+Read 1048576 bytes in 0.119615 seconds
+Read 1048576 bytes in 0.141545 seconds
+Read 1048576 bytes in 0.138031 seconds
+Read 1048576 bytes in 0.141957 seconds
+Read 1048576 bytes in 0.127993 seconds
+Read 1048576 bytes in 0.146074 seconds
+Read 1048576 bytes in 0.146128 seconds
+Read 1048576 bytes in 0.133984 seconds
+Read 1048576 bytes in 0.12783 seconds
+Read 1048576 bytes in 0.116263 seconds
+Read 1048576 bytes in 0.13694 seconds
+Read 1048576 bytes in 0.12788 seconds
+Read 1048576 bytes in 0.136182 seconds
+Read 1048576 bytes in 0.142688 seconds
+Read 1048576 bytes in 0.128457 seconds
+Read 1048576 bytes in 0.148271 seconds
+Read 1048576 bytes in 0.145792 seconds
+Read 1048576 bytes in 0.675849 seconds
+Read 1048576 bytes in 0.117016 seconds
+Read 1048576 bytes in 0.145356 seconds
+Read 1048576 bytes in 0.130249 seconds
+Read 1048576 bytes in 0.132986 seconds
+Read 1048576 bytes in 0.121827 seconds
+Read 1048576 bytes in 0.141326 seconds
+Read 1048576 bytes in 0.128759 seconds
+Read 1048576 bytes in 0.141899 seconds
+Read 1048576 bytes in 0.138479 seconds
+Read 1048576 bytes in 0.129456 seconds
+Read 1048576 bytes in 0.123442 seconds
+Read 1048576 bytes in 0.144953 seconds
+Read 1048576 bytes in 0.131843 seconds
+Read 1048576 bytes in 0.127097 seconds
+Read 1048576 bytes in 0.125521 seconds
+Read 1048576 bytes in 0.132911 seconds
+Read 1048576 bytes in 0.126324 seconds
+Read 1048576 bytes in 0.1325 seconds
+Read 1048576 bytes in 0.134967 seconds
+Read 1048576 bytes in 0.129622 seconds
+Read 1048576 bytes in 0.133524 seconds
+Read 1048576 bytes in 0.150136 seconds
+Read 1048576 bytes in 0.129013 seconds
+Read 1048576 bytes in 0.138473 seconds
+Read 1048576 bytes in 0.132544 seconds
+Read 1048576 bytes in 0.146601 seconds
+Read 1048576 bytes in 0.137566 seconds
+Read 1048576 bytes in 0.140046 seconds
+Read 1048576 bytes in 0.141823 seconds
+Read 1048576 bytes in 0.116413 seconds
+Read 1048576 bytes in 0.141795 seconds
+Read 1048576 bytes in 0.674264 seconds
+Read 1048576 bytes in 0.128266 seconds
+Read 1048576 bytes in 0.128695 seconds
+Read 1048576 bytes in 0.149483 seconds
+Read 1048576 bytes in 0.129316 seconds
+Read 1048576 bytes in 0.11726 seconds
+Read 1048576 bytes in 0.146636 seconds
+Read 1048576 bytes in 0.136447 seconds
+Read 1048576 bytes in 0.118818 seconds
+Read 1048576 bytes in 0.146384 seconds
+Read 1048576 bytes in 0.139921 seconds
+Read 1048576 bytes in 0.137521 seconds
+Read 1048576 bytes in 0.130768 seconds
+Read 1048576 bytes in 0.134784 seconds
+Read 1048576 bytes in 0.126331 seconds
+Read 1048576 bytes in 0.132333 seconds
+Read 1048576 bytes in 0.144436 seconds
+Read 1048576 bytes in 0.128729 seconds
+Read 1048576 bytes in 0.121858 seconds
+Read 1048576 bytes in 0.141791 seconds
+Read 1048576 bytes in 0.136016 seconds
+Read 1048576 bytes in 0.112054 seconds
+Read 1048576 bytes in 0.134376 seconds
+Read 1048576 bytes in 0.145594 seconds
+Read 1048576 bytes in 0.128192 seconds
+Read 1048576 bytes in 0.134946 seconds
+Read 1048576 bytes in 0.138133 seconds
+Read 1048576 bytes in 0.127601 seconds
+Read 1048576 bytes in 0.128194 seconds
+Read 1048576 bytes in 0.13097 seconds
+Read 1048576 bytes in 0.126622 seconds
+Read 1048576 bytes in 0.120665 seconds
+Read 1048576 bytes in 0.76247 seconds
+Read 1048576 bytes in 0.142365 seconds
+Read 1048576 bytes in 0.143876 seconds
+Read 1048576 bytes in 0.120828 seconds
+Read 1048576 bytes in 0.133854 seconds
+Read 1048576 bytes in 0.120542 seconds
+Read 1048576 bytes in 0.135876 seconds
+Read 1048576 bytes in 0.133855 seconds
+Read 1048576 bytes in 0.13974 seconds
+Read 1048576 bytes in 0.125061 seconds
+Read 1048576 bytes in 0.131354 seconds
+Read 1048576 bytes in 0.149165 seconds
+Read 1048576 bytes in 0.141119 seconds
+Read 1048576 bytes in 0.13444 seconds
+Read 1048576 bytes in 0.136437 seconds
+Read 1048576 bytes in 0.135336 seconds
+Read 1048576 bytes in 0.134655 seconds
+Read 1048576 bytes in 0.138338 seconds
+Read 1048576 bytes in 0.132758 seconds
+Read 1048576 bytes in 0.124058 seconds
+Read 1048576 bytes in 0.138944 seconds
+Read 1048576 bytes in 0.143697 seconds
+Read 1048576 bytes in 0.123457 seconds
+Read 1048576 bytes in 0.135582 seconds
+Read 1048576 bytes in 0.135567 seconds
+Read 1048576 bytes in 0.13883 seconds
+Read 1048576 bytes in 0.12723 seconds
+Read 1048576 bytes in 0.145797 seconds
+Read 1048576 bytes in 0.139876 seconds
+Read 1048576 bytes in 0.13536 seconds
+Read 1048576 bytes in 0.147789 seconds
+Read 1048576 bytes in 0.131761 seconds
+Read 1048576 bytes in 0.682038 seconds
+Read 1048576 bytes in 0.144571 seconds
+Read 1048576 bytes in 0.141108 seconds
+Read 1048576 bytes in 0.129708 seconds
+Read 1048576 bytes in 0.146941 seconds
+Read 1048576 bytes in 0.125206 seconds
+Read 1048576 bytes in 0.122706 seconds
+Read 1048576 bytes in 0.13221 seconds
+Read 1048576 bytes in 0.129111 seconds
+Read 1048576 bytes in 0.117219 seconds
+Read 1048576 bytes in 0.107904 seconds
+Read 1048576 bytes in 0.13879 seconds
+Read 1048576 bytes in 0.136743 seconds
+Read 1048576 bytes in 0.124376 seconds
+Read 1048576 bytes in 0.13785 seconds
+Read 1048576 bytes in 0.12454 seconds
+Read 1048576 bytes in 0.132006 seconds
+Read 1048576 bytes in 0.137676 seconds
+Read 1048576 bytes in 0.123594 seconds
+Read 1048576 bytes in 0.13103 seconds
+Read 1048576 bytes in 0.133534 seconds
+Read 1048576 bytes in 0.135762 seconds
+Read 1048576 bytes in 0.134643 seconds
+Read 1048576 bytes in 0.120255 seconds
+Read 1048576 bytes in 0.145579 seconds
+Read 1048576 bytes in 0.147212 seconds
+Read 1048576 bytes in 0.1276 seconds
+Read 1048576 bytes in 0.117462 seconds
+Read 1048576 bytes in 0.135924 seconds
+Read 1048576 bytes in 0.122145 seconds
+Read 1048576 bytes in 0.1138 seconds
+Read 1048576 bytes in 0.136032 seconds
+Read 1048576 bytes in 0.679951 seconds
+Read 1048576 bytes in 0.132987 seconds
+Read 1048576 bytes in 0.137552 seconds
+Read 1048576 bytes in 0.123153 seconds
+Read 1048576 bytes in 0.12595 seconds
+Read 1048576 bytes in 0.125901 seconds
+Read 1048576 bytes in 0.137843 seconds
+Read 1048576 bytes in 0.138097 seconds
+Read 1048576 bytes in 0.134802 seconds
+Read 1048576 bytes in 0.139126 seconds
+Read 1048576 bytes in 0.136627 seconds
+Read 1048576 bytes in 0.121431 seconds
+Read 1048576 bytes in 0.128162 seconds
+Read 1048576 bytes in 0.141946 seconds
+Read 1048576 bytes in 0.134368 seconds
+Read 1048576 bytes in 0.132297 seconds
+Read 1048576 bytes in 0.140047 seconds
+Read 1048576 bytes in 0.130204 seconds
+Read 1048576 bytes in 0.11216 seconds
+Read 1048576 bytes in 0.131544 seconds
+Read 1048576 bytes in 0.129277 seconds
+Read 1048576 bytes in 0.135753 seconds
+Read 1048576 bytes in 0.131966 seconds
+Read 1048576 bytes in 0.122085 seconds
+Read 1048576 bytes in 0.134097 seconds
+Read 1048576 bytes in 0.13272 seconds
+Read 1048576 bytes in 0.136894 seconds
+Read 1048576 bytes in 0.131563 seconds
+Read 1048576 bytes in 0.122683 seconds
+Read 1048576 bytes in 0.144242 seconds
+Read 1048576 bytes in 0.12597 seconds
+Read 1048576 bytes in 0.133287 seconds
+Read 1048576 bytes in 0.780647 seconds
+Read 1048576 bytes in 0.124201 seconds
+Read 1048576 bytes in 0.132033 seconds
+Read 1048576 bytes in 0.127852 seconds
+Read 1048576 bytes in 0.149931 seconds
+Read 1048576 bytes in 0.132112 seconds
+Read 1048576 bytes in 0.113523 seconds
+Read 1048576 bytes in 0.142273 seconds
+Read 1048576 bytes in 0.148608 seconds
+Read 1048576 bytes in 0.126173 seconds
+Read 1048576 bytes in 0.136933 seconds
+Read 1048576 bytes in 0.126032 seconds
+Read 1048576 bytes in 0.133429 seconds
+Read 1048576 bytes in 0.12704 seconds
+Read 1048576 bytes in 0.139773 seconds
+Read 1048576 bytes in 0.126258 seconds
+Read 1048576 bytes in 0.119894 seconds
+Read 1048576 bytes in 0.136879 seconds
+Read 1048576 bytes in 0.130489 seconds
+Read 1048576 bytes in 0.124658 seconds
+Read 1048576 bytes in 0.126301 seconds
+Read 1048576 bytes in 0.12818 seconds
+Read 1048576 bytes in 0.133767 seconds
+Read 1048576 bytes in 0.123986 seconds
+Read 1048576 bytes in 0.14343 seconds
+Read 1048576 bytes in 0.126624 seconds
+Read 1048576 bytes in 0.132631 seconds
+Read 1048576 bytes in 0.138421 seconds
+Read 1048576 bytes in 0.124071 seconds
+Read 1048576 bytes in 0.133733 seconds
+Read 1048576 bytes in 0.129825 seconds
+Read 1048576 bytes in 0.143482 seconds
+Read 1048576 bytes in 0.671942 seconds
+Read 1048576 bytes in 0.14111 seconds
+Read 1048576 bytes in 0.149521 seconds
+Read 1048576 bytes in 0.121215 seconds
+Read 1048576 bytes in 0.146547 seconds
+Read 1048576 bytes in 0.143827 seconds
+Read 1048576 bytes in 0.119747 seconds
+Read 1048576 bytes in 0.119684 seconds
+Read 1048576 bytes in 0.126579 seconds
+Read 1048576 bytes in 0.134511 seconds
+Read 1048576 bytes in 0.13138 seconds
+Read 1048576 bytes in 0.135288 seconds
+Read 1048576 bytes in 0.147985 seconds
+Read 1048576 bytes in 0.126876 seconds
+Read 1048576 bytes in 0.14446 seconds
+Read 1048576 bytes in 0.135309 seconds
+Read 1048576 bytes in 0.128714 seconds
+Read 1048576 bytes in 0.121253 seconds
+Read 1048576 bytes in 0.132956 seconds
+Read 1048576 bytes in 0.13796 seconds
+Read 1048576 bytes in 0.127039 seconds
+Read 1048576 bytes in 0.133508 seconds
+Read 1048576 bytes in 0.128807 seconds
+Read 1048576 bytes in 0.131771 seconds
+Read 1048576 bytes in 0.134943 seconds
+Read 1048576 bytes in 0.146114 seconds
+Read 1048576 bytes in 0.125749 seconds
+Read 1048576 bytes in 0.138 seconds
+Read 1048576 bytes in 0.142676 seconds
+Read 1048576 bytes in 0.117188 seconds
+Read 1048576 bytes in 0.136334 seconds
+Read 1048576 bytes in 0.143912 seconds
+Read 1048576 bytes in 0.770245 seconds
+Read 1048576 bytes in 0.122742 seconds
+Read 1048576 bytes in 0.13494 seconds
+Read 1048576 bytes in 0.136166 seconds
+Read 1048576 bytes in 0.134691 seconds
+Read 1048576 bytes in 0.129886 seconds
+Read 1048576 bytes in 0.136878 seconds
+Read 1048576 bytes in 0.141104 seconds
+Read 1048576 bytes in 0.13356 seconds
+Read 1048576 bytes in 0.146174 seconds
+Read 1048576 bytes in 0.124531 seconds
+Read 1048576 bytes in 0.124148 seconds
+Read 1048576 bytes in 0.124064 seconds
+Read 1048576 bytes in 0.133426 seconds
+Read 1048576 bytes in 0.116601 seconds
+Read 1048576 bytes in 0.128405 seconds
+Read 1048576 bytes in 0.111252 seconds
+Read 1048576 bytes in 0.128156 seconds
+Read 1048576 bytes in 0.139745 seconds
+Read 1048576 bytes in 0.1489 seconds
+Read 1048576 bytes in 0.124657 seconds
+Read 1048576 bytes in 0.12344 seconds
+Read 1048576 bytes in 0.151056 seconds
+Read 1048576 bytes in 0.139567 seconds
+Read 1048576 bytes in 0.130403 seconds
+Read 1048576 bytes in 0.143888 seconds
+Read 1048576 bytes in 0.132275 seconds
+Read 1048576 bytes in 0.125569 seconds
+Read 1048576 bytes in 0.140411 seconds
+Read 1048576 bytes in 0.131895 seconds
+Read 1048576 bytes in 0.133218 seconds
+Read 1048576 bytes in 0.144863 seconds
+Read 1048576 bytes in 0.632284 seconds
+Read 1048576 bytes in 0.132091 seconds
+Read 1048576 bytes in 0.135081 seconds
+Read 1048576 bytes in 0.150523 seconds
+Read 1048576 bytes in 0.143866 seconds
+Read 1048576 bytes in 0.127553 seconds
+Read 1048576 bytes in 0.138739 seconds
+Read 1048576 bytes in 0.139101 seconds
+Read 1048576 bytes in 0.124369 seconds
+Read 1048576 bytes in 0.137863 seconds
+Read 1048576 bytes in 0.136638 seconds
+Read 1048576 bytes in 0.135156 seconds
+Read 1048576 bytes in 0.137826 seconds
+Read 1048576 bytes in 0.128223 seconds
+Read 1048576 bytes in 0.130672 seconds
+Read 1048576 bytes in 0.135424 seconds
+Read 1048576 bytes in 0.13713 seconds
+Read 1048576 bytes in 0.138674 seconds
+Read 1048576 bytes in 0.118037 seconds
+Read 1048576 bytes in 0.141928 seconds
+Read 524288000 bytes (500 grayscale 1024x1024 planes) in 75.4916 seconds
+Frame rate: 150.983 milliseconds
+Time Elapsed: 233.869 seconds
