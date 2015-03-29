@@ -17,6 +17,7 @@
 #include "DVIDVoxels.h"
 #include "DVIDGraph.h"
 #include "DVIDConnection.h"
+#include "DVIDBlocks.h"
 
 #include <json/value.h>
 #include <vector>
@@ -136,7 +137,7 @@ class DVIDNodeService {
      * GETs/PUTs from executing at the same time.
      * A 2D slice should be requested as X x Y x 1.  The requested
      * number of voxels cannot be larger than INT_MAX/8.
-     * \param datatype_instance name of tile type instance
+     * \param datatype_instance name of grayscale type instance
      * \param dims size of X, Y, Z dimensions in voxel coordinates
      * \param offset X, Y, Z offset in voxel coordinates
      * \param throttle allow only one request at time (default: true)
@@ -159,7 +160,7 @@ class DVIDNodeService {
      * multiple volume GETs/PUTs from executing at the same time.
      * A 2D slice should be requested as ch1 size x ch2 size x 1.  The requested
      * number of voxels cannot be larger than INT_MAX/8.
-     * \param datatype_instance name of tile type instance
+     * \param datatype_instance name of grayscale type instance
      * \param dims size of dimensions (order given by channels)
      * \param offset offset in voxel coordinates (order given by channels)
      * \param channels channel order (default: 0,1,2)
@@ -183,7 +184,7 @@ class DVIDNodeService {
      * GETs/PUTs from executing at the same time.
      * A 2D slice should be requested as X x Y x 1.  The requested
      * number of voxels cannot be larger than INT_MAX/8.
-     * \param datatype_instance name of tile type instance
+     * \param datatype_instance name of the labelblk type instance
      * \param dims size of X, Y, Z dimensions in voxel coordinates
      * \param offset X, Y, Z offset in voxel coordinates
      * \param throttle allow only one request at time (default: true)
@@ -206,7 +207,7 @@ class DVIDNodeService {
      * multiple volume GETs/PUTs from executing at the same time.
      * A 2D slice should be requested as ch1 size x ch2 size x 1.  The requested
      * number of voxels cannot be larger than INT_MAX/8.
-     * \param datatype_instance name of tile type instance
+     * \param datatype_instance name of the labelblk type instance
      * \param dims size of dimensions (order given by channels)
      * \param offset offset in voxel coordinates (order given by channels)
      * \param channels channel order (default: 0,1,2)
@@ -231,7 +232,7 @@ class DVIDNodeService {
      * multiple volume GETs/PUTs from executing at the same time.
      * The number of voxels put cannot be larger than INT_MAX/8.
      * TODO: expose block size parameter through interface.
-     * \param datatype_instance name of tile type instance
+     * \param datatype_instance name of the grayscale type instance
      * \param volume grayscale 3D volume encodes dimension sizes and binary buffer 
      * \param offset offset in voxel coordinates (order given by channels)
      * \param throttle allow only one request at time (default: true)
@@ -253,7 +254,7 @@ class DVIDNodeService {
      * multiple volume GETs/PUTs from executing at the same time.
      * The number of voxels put cannot be larger than INT_MAX/8.
      * TODO: expose block size parameter through interface.
-     * \param datatype_instance name of tile type instance
+     * \param datatype_instance name of the grayscale type instance
      * \param volume label 3D volume encodes dimension sizes and binary buffer 
      * \param offset offset in voxel coordinates (order given by channels)
      * \param throttle allow only one request at time (default: true)
@@ -262,6 +263,64 @@ class DVIDNodeService {
     void put_labels3D(std::string datatype_instance, Labels3D& volume,
             std::vector<unsigned int> offset, bool throttle=true,
             bool compress=false);
+
+    /************** API to access DVID blocks directly **************/
+    // This API is probably most relevant for bulk transfers to and
+    // from DVID where high-throughput needs to be optimized.
+    
+    /*!
+     * Fetch grayscale blocks from DVID.  The call will fetch
+     * a series of contiguous blocks along the first dimension (X).
+     * The number of blocks fetched is encoded in the GrayscaleBlocks
+     * returned structure.  This number can be less than the
+     * requested span if those blocks do not exist on DVID.
+     * TODO: support compression and throttling.
+     * \param datatype instance name of grayscale type instance
+     * \param block_coords location of first block in span (block coordinates)
+     * \param span number of blocks to attemp to read
+     * \return grayscale blocks
+    */
+    GrayscaleBlocks get_grayblocks(std::string datatype_instance,
+           std::vector<unsigned int> block_coords, unsigned int span); 
+
+    /*!
+     * Fetch label blocks from DVID.  The call will fetch
+     * a series of contiguous blocks along the first dimension (X).
+     * The number of blocks fetched is encoded in the LabelBlocks
+     * returned structure.  This number can be less than the
+     * requested span if those blocks do not exist on DVID.
+     * TODO: support compression and throttling.
+     * \param datatype instance name of labelblk type instance
+     * \param block_coords location of first block in span (block coordinates)
+     * \param span number of blocks to attemp to read
+     * \return grayscale blocks
+    */
+    LabelBlocks get_labelblocks(std::string datatype_instance,
+           std::vector<unsigned int> block_coords, unsigned int span);
+
+    /*!
+     * Put grayscale blocks to DVID.   The call will put
+     * a series of contiguous blocks along the first spatial dimension (X).
+     * The number of blocks posted is encoded in GrayscaleBlocks.
+     * TODO: support compression and throttling.
+     * \param datatype instance name of grayscale type instance
+     * \param blocks stores buffer for array of blocks
+     * \param block_coords location of first block in span (block coordinates)
+    */
+    void put_grayblocks(std::string datatype_instance,
+            GrayscaleBlocks blocks, std::vector<unsigned int> block_coords);
+    
+    /*!
+     * Put label blocks to DVID.   The call will put
+     * a series of contiguous blocks along the first spatial dimension (X).
+     * The number of blocks posted is encoded in LabelBlocks.
+     * TODO: support compression and throttling.
+     * \param datatype instance name of labelblk type instance
+     * \param blocks stores buffer for array of blocks
+     * \param block_coords location of first block in span (block coordinates)
+    */
+    void put_labelblocks(std::string datatype_instance,
+            LabelBlocks blocks, std::vector<unsigned int> block_coords);
 
     /*************** API to access keyvalue interface ***************/
     
@@ -449,6 +508,27 @@ class DVIDNodeService {
     void put_volume(std::string datatype_instance, BinaryDataPtr volume,
             std::vector<unsigned int> sizes, std::vector<unsigned int> offset,
             bool throttle, bool compress);
+
+    /*!
+     * Helper to retrieve blocks from DVID for labels and grayscale.
+     * \param datatype_instance name of datatype instance
+     * \param block_coords starting block in DVID block coordinates
+     * \param span number of blocks to attempt to get
+     * \param return number of actual blocks retrieved
+     * \return binary data corresponding to an array of blocks
+    */
+    BinaryDataPtr get_blocks(std::string datatype_instance,
+        std::vector<unsigned int> block_coords, int span, int& extracted_span);
+
+    /*!
+     * Helper to put blocks from DVID for labels and grayscale.
+     * \param datatype_instance name of datatype instance
+     * \param binary array of blocks to be written
+     * \param span number of blocks to attempt to post
+     * \param block_coord starting block in DVID block coordinates
+    */
+    void put_blocks(std::string datatype_instance, BinaryDataPtr binary,
+            int span, std::vector<unsigned int> block_coords);
 
     /*!
      * Helper function to create an instance of the specified type.

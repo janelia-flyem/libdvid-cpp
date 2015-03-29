@@ -9,23 +9,16 @@
 
 #include "BinaryData.h"
 #include "DVIDException.h"
+#include "Globals.h"
+
 #include <string>
 #include <vector>
-#include <boost/static_assert.hpp>
 
 namespace libdvid {
 
-//! Asssume long long are 64 bits
-typedef unsigned long long uint64;
-
-//! Grayscale type is 1 byte
-typedef unsigned char uint8;
-
 //! Represents dimension sizes for ND volumes
+//! TODO: create a special class for dims and offset
 typedef std::vector<unsigned int> Dims_t;
-
-//! Checks that uint64 is actually 8 bytes
-BOOST_STATIC_ASSERT(sizeof(uint64) == 8);
 
 /*!
  * Wrapper for binary data that is part of an n-D array.  This
@@ -48,12 +41,18 @@ class DVIDVoxels {
     */ 
     DVIDVoxels(const T* array_, unsigned int length, Dims_t& dims_)
                : dims(dims_) {
+        uint64 total_size = uint64(dims_[0])*uint64(dims_[1])*
+            uint64(dims_[2])*uint64(sizeof(T)); 
+        if (total_size > INT_MAX) {
+            throw ErrMsg("Cannot allocate larger than INT_MAX");
+        }
+
         data = BinaryData::create_binary_data((const char*) array_,
                                                 length*sizeof(T));
-        
         if (dims.size() != N) {
             throw ErrMsg("Incorrect dimensions provided");
         }
+
         unsigned long long total = 0;
         for (int i = 0; i < dims.size(); ++i) {
             if (i == 0) {
@@ -103,7 +102,7 @@ class DVIDVoxels {
 
     /*!
      * Retrieve raw buffer from binary pointer.
-     * \return constant volume buffer.
+     * \return constant volume buffer
     */
     const T* get_raw() const
     {

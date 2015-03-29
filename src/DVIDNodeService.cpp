@@ -12,8 +12,6 @@ using std::ifstream; using std::set; using std::stringstream;
 //! Gives the limit for how many vertice can be operated on in one call
 static const int TransactionLimit = 1000;
 
-//! The size of the DVID block (TODO: set dynamically)
-static const int BLOCK_SIZE = 32; 
 
 namespace libdvid {
 
@@ -202,12 +200,61 @@ void DVIDNodeService::put_gray3D(string datatype_instance, Grayscale3D& volume,
             offset, throttle, compress);
 }
 
+
+GrayscaleBlocks DVIDNodeService::get_grayblocks(string datatype_instance,
+        vector<unsigned int> block_coords, unsigned int span)
+{
+    int ret_span = span;
+    BinaryDataPtr data = get_blocks(datatype_instance, block_coords,
+            span, ret_span);
+    assert(ret_span <= span);
+
+    // make sure this data encodes blocks of grayscale
+    if (data->length() !=
+            (DEFBLOCKSIZE*DEFBLOCKSIZE*DEFBLOCKSIZE*sizeof(uint8)*ret_span)) {
+        throw ErrMsg("Expected 1-byte values from " + datatype_instance);
+    }
+ 
+    return GrayscaleBlocks(data, ret_span);
+} 
+
+LabelBlocks DVIDNodeService::get_labelblocks(string datatype_instance,
+           vector<unsigned int> block_coords, unsigned int span)
+{
+    int ret_span = span;
+    BinaryDataPtr data = get_blocks(datatype_instance, block_coords,
+            span, ret_span);
+    assert(ret_span <= span);
+
+    // make sure this data encodes blocks of grayscale
+    if (data->length() !=
+            (DEFBLOCKSIZE*DEFBLOCKSIZE*DEFBLOCKSIZE*sizeof(uint64)*ret_span)) {
+        throw ErrMsg("Expected 8-byte values from " + datatype_instance);
+    }
+ 
+    return LabelBlocks(data, ret_span);
+}
+    
+void DVIDNodeService::put_grayblocks(string datatype_instance,
+            GrayscaleBlocks blocks, vector<unsigned int> block_coords)
+{
+    put_blocks(datatype_instance, blocks.get_binary(),
+            blocks.get_num_blocks(), block_coords);
+}
+
+
+void DVIDNodeService::put_labelblocks(string datatype_instance,
+            LabelBlocks blocks, vector<unsigned int> block_coords)
+{
+    put_blocks(datatype_instance, blocks.get_binary(),
+            blocks.get_num_blocks(), block_coords);
+}
+
 void DVIDNodeService::put(string keyvalue, string key, ifstream& fin)
 {
     BinaryDataPtr data = BinaryData::create_binary_data(fin);
     put(keyvalue, key, data);
 }
-
 
 void DVIDNodeService::put(string keyvalue, string key, Json::Value& data)
 {
@@ -671,13 +718,13 @@ void DVIDNodeService::put_volume(string datatype_instance, BinaryDataPtr volume,
         throw ErrMsg("Did not correctly specify 3D volume");
     }
     
-    if ((offset[0] % BLOCK_SIZE != 0) || (offset[1] % BLOCK_SIZE != 0)
-            || (offset[2] % BLOCK_SIZE != 0)) {
+    if ((offset[0] % DEFBLOCKSIZE != 0) || (offset[1] % DEFBLOCKSIZE != 0)
+            || (offset[2] % DEFBLOCKSIZE != 0)) {
         throw ErrMsg("Label POST error: Not block aligned");
     }
 
-    if ((sizes[0] % BLOCK_SIZE != 0) || (sizes[1] % BLOCK_SIZE != 0)
-            || (sizes[2] % BLOCK_SIZE != 0)) {
+    if ((sizes[0] % DEFBLOCKSIZE != 0) || (sizes[1] % DEFBLOCKSIZE != 0)
+            || (sizes[2] % DEFBLOCKSIZE != 0)) {
         throw ErrMsg("Label POST error: Region is not a multiple of block size");
     }
 
@@ -723,6 +770,42 @@ void DVIDNodeService::put_volume(string datatype_instance, BinaryDataPtr volume,
         throw DVIDException(respdata + "\n" + binary_result->get_data(),
                 status_code);
     } 
+}
+
+BinaryDataPtr DVIDNodeService::get_blocks(string datatype_instance,
+        vector<unsigned int> block_coords, int span, int& extracted_span)
+{
+    string prefix = "/node/" + uuid + "/" + datatype_instance + "/blocks/";
+    stringstream sstr;
+    // encode starting block
+    sstr << block_coords[0] << "_" << block_coords[1] << "_" << block_coords[2];
+    sstr << "/" << span;
+    string endpoint = sstr.str();
+  
+    // first 4 bytes encodes the number of returned blocks 
+    BinaryDataPtr blockbinary = custom_request(endpoint, BinaryDataPtr(), GET);
+    const unsigned int* blocks_retrieved =
+        (const unsigned int*) blockbinary->get_raw();
+    extracted_span = *blocks_retrieved; 
+
+    // remove first 4 bytes from binary
+    string& data_ref = blockbinary->get_data();
+    data_ref.erase(0,4);
+
+    return blockbinary;
+}
+
+void DVIDNodeService::put_blocks(string datatype_instance,
+        BinaryDataPtr binary, int span, vector<unsigned int> block_coords)
+{
+    string prefix = "/node/" + uuid + "/" + datatype_instance + "/blocks/";
+    stringstream sstr;
+    // encode starting block
+    sstr << block_coords[0] << "_" << block_coords[1] << "_" << block_coords[2];
+    sstr << "/" << span;
+    string endpoint = sstr.str();
+    
+    custom_request(endpoint, binary, POST);
 }
 
 bool DVIDNodeService::create_datatype(string datatype, string datatype_name)

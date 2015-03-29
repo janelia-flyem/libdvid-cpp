@@ -81,7 +81,9 @@ detailed explanation of available API, please examined DVIDNodeService.h
 and DVIDServerService.h.
 
 *(Note: To use this library in a multi-threaded environment,
-instantiate a new service variable for each thread)*
+instantiate a new service variable for each thread.  Also, GET and POST
+requests should involve less bytes than INT_MAX.  If bigger requests
+are needed, the request should be divided into multiple calls)*
    
 ## Testing the Package
 libdvid contains unit tests under *tests/* and load tests under *load_tests/*.
