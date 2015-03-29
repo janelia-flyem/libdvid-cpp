@@ -139,6 +139,9 @@ target_link_libraries(dvidtest_keyvalue dvidcpp ${support_LIBS})
 add_executable(dvidtest_labelgraph "tests/test_labelgraph.cpp")
 target_link_libraries(dvidtest_labelgraph dvidcpp ${support_LIBS})
 
+add_executable(dvidtest_compression "tests/test_compression.cpp")
+target_link_libraries(dvidtest_compression dvidcpp ${support_LIBS})
+
 add_executable(dvidloadtest_labelblk "load_tests/loadtest_labelblk.cpp")
 target_link_libraries(dvidloadtest_labelblk dvidcpp ${support_LIBS})
 
@@ -176,3 +179,9 @@ add_test(
     labelgraph 
     dvidtest_labelgraph http://127.0.0.1:8000
 )
+add_test(
+    compression 
+    dvidtest_compression sample/image.jpeg sample/image.png sample.binary 
+)
+
+

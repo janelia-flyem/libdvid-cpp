@@ -1,5 +1,3 @@
--fix libcurl print
--add compression unit test (read stored images) -- check memory
 -create block interface (create block type,
 have a compression but set to false, access by block id)
 -fix buildem (json, lz4)
