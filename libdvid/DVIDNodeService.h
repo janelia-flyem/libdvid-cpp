@@ -405,7 +405,6 @@ class DVIDNodeService {
      * \param transaction specify transactions for set call
      * \param leftover_vertices vertices that could not be written
     */
-
     void set_properties(std::string graph_name,
             std::vector<Edge>& edges, std::string key,
             std::vector<BinaryDataPtr>& properties,

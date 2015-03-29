@@ -1,3 +1,12 @@
+/*!
+ * This file gives a simple example of creating
+ * a labels64 instance (used for image segmentation).
+ * It stores some data, retrieves the data, and
+ * checks that the data is equal.
+ *
+ * \author Stephen Plaza (plazas@janelia.hhmi.org)
+*/
+
 #include <libdvid/DVIDServerService.h>
 #include <libdvid/DVIDNodeService.h>
 
@@ -10,14 +19,17 @@ using namespace libdvid;
 using std::vector;
 using std::string;
 
-// assume all blocks are BLK_SIZE in each dimension
+// assume all blocks are 32 in each dimension
+// (label posts must be block aligned)
 int BLK_SIZE = 32;
 
+// sample labels to write
 unsigned long long int limg1_mask[] = {
     5, 4, 3, 2,
     4, 4, 1, 3,
     7, 7, 7, 7};
 
+// sample labels to write
 unsigned long long int limg2_mask[] = {
     8, 8, 9, 0,
     9, 9, 9, 3,
@@ -41,7 +53,6 @@ int main(int argc, char** argv)
         DVIDNodeService dvid_node(argv[1], uuid);
     
         string label_datatype_name = "labels1";
-        // ** Test creation of DVID datatypes **
         
         // should be a new instance
         if(!dvid_node.create_labelblk(label_datatype_name)) {
@@ -56,6 +67,7 @@ int main(int argc, char** argv)
         }
 
         // ** Write and read labelblk data **
+        
         // create label 64 image volume
         unsigned long long * img_labels = new unsigned long long [BLK_SIZE*BLK_SIZE*BLK_SIZE];
         for (int i = 0; i < (LWIDTH*LHEIGHT); ++i) {
@@ -67,8 +79,6 @@ int main(int argc, char** argv)
         vector<unsigned int> start; start.push_back(0); start.push_back(0); start.push_back(0);
 
         // post labels volume
-        // one could also write 2D image slices but the starting location must
-        // be at least an ND point where N is greater than 2
         Dims_t lsizes; lsizes.push_back(BLK_SIZE); lsizes.push_back(BLK_SIZE); lsizes.push_back(BLK_SIZE);
         Labels3D labelsbin(img_labels, BLK_SIZE*BLK_SIZE*BLK_SIZE, lsizes);
         dvid_node.put_labels3D(label_datatype_name, labelsbin, start);

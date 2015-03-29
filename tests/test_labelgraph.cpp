@@ -1,3 +1,8 @@
+/*!
+ * This file gives examples of how to use the labelgraph
+ * interface.  It creates a simple graph by adding
+ * vertices and edges.  Properties are set and retrieved as well.
+*/
 #include <libdvid/DVIDServerService.h>
 #include <libdvid/DVIDNodeService.h>
 
@@ -38,7 +43,7 @@ int main(int argc, char** argv)
             return -1;
         }
        
-        // update or add vertex1 and vertex2
+        // add vertex1 and vertex2 by calling the update function
         Vertex vertex1(1, 0.0);
         Vertex vertex2(2, 0.0);
         vector<Vertex> vertices;
@@ -47,7 +52,7 @@ int main(int argc, char** argv)
         // if the node was already created the value will be different
         dvid_node.update_vertices(graph_datatype_name, vertices);
         
-        // update or add edge
+        // add edge by calling the update function
         Edge edge(1, 2, 0.0);
         vector<Edge> edges;
         edges.push_back(edge);
@@ -95,7 +100,6 @@ int main(int argc, char** argv)
 
         // ** Test graph property get/set **
 
-
         // test vertex get/put properties -- just make sure there are no fails
         // for two update cycles
         double incr1 = 1.3;
@@ -130,7 +134,8 @@ int main(int argc, char** argv)
                     }
                 }
 
-                // set properties
+                // set properties -- there will never be leftover vertices
+                // when this script is run alone without competing processes
                 vector<Vertex> leftover_vertices;
                 dvid_node.set_properties(graph_datatype_name, prop_vertices,
                         "features", properties, transactions, leftover_vertices); 
@@ -170,7 +175,8 @@ int main(int argc, char** argv)
                     }
                 }
 
-                // set properties
+                // set properties -- there will never be leftover vertices
+                // when this script is run alone without competing processes
                 vector<Edge> leftover_edges;
                 dvid_node.set_properties(graph_datatype_name, prop_edges,
                         "efeatures", properties, transactions, leftover_edges); 

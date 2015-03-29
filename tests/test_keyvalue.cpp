@@ -1,3 +1,11 @@
+/*!
+ * This file gives a simple example of using the DVID
+ * keyvalue interface.  JSON is put to a key and then
+ * the JSON is read.
+ *
+ * \author Stephen Plaza (plazas@janelia.hhmi.org)
+*/
+
 #include <libdvid/DVIDServerService.h>
 #include <libdvid/DVIDNodeService.h>
 
