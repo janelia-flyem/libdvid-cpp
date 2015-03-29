@@ -134,15 +134,18 @@ class DVIDNodeService {
      * server implementation of DVID with hundreds of volume requests,
      * we support a throttle command that prevents multiple volume
      * GETs/PUTs from executing at the same time.
-     * A 2D slice should be requested as X x Y x 1.
+     * A 2D slice should be requested as X x Y x 1.  The requested
+     * number of voxels cannot be larger than INT_MAX/8.
      * \param datatype_instance name of tile type instance
      * \param dims size of X, Y, Z dimensions in voxel coordinates
      * \param offset X, Y, Z offset in voxel coordinates
      * \param throttle allow only one request at time (default: true)
+     * \param compress enable lz4 compression
      * \return 3D grayscale object that wraps a byte buffer
     */
     Grayscale3D get_gray3D(std::string datatype_instance, Dims_t dims,
-            std::vector<unsigned int> offset, bool throttle=true);
+            std::vector<unsigned int> offset, bool throttle=true,
+            bool compress=false);
 
     /*!
      * Retrive a 3D 1-byte grayscale volume with the specified
@@ -154,17 +157,20 @@ class DVIDNodeService {
      * overload a single server implementation of DVID with hundreds
      * of volume requests, we support a throttle command that prevents
      * multiple volume GETs/PUTs from executing at the same time.
-     * A 2D slice should be requested as ch1 size x ch2 size x 1.
+     * A 2D slice should be requested as ch1 size x ch2 size x 1.  The requested
+     * number of voxels cannot be larger than INT_MAX/8.
      * \param datatype_instance name of tile type instance
      * \param dims size of dimensions (order given by channels)
      * \param offset offset in voxel coordinates (order given by channels)
      * \param channels channel order (default: 0,1,2)
      * \param throttle allow only one request at time (default: true)
+     * \param compress enable lz4 compression
      * \return 3D grayscale object that wraps a byte buffer
     */
     Grayscale3D get_gray3D(std::string datatype_instance, Dims_t dims,
             std::vector<unsigned int> offset,
-            std::vector<unsigned int> channels, bool throttle=true);
+            std::vector<unsigned int> channels, bool throttle=true,
+            bool compress=false);
     
      /*!
      * Retrive a 3D 8-byte label volume with the specified
@@ -175,15 +181,18 @@ class DVIDNodeService {
      * server implementation of DVID with hundreds of volume requests,
      * we support a throttle command that prevents multiple volume
      * GETs/PUTs from executing at the same time.
-     * A 2D slice should be requested as X x Y x 1.
+     * A 2D slice should be requested as X x Y x 1.  The requested
+     * number of voxels cannot be larger than INT_MAX/8.
      * \param datatype_instance name of tile type instance
      * \param dims size of X, Y, Z dimensions in voxel coordinates
      * \param offset X, Y, Z offset in voxel coordinates
      * \param throttle allow only one request at time (default: true)
+     * \param compress enable lz4 compression
      * \return 3D label object that wraps a byte buffer
     */
     Labels3D get_labels3D(std::string datatype_instance, Dims_t dims,
-            std::vector<unsigned int> offset, bool throttle=true);
+            std::vector<unsigned int> offset, bool throttle=true,
+            bool compress=false);
    
     /*!
      * Retrive a 3D 8-byte label volume with the specified
@@ -195,17 +204,20 @@ class DVIDNodeService {
      * overload a single server implementation of DVID with hundreds
      * of volume requests, we support a throttle command that prevents
      * multiple volume GETs/PUTs from executing at the same time.
-     * A 2D slice should be requested as ch1 size x ch2 size x 1.
+     * A 2D slice should be requested as ch1 size x ch2 size x 1.  The requested
+     * number of voxels cannot be larger than INT_MAX/8.
      * \param datatype_instance name of tile type instance
      * \param dims size of dimensions (order given by channels)
      * \param offset offset in voxel coordinates (order given by channels)
      * \param channels channel order (default: 0,1,2)
      * \param throttle allow only one request at time (default: true)
+     * \param compress enable lz4 compression
      * \return 3D label object that wraps a byte buffer
     */
     Labels3D get_labels3D(std::string datatype_instance, Dims_t dims,
             std::vector<unsigned int> offset,
-            std::vector<unsigned int> channels, bool throttle=true);
+            std::vector<unsigned int> channels, bool throttle=true,
+            bool compress=false);
 
     /*!
      * Put a 3D 1-byte grayscale volume to DVID with the specified
@@ -217,14 +229,17 @@ class DVIDNodeService {
      * implementation of DVID with hundreds
      * of volume PUTs, we support a throttle command that prevents
      * multiple volume GETs/PUTs from executing at the same time.
+     * The number of voxels put cannot be larger than INT_MAX/8.
      * TODO: expose block size parameter through interface.
      * \param datatype_instance name of tile type instance
      * \param volume grayscale 3D volume encodes dimension sizes and binary buffer 
      * \param offset offset in voxel coordinates (order given by channels)
      * \param throttle allow only one request at time (default: true)
+     * \param compress enable lz4 compression
     */
     void put_gray3D(std::string datatype_instance, Grayscale3D& volume,
-            std::vector<unsigned int> offset, bool throttle=true);
+            std::vector<unsigned int> offset, bool throttle=true,
+            bool compress=false);
 
     /*!
      * Put a 3D 8-byte label volume to DVID with the specified
@@ -236,14 +251,17 @@ class DVIDNodeService {
      * implementation of DVID with hundreds
      * of volume PUTs, we support a throttle command that prevents
      * multiple volume GETs/PUTs from executing at the same time.
+     * The number of voxels put cannot be larger than INT_MAX/8.
      * TODO: expose block size parameter through interface.
      * \param datatype_instance name of tile type instance
      * \param volume label 3D volume encodes dimension sizes and binary buffer 
      * \param offset offset in voxel coordinates (order given by channels)
      * \param throttle allow only one request at time (default: true)
+     * \param compress enable lz4 compression
     */
     void put_labels3D(std::string datatype_instance, Labels3D& volume,
-            std::vector<unsigned int> offset, bool throttle=true);
+            std::vector<unsigned int> offset, bool throttle=true,
+            bool compress=false);
 
     /*************** API to access keyvalue interface ***************/
     
@@ -426,10 +444,11 @@ class DVIDNodeService {
      * \param volume binary buffer encodes volume 
      * \param offset offset in voxel coordinates (order given by channels)
      * \param throttle allow only one request at time
+     * \param compress enable lz4 compression
     */
     void put_volume(std::string datatype_instance, BinaryDataPtr volume,
             std::vector<unsigned int> sizes, std::vector<unsigned int> offset,
-            bool throttle);
+            bool throttle, bool compress);
 
     /*!
      * Helper function to create an instance of the specified type.
@@ -467,10 +486,11 @@ class DVIDNodeService {
      * \param offset offset in voxel coordinates (order given by channels)
      * \param channels channel order (default: 0,1,2)
      * \param throttle allow only one request at time
+     * \param compress enable lz4 compression
     */
     std::string construct_volume_uri(std::string datatype_inst, Dims_t sizes,
             std::vector<unsigned int> offset,
-            std::vector<unsigned int> channels, bool throttle);
+            std::vector<unsigned int> channels, bool throttle, bool compress);
 };
 
 }

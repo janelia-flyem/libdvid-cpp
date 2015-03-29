@@ -13,6 +13,7 @@ The primary dependencies are:
 * [jsoncpp](https://github.com/open-source-parsers/jsoncpp.git)
 * libpng
 * libcurl
+* [lz4](https://github.com/Cyan4973/lz4)
 
 ### standalone installation
 

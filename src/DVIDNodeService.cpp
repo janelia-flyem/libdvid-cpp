@@ -145,58 +145,73 @@ BinaryDataPtr DVIDNodeService::get_tile_slice_binary(string datatype_instance,
 
 Grayscale3D DVIDNodeService::get_gray3D(string datatype_instance, Dims_t sizes,
         vector<unsigned int> offset, vector<unsigned int> channels,
-        bool throttle)
+        bool throttle, bool compress)
 {
     BinaryDataPtr data = get_volume3D(datatype_instance,
             sizes, offset, channels, throttle);
-    
+   
+    // decompress using lz4
+    if (compress) {
+        // determined number of returned bytes
+        int decomp_size = sizes[0]*sizes[1]*sizes[2];
+        data = BinaryData::decompress_lz4(data, decomp_size);
+    }
+
     Grayscale3D grayvol(data, sizes);
     return grayvol; 
 }
 
 Grayscale3D DVIDNodeService::get_gray3D(string datatype_instance, Dims_t sizes,
-        vector<unsigned int> offset, bool throttle)
+        vector<unsigned int> offset, bool throttle, bool compress)
 {
     vector<unsigned int> channels;
     channels.push_back(0); channels.push_back(1); channels.push_back(2);
     return get_gray3D(datatype_instance, sizes, offset, channels,
-            throttle);
+            throttle, compress);
 }
 
 Labels3D DVIDNodeService::get_labels3D(string datatype_instance, Dims_t sizes,
         vector<unsigned int> offset, vector<unsigned int> channels,
-        bool throttle)
+        bool throttle, bool compress)
 {
     BinaryDataPtr data = get_volume3D(datatype_instance,
             sizes, offset, channels, throttle);
-    
+   
+    // decompress using lz4
+    if (compress) {
+        // determined number of returned bytes
+        int decomp_size = sizes[0]*sizes[1]*sizes[2]*8;
+        data = BinaryData::decompress_lz4(data, decomp_size);
+    }
+
     Labels3D labels(data, sizes);
     return labels; 
 }
 
 Labels3D DVIDNodeService::get_labels3D(string datatype_instance, Dims_t sizes,
-        vector<unsigned int> offset, bool throttle)
+        vector<unsigned int> offset, bool throttle, bool compress)
 {
     vector<unsigned int> channels;
     channels.push_back(0); channels.push_back(1); channels.push_back(2);
     return get_labels3D(datatype_instance, sizes, offset, channels,
-            throttle);
+            throttle, compress);
 }
 
 void DVIDNodeService::put_labels3D(string datatype_instance, Labels3D& volume,
-            vector<unsigned int> offset, bool throttle)
+            vector<unsigned int> offset, bool throttle, bool compress)
 {
     Dims_t sizes = volume.get_dims();
-    put_volume(datatype_instance, volume.get_binary(), sizes, offset, throttle);
+    put_volume(datatype_instance, volume.get_binary(), sizes,
+            offset, throttle, compress);
 }
 
 void DVIDNodeService::put_gray3D(string datatype_instance, Grayscale3D& volume,
-            vector<unsigned int> offset, bool throttle)
+            vector<unsigned int> offset, bool throttle, bool compress)
 {
     Dims_t sizes = volume.get_dims();
-    put_volume(datatype_instance, volume.get_binary(), sizes, offset, throttle);
+    put_volume(datatype_instance, volume.get_binary(), sizes,
+            offset, throttle, compress);
 }
-
 
 void DVIDNodeService::put(string keyvalue, string key, ifstream& fin)
 {
@@ -660,7 +675,7 @@ void DVIDNodeService::set_properties(string graph_name, std::vector<Edge>& edges
 
 void DVIDNodeService::put_volume(string datatype_instance, BinaryDataPtr volume,
             vector<unsigned int> sizes, vector<unsigned int> offset,
-            bool throttle)
+            bool throttle, bool compress)
 {
     // make sure volume specified is legal and block aligned
     if ((sizes.size() != 3) || (offset.size() != 3)) {
@@ -677,6 +692,13 @@ void DVIDNodeService::put_volume(string datatype_instance, BinaryDataPtr volume,
         throw ErrMsg("Label POST error: Region is not a multiple of block size");
     }
 
+    // make sure requests do not involve more bytes than fit in an int
+    // (use 8-byte label to create this bound)
+    uint64 total_size = uint64(sizes[0]) * uint64(sizes[1]) * uint64(sizes[2]);
+    if (total_size > INT_MAX) {
+        throw ErrMsg("Trying to post too large of a volume");
+    }
+
     bool waiting = true;
     int status_code;
     string respdata;
@@ -686,8 +708,14 @@ void DVIDNodeService::put_volume(string datatype_instance, BinaryDataPtr volume,
     // try posting until DVID is available (no contention)
     while (waiting) {
         string endpoint =  construct_volume_uri(
-                    datatype_instance, sizes, offset, channels, throttle);
-       
+                    datatype_instance, sizes, offset,
+                    channels, throttle, compress);
+        
+        // compress using lz4
+        if (compress) {
+            volume = BinaryData::compress_lz4(volume);
+        }
+
         BinaryDataPtr binary_result = BinaryData::create_binary_data();
         status_code = connection.make_request(endpoint, POST, volume,
                 binary_result, respdata, BINARY);
@@ -763,13 +791,21 @@ BinaryDataPtr DVIDNodeService::get_volume3D(string datatype_inst, Dims_t sizes,
         throw ErrMsg("Did not correctly specify 3D volume");
     }
 
+    // make sure requests do not involve more bytes than fit in an int
+    // (use 8-byte label to create this bound)
+    uint64 total_size = uint64(sizes[0]) * uint64(sizes[1]) * uint64(sizes[2]);
+    if (total_size > INT_MAX) {
+        throw ErrMsg("Requested too large of a volume");
+    }
+
     // try get until DVID is available (no contention)
     while (waiting) {
         string endpoint = 
-            construct_volume_uri(datatype_inst, sizes, offset, channels, throttle);
+            construct_volume_uri(datatype_inst, sizes, offset,
+                    channels, throttle, compress);
         status_code = connection.make_request(endpoint, GET, BinaryDataPtr(),
                 binary_result, respdata, BINARY);
-        
+       
         // wait 1 second if the server is busy
         if (status_code == 503) {
             sleep(1);
@@ -786,7 +822,8 @@ BinaryDataPtr DVIDNodeService::get_volume3D(string datatype_inst, Dims_t sizes,
 }
 
 string DVIDNodeService::construct_volume_uri(string datatype_inst, Dims_t sizes,
-        vector<unsigned int> offset, vector<unsigned int> channels, bool throttle)
+        vector<unsigned int> offset, vector<unsigned int> channels,
+        bool throttle, bool compress)
 {
     string uri = "/node/" + uuid + "/"
                     + datatype_inst + "/raw/";
@@ -832,6 +869,12 @@ string DVIDNodeService::construct_volume_uri(string datatype_inst, Dims_t sizes,
     if (throttle) {
         sstr << "?throttle=on";
     }
+    if (compress && !throttle) {
+        sstr << "?compression=lz4";
+    } else if (compress) {
+        sstr << "&compression=lz4";
+    }
+
     return sstr.str();
 }
 

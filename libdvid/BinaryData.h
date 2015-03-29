@@ -59,6 +59,23 @@ class BinaryData {
     }
 
     /*!
+     * Decompress and load from lz4 format.
+     * TODO: decompress from lz4 streaming interface
+     * \param lz4binary binary that contains lz4 data
+     * \param the size of the resulting uncompresed buffer
+     * \return smart pointer to new binary data (uncompressed)
+    */
+    static BinaryDataPtr decompress_lz4(const BinaryDataPtr lz4binary,
+            int uncompressed_size);
+
+    /*!
+     * Load data and compress to lz4 format.
+     * \param binary data to compress
+     * \return smart pointer to new binary data (compressed)
+    */
+    static BinaryDataPtr compress_lz4(const BinaryDataPtr lz4binary);
+
+    /*!
      * Allows modification of underlying buffer data.
      * \return string reference
     */
@@ -90,7 +107,7 @@ class BinaryData {
      * Default destruction of string is sufficient.
     */  
      ~BinaryData() {}
-  
+
   private:
     /*!
      * Private constructor to prevent stack allocation of binary data.
@@ -99,7 +116,12 @@ class BinaryData {
      * \param length Number of bytes in data_
     */
     BinaryData(const char* data_, unsigned int length) : data(data_, length) {}
-    
+   
+    /*!
+     * Private empty constructor.
+    */
+    BinaryData() {}
+
     /*!
      * Private constructor to prevent stack allocation of binary data.
      * Read a file and load the data into binary format.
