@@ -76,6 +76,27 @@ class BinaryData {
     static BinaryDataPtr compress_lz4(const BinaryDataPtr lz4binary);
 
     /*!
+     * Decompress and load from jpeg format.
+     * \param jpegbinary binary that contains jpeg data
+     * \param width returns width of decompressed image
+     * \param height returns height of decompressed image
+     * \return smart pointer to new binary data (uncompressed)
+    */ 
+    static BinaryDataPtr decompress_jpeg(const BinaryDataPtr jpegbinary,
+            unsigned int& width, unsigned int& height);
+
+    /*!
+     * Decompress and load from png format (must be 8-bit!).
+     * TODO: allow loading of non-8bt images
+     * \param pngbinary binary that contains png data
+     * \param width returns width of decompressed image
+     * \param height returns height of decompressed image
+     * \return smart pointer to new binary data (uncompressed)
+    */ 
+    static BinaryDataPtr decompress_png8(const BinaryDataPtr pngbinary,
+        unsigned int& width, unsigned int& height);
+
+    /*!
      * Allows modification of underlying buffer data.
      * \return string reference
     */

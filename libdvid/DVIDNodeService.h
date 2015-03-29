@@ -472,11 +472,12 @@ class DVIDNodeService {
      * \param offset offset in voxel coordinates (order given by channels)
      * \param channels channel order (default: 0,1,2)
      * \param throttle allow only one request at time
+     * \param compress enable lz4 compression
      * \return byte buffer corresponding to volume
     */
     BinaryDataPtr get_volume3D(std::string datatype_inst, Dims_t sizes,
         std::vector<unsigned int> offset, std::vector<unsigned int> channels,
-        bool throttle);
+        bool throttle, bool compress);
 
     /*!
      * Helper function to construct a REST endpoint strign for

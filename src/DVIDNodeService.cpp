@@ -1,7 +1,6 @@
 #include "DVIDNodeService.h"
 #include "DVIDException.h"
 
-#include <png++/png.hpp>
 #include <json/json.h>
 #include <set>
 
@@ -27,7 +26,7 @@ DVIDNodeService::DVIDNodeService(string web_addr_, UUID uuid_) :
     int status_code = connection.make_request(endpoint, GET, BinaryDataPtr(),
             binary, respdata, DEFAULT);
     if (status_code != 200) {
-        throw DVIDException(respdata, status_code);
+        throw DVIDException(respdata + "\n" + binary->get_data(), status_code);
     }
 }
 
@@ -44,7 +43,7 @@ BinaryDataPtr DVIDNodeService::custom_request(string endpoint,
     int status_code = connection.make_request(node_endpoint, method, payload,
             resp_binary, respdata, BINARY);
     if (status_code != 200) {
-        throw DVIDException(respdata, status_code);
+        throw DVIDException(respdata + "\n" + resp_binary->get_data(), status_code);
     }
 
     return resp_binary; 
@@ -82,39 +81,29 @@ bool DVIDNodeService::create_graph(string graph_name)
     return create_datatype("labelgraph", graph_name);
 }
 
-// ?! add JPEG support (can use libjpeg by just doing jpeg_mem_src)
 Grayscale2D DVIDNodeService::get_tile_slice(string datatype_instance,
         Slice2D slice, unsigned int scaling, vector<unsigned int> tile_loc)
 {
     BinaryDataPtr binary_response = get_tile_slice_binary(datatype_instance,
             slice, scaling, tile_loc);
+    Dims_t dim_size;
 
-//    if (1) {
-        // retrieve PNG
-        string& png_image = binary_response->get_data();
-        std::istringstream sstr2(png_image);
-        png::image<png::gray_pixel> image;         
-        image.read(sstr2);
-    
-        Dims_t dim_size;
-        dim_size.push_back(image.get_width());
-        dim_size.push_back(image.get_height());
+    // retrieve JPEG
+    try {
+        unsigned int width, height;
+        binary_response = 
+            BinaryData::decompress_jpeg(binary_response, width, height);
+        dim_size.push_back(width); dim_size.push_back(height);
+        
+    } catch (ErrMsg& msg) {
+        unsigned int width, height;
+        binary_response = 
+            BinaryData::decompress_png8(binary_response, width, height);
+        dim_size.push_back(width); dim_size.push_back(height);
+    }
 
-        // inefficient extra copy into binary buffer
-        uint8* buffer = new uint8[image.get_width()*image.get_height()];
-        uint8* ptr = buffer;
-        for (int y = 0; y < image.get_height(); ++y) {
-            for (int x = 0; x < image.get_width(); ++x) {
-                *ptr = image[y][x];
-                ++ptr;
-            }
-        }
-        BinaryDataPtr buffer_binary = BinaryData::create_binary_data(
-                (const char*) buffer, image.get_width()*image.get_height());
-        Grayscale2D grayimage(buffer_binary, dim_size);
-        return grayimage;
-//    }
-
+    Grayscale2D grayimage(binary_response, dim_size);
+    return grayimage;
 }
 
 BinaryDataPtr DVIDNodeService::get_tile_slice_binary(string datatype_instance,
@@ -148,7 +137,7 @@ Grayscale3D DVIDNodeService::get_gray3D(string datatype_instance, Dims_t sizes,
         bool throttle, bool compress)
 {
     BinaryDataPtr data = get_volume3D(datatype_instance,
-            sizes, offset, channels, throttle);
+            sizes, offset, channels, throttle, compress);
    
     // decompress using lz4
     if (compress) {
@@ -175,7 +164,7 @@ Labels3D DVIDNodeService::get_labels3D(string datatype_instance, Dims_t sizes,
         bool throttle, bool compress)
 {
     BinaryDataPtr data = get_volume3D(datatype_instance,
-            sizes, offset, channels, throttle);
+            sizes, offset, channels, throttle, compress);
    
     // decompress using lz4
     if (compress) {
@@ -704,7 +693,9 @@ void DVIDNodeService::put_volume(string datatype_instance, BinaryDataPtr volume,
     string respdata;
     vector<unsigned int> channels;
     channels.push_back(0); channels.push_back(1); channels.push_back(2); 
-
+    
+    BinaryDataPtr binary_result;
+    
     // try posting until DVID is available (no contention)
     while (waiting) {
         string endpoint =  construct_volume_uri(
@@ -716,7 +707,7 @@ void DVIDNodeService::put_volume(string datatype_instance, BinaryDataPtr volume,
             volume = BinaryData::compress_lz4(volume);
         }
 
-        BinaryDataPtr binary_result = BinaryData::create_binary_data();
+        binary_result = BinaryData::create_binary_data();
         status_code = connection.make_request(endpoint, POST, volume,
                 binary_result, respdata, BINARY);
 
@@ -729,7 +720,8 @@ void DVIDNodeService::put_volume(string datatype_instance, BinaryDataPtr volume,
     }
 
     if (status_code != 200) {
-        throw DVIDException(respdata, status_code);
+        throw DVIDException(respdata + "\n" + binary_result->get_data(),
+                status_code);
     } 
 }
 
@@ -752,7 +744,7 @@ bool DVIDNodeService::create_datatype(string datatype, string datatype_name)
             POST, payload, binary, respdata, JSON);
 
     if (status_code != 200) {
-        throw DVIDException(respdata, status_code);
+        throw DVIDException(respdata + "\n" + binary->get_data(), status_code);
     }
 
     return true;
@@ -778,7 +770,7 @@ bool DVIDNodeService::exists(string datatype_endpoint)
 
 BinaryDataPtr DVIDNodeService::get_volume3D(string datatype_inst, Dims_t sizes,
         vector<unsigned int> offset, vector<unsigned int> channels,
-        bool throttle)
+        bool throttle, bool compress)
 {
     bool waiting = true;
     int status_code;
@@ -815,7 +807,8 @@ BinaryDataPtr DVIDNodeService::get_volume3D(string datatype_inst, Dims_t sizes,
     }
     
     if (status_code != 200) {
-        throw DVIDException(respdata, status_code);
+        throw DVIDException(respdata + "\n" + binary_result->get_data(),
+                status_code);
     }
 
     return binary_result;
