@@ -1,9 +1,3 @@
-
--is DVID UUID the same within a second; fix error for deleting curl
-
-
--private broadcast
-
 -fix c++ warnings and look for any other memory leaks
 -add compression for blocks when available
 -add load test for volume gets using compression (dependent on Bill)

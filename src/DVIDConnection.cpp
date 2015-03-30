@@ -45,8 +45,7 @@ DVIDConnection::DVIDConnection(const DVIDConnection& copy_connection)
 
 DVIDConnection::~DVIDConnection()
 {
-    // currently causing a memory fault so commenting out
-    // curl_easy_cleanup(curl_connection);
+    curl_easy_cleanup(curl_connection);
 }
 
 int DVIDConnection::make_request(string endpoint, ConnectionMethod method,
