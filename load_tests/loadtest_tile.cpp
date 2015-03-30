@@ -1,3 +1,18 @@
+/*!
+ * This file is a DVID load test that simulates a client
+ * scrolling through several image planes.  The program tries
+ * fetching data 2D slices in tile, grayscale, and labelblk format.  Tiles
+ * should be the fastest and labels the slowest.  Note:
+ * that because DVID typically splits the volume in 32x32x32
+ * chunks, every 32nd image slice retrieved using the grayscale
+ * and labelblk interface often results in a higher latency
+ * call.  Users calling this load test should note that the DVID
+ * database may cache recent requests (running this command twice
+ * could result in different performance the second time).
+ *
+ * \author Stephen Plaza (plazas@janelia.hhmi.org)
+*/
+
 #include <libdvid/DVIDNodeService.h>
 #include "ScopeTime.h"
 
@@ -11,15 +26,24 @@ using std::string;
 
 // assume all blocks are BLK_SIZE in each dimension
 int BLK_SIZE = 32;
+
+// number of planes to scroll through
 int NUM_FETCHES = 500;
+
+// the size of the tile on DVID
 int TILESIZE = 512;
+
+// the size of the window to be fetched
 int FETCHSIZE = 1024;
 
 /*!
- * Exercises the nD GETs and PUTs for the labelblk datatype.
+ * Exercises 2D plane access using the nD grayscale and labelblk interface and
+ * grayscale tiles.
 */
 int main(int argc, char** argv)
 {
+    // must point to a DVID instance with tiles (with name tile name) and
+    // starting voxel coordinates
     if (argc != 7 && argc != 8) {
         cout << "Usage: <program> <server_name> <uuid> <tilename> <startx> <starty> <startz> <seg: opt>" << endl;
         return -1;
@@ -29,6 +53,8 @@ int main(int argc, char** argv)
         
         DVIDNodeService dvid_node(argv[1], argv[2]);
 
+        // some arithmetic to get tiles aligned to the tile space (indicated
+        // by TILESIZE)
         int xstart = atoi(argv[4]);
         int ystart = atoi(argv[5]);
         int zstart = atoi(argv[6]);
@@ -39,6 +65,8 @@ int main(int argc, char** argv)
         if (ystart % TILESIZE) {
             ystart += (TILESIZE - (ystart % TILESIZE)); 
         }
+
+        // make 2D calls in the middle of a block to get a worse-case scenario
         int xstartm = xstart + TILESIZE / 2;
         int ystartm = ystart + TILESIZE / 2;
 
@@ -53,12 +81,16 @@ int main(int argc, char** argv)
 
         cout << "*** Tile Fetching (Single Thread 9 Tiles Per Slice) ***" << endl;
 
+        // assuming a 1024x1024 window, 9 tiles could be needed if the window
+        // is not completely aligned to tile space
         vector<unsigned int> tilepos;
         tilepos.push_back(0);
         tilepos.push_back(0);
         tilepos.push_back(zstart);
         int total_bytes_read = 0;
         ScopeTime tiles_timer(false);
+
+        // multi-threading might reduce latency further
         for (int z = zstart; z < (zstart+NUM_FETCHES); ++z) {
             // fetch 9 tiles
             ScopeTime tile_timer(false);
@@ -161,9 +193,6 @@ int main(int argc, char** argv)
         cerr << e.what() << endl;
         return -1;
     }
-
-    // ?! validate my decompression algorithm for PNG and JPEG
-
 
     return 0;
 }

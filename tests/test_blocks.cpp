@@ -2,6 +2,7 @@
  * This file stores grayscale and label data using the
  * block interface and retrieves it using nD and block
  * interface. 
+ * NOTE: labelblk block call is not yet implemented in DVID
  *
  * \author Stephen Plaza (plazas@janelia.hhmi.org)
 */
@@ -31,7 +32,7 @@ bool buffers_equal(const T* buf1,
         const T* buf2, int size)
 {
     for (int i = 0; i < size; ++i) {
-        if (buf1[size] != buf2[size]) {
+        if (buf1[i] != buf2[i]) {
             return false;
         }
     }
@@ -46,7 +47,7 @@ bool buffers_equal(const T* buf1,
 int main(int argc, char** argv)
 {
     if (argc != 2) {
-        cout << "Usage: <program> <server_name> <uuid>" << endl;
+        cout << "Usage: <program> <server_name>" << endl;
         return -1;
     }
     try {
@@ -96,6 +97,7 @@ int main(int argc, char** argv)
         GrayscaleBlocks gray_blocks;
         gray_blocks.push_back(buffer1);
         gray_blocks.push_back(buffer2);
+        
         LabelBlocks label_blocks;
         label_blocks.push_back(label1);
         label_blocks.push_back(label2);
@@ -120,20 +122,21 @@ int main(int argc, char** argv)
         sizes.push_back(BLK_SIZE);
 
         dvid_node.put_grayblocks(gray_name, gray_blocks, offset_blocks);
-        dvid_node.put_labelblocks(label_name, label_blocks, offset_blocks);
+        //dvid_node.put_labelblocks(label_name, label_blocks, offset_blocks);
 
         // ask to read more blocks than are there (should return 2 blocks)
         GrayscaleBlocks gray_blocks_comp = 
             dvid_node.get_grayblocks(gray_name, offset_blocks, 5);
-        LabelBlocks label_blocks_comp = 
-            dvid_node.get_labelblocks(label_name, offset_blocks, 5);
+        /*LabelBlocks label_blocks_comp = 
+            dvid_node.get_labelblocks(label_name, offset_blocks, 5);*/
 
         if (gray_blocks_comp.get_num_blocks() != 2) {
             throw ErrMsg("Retrieved more than 2 grayscale blocks");
         }
-        if (label_blocks_comp.get_num_blocks() != 2) {
+        
+        /*if (label_blocks_comp.get_num_blocks() != 2) {
             throw ErrMsg("Retrieved more than 2 label blocks");
-        }
+        }*/
 
         // check that buffers match
         if (!buffers_equal(gray_blocks[0], gray_blocks_comp[0],
@@ -144,14 +147,14 @@ int main(int argc, char** argv)
                     BLK_SIZE*BLK_SIZE*BLK_SIZE)) {
             throw ErrMsg("Retrieved incorrect grayscale block data");
         }  
-        if (!buffers_equal(label_blocks[0], label_blocks_comp[0], 
+        /*if (!buffers_equal(label_blocks[0], label_blocks_comp[0], 
                     BLK_SIZE*BLK_SIZE*BLK_SIZE)) {
             throw ErrMsg("Retrieved incorrect label block data");
         }  
         if (!buffers_equal(label_blocks[1], label_blocks_comp[1],
                     BLK_SIZE*BLK_SIZE*BLK_SIZE)) {
             throw ErrMsg("Retrieved incorrect label block data");
-        }  
+        }*/  
 
         // post grayscale as two nD calls
         // post grayscale volume (note: that it is block aligned)
@@ -159,7 +162,7 @@ int main(int argc, char** argv)
         dvid_node.put_gray3D(gray_namend, graypost1, offset_voxels);
         Grayscale3D graypost2(buffer2, BLK_SIZE*BLK_SIZE*BLK_SIZE, sizes);
         offset_voxels[0] += BLK_SIZE; // write the next block
-        dvid_node.put_gray3D(gray_namend, graypost1, offset_voxels);
+        dvid_node.put_gray3D(gray_namend, graypost2, offset_voxels);
 
         // post labels as two nD calls
         // post labels volume (note: that it is block aligned)
@@ -168,11 +171,11 @@ int main(int argc, char** argv)
         dvid_node.put_labels3D(label_namend, labelpost1, offset_voxels);
         Labels3D labelpost2(label2, BLK_SIZE*BLK_SIZE*BLK_SIZE, sizes);
         offset_voxels[0] += BLK_SIZE; // write the next block
-        dvid_node.put_labels3D(label_namend, labelpost1, offset_voxels);
+        dvid_node.put_labels3D(label_namend, labelpost2, offset_voxels);
 
         offset_voxels[0] -= BLK_SIZE; // reinitialize starting position
         Grayscale3D graycomp0 = dvid_node.get_gray3D(gray_namend, sizes, offset_voxels);
-        Labels3D labelcomp0 = dvid_node.get_labels3D(gray_namend, sizes, offset_voxels);
+        Labels3D labelcomp0 = dvid_node.get_labels3D(label_namend, sizes, offset_voxels);
 
         // check that buffers match block buffers
         if (!buffers_equal(graycomp0.get_raw(), gray_blocks[0],

@@ -315,6 +315,7 @@ class DVIDNodeService {
      * a series of contiguous blocks along the first spatial dimension (X).
      * The number of blocks posted is encoded in LabelBlocks.
      * TODO: support compression and throttling.
+     * NOTE: UNTESTED (DVID DOES NOT YET SUPPORT)
      * \param datatype instance name of labelblk type instance
      * \param blocks stores buffer for array of blocks
      * \param block_coords location of first block in span (block coordinates)

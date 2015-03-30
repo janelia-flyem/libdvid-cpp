@@ -90,14 +90,14 @@ class DVIDBlocks {
     {
         uint64 total_size = uint64(num_blocks+1)*uint64(N)*uint64(N)*
             uint64(N)*uint64(sizeof(T)); 
-        
-        std::string& dataint = data->get_data();
-        dataint.append((char*) block, N*N*N*sizeof(T));
-        ++num_blocks;
 
         if (total_size > INT_MAX) {
             throw ErrMsg("Cannot allocate larger than INT_MAX");
         }
+
+        std::string& dataint = data->get_data();
+        dataint.append((char*) block, N*N*N*sizeof(T));
+        ++num_blocks;
     }
     
     /*!

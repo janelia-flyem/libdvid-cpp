@@ -80,11 +80,18 @@ For some simple examples of using libdvid, please review *tests/*.  For
 detailed explanation of available API, please examined DVIDNodeService.h
 and DVIDServerService.h.
 
-*(Note: To use this library in a multi-threaded environment,
+## Important Notes
+
+To use this library in a multi-threaded environment,
 instantiate a new service variable for each thread.  Also, GET and POST
 requests should involve less bytes than INT_MAX.  If bigger requests
-are needed, the request should be divided into multiple calls)*
-   
+are needed, the request should be divided into multiple calls
+
+lz4 compression has been implemented in libdvid but has not been tested
+against DVID yet.  libdvid also implements a labelblk block get/put that
+is not yet supported in DVID.  Eventually, DVID will version the APIs
+and this library can then be checked against that.
+ 
 ## Testing the Package
 libdvid contains unit tests under *tests/* and load tests under *load_tests/*.
 The unit tests can be run by:

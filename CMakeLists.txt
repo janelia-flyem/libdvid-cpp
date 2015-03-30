@@ -65,8 +65,10 @@ if (NOT ${BUILDEM_DIR} STREQUAL "None")
     include (libjpeg)
     include (libcurl)
     include (lz4)
+    include (boost)
 
-    set (LIBDVID_DEPS ${jsoncpp_NAME} ${libpng_NAME})
+    set (LIBDVID_DEPS ${jsoncpp_NAME} ${libpng_NAME} ${libcurl_NAME}
+        ${libjpeg_NAME} ${lz4_NAME} ${boost_NAME})
     set (boost_LIBS ${BUILDEM_LIB_DIR}/libboost_system.so)
     set (support_LIBS ${json_LIB} ${boost_LIBS} ${BUILDEM_LIB_DIR}/libpng.so ${BUILDEM_LIB_DIR}/libcurl.so ${BUILDEM_LIB_DIR}/libjpeg.so ${BUILDEM_LIB_DIR}/liblz4.so )
     #set (support_LIBS ${json_LIB} ${CPPNETLIB_LIBRARIES} ${boost_LIBS} ${BUILDEM_LIB_DIR}/libssl.so ${BUILDEM_LIB_DIR}/libcrypto.so ${BUILDEM_LIB_DIR}/libpng.so curl)
@@ -188,7 +190,10 @@ add_test(
 
 add_test(
     compression 
-    dvidtest_compression sample/image.jpeg sample/image.png sample.binary 
+    dvidtest_compression
+    ${CMAKE_SOURCE_DIR}/tests/inputs/testimage.jpeg
+    ${CMAKE_SOURCE_DIR}/tests/inputs/testimage.png
+    ${CMAKE_SOURCE_DIR}/tests/inputs/testimage.binary
 )
 
 add_test(

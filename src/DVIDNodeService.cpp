@@ -775,12 +775,12 @@ void DVIDNodeService::put_volume(string datatype_instance, BinaryDataPtr volume,
 BinaryDataPtr DVIDNodeService::get_blocks(string datatype_instance,
         vector<unsigned int> block_coords, int span, int& extracted_span)
 {
-    string prefix = "/node/" + uuid + "/" + datatype_instance + "/blocks/";
+    string prefix = "/" + datatype_instance + "/blocks/";
     stringstream sstr;
     // encode starting block
     sstr << block_coords[0] << "_" << block_coords[1] << "_" << block_coords[2];
     sstr << "/" << span;
-    string endpoint = sstr.str();
+    string endpoint = prefix + sstr.str();
   
     // first 4 bytes encodes the number of returned blocks 
     BinaryDataPtr blockbinary = custom_request(endpoint, BinaryDataPtr(), GET);
@@ -798,12 +798,12 @@ BinaryDataPtr DVIDNodeService::get_blocks(string datatype_instance,
 void DVIDNodeService::put_blocks(string datatype_instance,
         BinaryDataPtr binary, int span, vector<unsigned int> block_coords)
 {
-    string prefix = "/node/" + uuid + "/" + datatype_instance + "/blocks/";
+    string prefix = "/" + datatype_instance + "/blocks/";
     stringstream sstr;
     // encode starting block
     sstr << block_coords[0] << "_" << block_coords[1] << "_" << block_coords[2];
     sstr << "/" << span;
-    string endpoint = sstr.str();
+    string endpoint = prefix + sstr.str();
     
     custom_request(endpoint, binary, POST);
 }
