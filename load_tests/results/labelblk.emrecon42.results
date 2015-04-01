@@ -1,0 +1,216 @@
+# using lz4 compression really improves performance (especially
+# when using real segmentation data, i.e., not random)
+# GET requests are still slow because there appears to be an
+# issue with LZ4 compression on DVID
+Large volume dimension: 512
+Small volume dimension: 128
+Volume size sent: 32570374
+Time to POST large label volume: 1.61717 seconds
+663964715 bytes posted per second for large label volume
+Volume size received: 1077952592
+Time to GET large label volume: 13.0792 seconds
+82095375 bytes read per second for large label volume
+Volume size received: 16843025
+Time to GET small label volume: 0.198198 seconds
+Volume size received: 16843025
+Time to GET small label volume: 0.191843 seconds
+Volume size received: 16843025
+Time to GET small label volume: 0.197929 seconds
+Volume size received: 16843025
+Time to GET small label volume: 0.198815 seconds
+Volume size received: 16843025
+Time to GET small label volume: 0.202637 seconds
+Volume size received: 16843025
+Time to GET small label volume: 0.200879 seconds
+Volume size received: 16843025
+Time to GET small label volume: 0.190546 seconds
+Volume size received: 16843025
+Time to GET small label volume: 0.189863 seconds
+Volume size received: 16843025
+Time to GET small label volume: 0.201195 seconds
+Volume size received: 16843025
+Time to GET small label volume: 0.198938 seconds
+Volume size received: 16843025
+Time to GET small label volume: 0.197877 seconds
+Volume size received: 16843025
+Time to GET small label volume: 0.191257 seconds
+Volume size received: 16843025
+Time to GET small label volume: 0.189809 seconds
+Volume size received: 16843025
+Time to GET small label volume: 0.193442 seconds
+Volume size received: 16843025
+Time to GET small label volume: 0.195505 seconds
+Volume size received: 16843025
+Time to GET small label volume: 0.199242 seconds
+Volume size received: 16843025
+Time to GET small label volume: 0.197654 seconds
+Volume size received: 16843025
+Time to GET small label volume: 0.195176 seconds
+Volume size received: 16843025
+Time to GET small label volume: 0.196706 seconds
+Volume size received: 16843025
+Time to GET small label volume: 0.19665 seconds
+Volume size received: 16843025
+Time to GET small label volume: 0.190129 seconds
+Volume size received: 16843025
+Time to GET small label volume: 0.194021 seconds
+Volume size received: 16843025
+Time to GET small label volume: 0.194939 seconds
+Volume size received: 16843025
+Time to GET small label volume: 0.196573 seconds
+Volume size received: 16843025
+Time to GET small label volume: 0.197707 seconds
+Volume size received: 16843025
+Time to GET small label volume: 0.190428 seconds
+Volume size received: 16843025
+Time to GET small label volume: 0.188568 seconds
+Volume size received: 16843025
+Time to GET small label volume: 0.197974 seconds
+Volume size received: 16843025
+Time to GET small label volume: 0.187289 seconds
+Volume size received: 16843025
+Time to GET small label volume: 0.195907 seconds
+Volume size received: 16843025
+Time to GET small label volume: 0.195333 seconds
+Volume size received: 16843025
+Time to GET small label volume: 0.192371 seconds
+Volume size received: 16843025
+Time to GET small label volume: 0.194286 seconds
+Volume size received: 16843025
+Time to GET small label volume: 0.19939 seconds
+Volume size received: 16843025
+Time to GET small label volume: 0.199325 seconds
+Volume size received: 16843025
+Time to GET small label volume: 0.195019 seconds
+Volume size received: 16843025
+Time to GET small label volume: 0.196229 seconds
+Volume size received: 16843025
+Time to GET small label volume: 0.201799 seconds
+Volume size received: 16843025
+Time to GET small label volume: 0.20004 seconds
+Volume size received: 16843025
+Time to GET small label volume: 0.195592 seconds
+Volume size received: 16843025
+Time to GET small label volume: 0.1961 seconds
+Volume size received: 16843025
+Time to GET small label volume: 0.191816 seconds
+Volume size received: 16843025
+Time to GET small label volume: 0.202969 seconds
+Volume size received: 16843025
+Time to GET small label volume: 0.199009 seconds
+Volume size received: 16843025
+Time to GET small label volume: 0.202007 seconds
+Volume size received: 16843025
+Time to GET small label volume: 0.197088 seconds
+Volume size received: 16843025
+Time to GET small label volume: 0.193735 seconds
+Volume size received: 16843025
+Time to GET small label volume: 0.199741 seconds
+Volume size received: 16843025
+Time to GET small label volume: 0.202005 seconds
+Volume size received: 16843025
+Time to GET small label volume: 0.190223 seconds
+Volume size received: 16843025
+Time to GET small label volume: 0.20284 seconds
+Volume size received: 16843025
+Time to GET small label volume: 0.194824 seconds
+Volume size received: 16843025
+Time to GET small label volume: 0.194573 seconds
+Volume size received: 16843025
+Time to GET small label volume: 0.201355 seconds
+Volume size received: 16843025
+Time to GET small label volume: 0.201652 seconds
+Volume size received: 16843025
+Time to GET small label volume: 0.197031 seconds
+Volume size received: 16843025
+Time to GET small label volume: 0.199802 seconds
+Volume size received: 16843025
+Time to GET small label volume: 0.199741 seconds
+Volume size received: 16843025
+Time to GET small label volume: 0.199613 seconds
+Volume size received: 16843025
+Time to GET small label volume: 0.199187 seconds
+Volume size received: 16843025
+Time to GET small label volume: 0.202597 seconds
+Volume size received: 16843025
+Time to GET small label volume: 0.196597 seconds
+Volume size received: 16843025
+Time to GET small label volume: 0.197864 seconds
+Volume size received: 16843025
+Time to GET small label volume: 0.201588 seconds
+Volume size received: 16843025
+Time to GET small label volume: 0.199608 seconds
+Volume size received: 16843025
+Time to GET small label volume: 0.198803 seconds
+Volume size received: 16843025
+Time to GET small label volume: 0.202597 seconds
+Volume size received: 16843025
+Time to GET small label volume: 0.192226 seconds
+Volume size received: 16843025
+Time to GET small label volume: 0.194587 seconds
+Volume size received: 16843025
+Time to GET small label volume: 0.199442 seconds
+Volume size received: 16843025
+Time to GET small label volume: 0.196732 seconds
+Volume size received: 16843025
+Time to GET small label volume: 0.194057 seconds
+Volume size received: 16843025
+Time to GET small label volume: 0.201749 seconds
+Volume size received: 16843025
+Time to GET small label volume: 0.201519 seconds
+Volume size received: 16843025
+Time to GET small label volume: 0.191357 seconds
+Volume size received: 16843025
+Time to GET small label volume: 0.201477 seconds
+Volume size received: 16843025
+Time to GET small label volume: 0.195549 seconds
+Volume size received: 16843025
+Time to GET small label volume: 0.200968 seconds
+Volume size received: 16843025
+Time to GET small label volume: 0.202969 seconds
+Volume size received: 16843025
+Time to GET small label volume: 0.201019 seconds
+Volume size received: 16843025
+Time to GET small label volume: 0.200994 seconds
+Volume size received: 16843025
+Time to GET small label volume: 0.199418 seconds
+Volume size received: 16843025
+Time to GET small label volume: 0.198947 seconds
+Volume size received: 16843025
+Time to GET small label volume: 0.202951 seconds
+Volume size received: 16843025
+Time to GET small label volume: 0.200399 seconds
+Volume size received: 16843025
+Time to GET small label volume: 0.192201 seconds
+Volume size received: 16843025
+Time to GET small label volume: 0.193768 seconds
+Volume size received: 16843025
+Time to GET small label volume: 0.202805 seconds
+Volume size received: 16843025
+Time to GET small label volume: 0.201637 seconds
+Volume size received: 16843025
+Time to GET small label volume: 0.193883 seconds
+Volume size received: 16843025
+Time to GET small label volume: 0.19213 seconds
+Volume size received: 16843025
+Time to GET small label volume: 0.199168 seconds
+Volume size received: 16843025
+Time to GET small label volume: 0.19926 seconds
+Volume size received: 16843025
+Time to GET small label volume: 0.193223 seconds
+Volume size received: 16843025
+Time to GET small label volume: 0.193375 seconds
+Volume size received: 16843025
+Time to GET small label volume: 0.203052 seconds
+Volume size received: 16843025
+Time to GET small label volume: 0.193842 seconds
+Volume size received: 16843025
+Time to GET small label volume: 0.199219 seconds
+Volume size received: 16843025
+Time to GET small label volume: 0.200611 seconds
+Volume size received: 16843025
+Time to GET small label volume: 0.195812 seconds
+100 fetches performed in 19.7224 seconds
+0.197224 seconds per fetch
+85066846 bytes read per second
+Time Elapsed: 35.2015 seconds

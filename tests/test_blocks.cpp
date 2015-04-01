@@ -124,14 +124,15 @@ int main(int argc, char** argv)
         dvid_node.put_grayblocks(gray_name, gray_blocks, offset_blocks);
         //dvid_node.put_labelblocks(label_name, label_blocks, offset_blocks);
 
-        // ask to read more blocks than are there (should return 2 blocks)
+        // ask to read more blocks than are there (should return 5 blocks with
+        // the last 3 blank)
         GrayscaleBlocks gray_blocks_comp = 
             dvid_node.get_grayblocks(gray_name, offset_blocks, 5);
         /*LabelBlocks label_blocks_comp = 
             dvid_node.get_labelblocks(label_name, offset_blocks, 5);*/
 
-        if (gray_blocks_comp.get_num_blocks() != 2) {
-            throw ErrMsg("Retrieved more than 2 grayscale blocks");
+        if (gray_blocks_comp.get_num_blocks() != 5) {
+            throw ErrMsg("Retrieve incorrect number of grayscale blocks");
         }
         
         /*if (label_blocks_comp.get_num_blocks() != 2) {

@@ -1,4 +1,6 @@
--fix c++ warnings and look for any other memory leaks
+-make lz4 r126 version
+
+-fix c++ warnings and look for any other memory leaks -- appears to be some, not sure if important
 -add compression for blocks when available
 -add load test for volume gets using compression (dependent on Bill)
 -improve test coverage

@@ -193,7 +193,7 @@ class DVIDNodeService {
     */
     Labels3D get_labels3D(std::string datatype_instance, Dims_t dims,
             std::vector<unsigned int> offset, bool throttle=true,
-            bool compress=false);
+            bool compress=true);
    
     /*!
      * Retrive a 3D 8-byte label volume with the specified
@@ -218,7 +218,7 @@ class DVIDNodeService {
     Labels3D get_labels3D(std::string datatype_instance, Dims_t dims,
             std::vector<unsigned int> offset,
             std::vector<unsigned int> channels, bool throttle=true,
-            bool compress=false);
+            bool compress=true);
 
     /*!
      * Put a 3D 1-byte grayscale volume to DVID with the specified
@@ -262,7 +262,7 @@ class DVIDNodeService {
     */
     void put_labels3D(std::string datatype_instance, Labels3D& volume,
             std::vector<unsigned int> offset, bool throttle=true,
-            bool compress=false);
+            bool compress=true);
 
     /************** API to access DVID blocks directly **************/
     // This API is probably most relevant for bulk transfers to and
@@ -272,8 +272,7 @@ class DVIDNodeService {
      * Fetch grayscale blocks from DVID.  The call will fetch
      * a series of contiguous blocks along the first dimension (X).
      * The number of blocks fetched is encoded in the GrayscaleBlocks
-     * returned structure.  This number can be less than the
-     * requested span if those blocks do not exist on DVID.
+     * returned structure. 
      * TODO: support compression and throttling.
      * \param datatype instance name of grayscale type instance
      * \param block_coords location of first block in span (block coordinates)
@@ -287,8 +286,7 @@ class DVIDNodeService {
      * Fetch label blocks from DVID.  The call will fetch
      * a series of contiguous blocks along the first dimension (X).
      * The number of blocks fetched is encoded in the LabelBlocks
-     * returned structure.  This number can be less than the
-     * requested span if those blocks do not exist on DVID.
+     * returned structure.
      * TODO: support compression and throttling.
      * \param datatype instance name of labelblk type instance
      * \param block_coords location of first block in span (block coordinates)
@@ -515,11 +513,10 @@ class DVIDNodeService {
      * \param datatype_instance name of datatype instance
      * \param block_coords starting block in DVID block coordinates
      * \param span number of blocks to attempt to get
-     * \param return number of actual blocks retrieved
      * \return binary data corresponding to an array of blocks
     */
     BinaryDataPtr get_blocks(std::string datatype_instance,
-        std::vector<unsigned int> block_coords, int span, int& extracted_span);
+        std::vector<unsigned int> block_coords, int span);
 
     /*!
      * Helper to put blocks from DVID for labels and grayscale.

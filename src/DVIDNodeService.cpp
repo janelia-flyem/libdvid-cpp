@@ -171,6 +171,7 @@ Labels3D DVIDNodeService::get_labels3D(string datatype_instance, Dims_t sizes,
         data = BinaryData::decompress_lz4(data, decomp_size);
     }
 
+
     Labels3D labels(data, sizes);
     return labels; 
 }
@@ -205,13 +206,11 @@ GrayscaleBlocks DVIDNodeService::get_grayblocks(string datatype_instance,
         vector<unsigned int> block_coords, unsigned int span)
 {
     int ret_span = span;
-    BinaryDataPtr data = get_blocks(datatype_instance, block_coords,
-            span, ret_span);
-    assert(ret_span <= span);
+    BinaryDataPtr data = get_blocks(datatype_instance, block_coords, span);
 
     // make sure this data encodes blocks of grayscale
     if (data->length() !=
-            (DEFBLOCKSIZE*DEFBLOCKSIZE*DEFBLOCKSIZE*sizeof(uint8)*ret_span)) {
+            (DEFBLOCKSIZE*DEFBLOCKSIZE*DEFBLOCKSIZE*sizeof(uint8)*span)) {
         throw ErrMsg("Expected 1-byte values from " + datatype_instance);
     }
  
@@ -222,9 +221,7 @@ LabelBlocks DVIDNodeService::get_labelblocks(string datatype_instance,
            vector<unsigned int> block_coords, unsigned int span)
 {
     int ret_span = span;
-    BinaryDataPtr data = get_blocks(datatype_instance, block_coords,
-            span, ret_span);
-    assert(ret_span <= span);
+    BinaryDataPtr data = get_blocks(datatype_instance, block_coords, span);
 
     // make sure this data encodes blocks of grayscale
     if (data->length() !=
@@ -773,7 +770,7 @@ void DVIDNodeService::put_volume(string datatype_instance, BinaryDataPtr volume,
 }
 
 BinaryDataPtr DVIDNodeService::get_blocks(string datatype_instance,
-        vector<unsigned int> block_coords, int span, int& extracted_span)
+        vector<unsigned int> block_coords, int span)
 {
     string prefix = "/" + datatype_instance + "/blocks/";
     stringstream sstr;
@@ -782,15 +779,8 @@ BinaryDataPtr DVIDNodeService::get_blocks(string datatype_instance,
     sstr << "/" << span;
     string endpoint = prefix + sstr.str();
   
-    // first 4 bytes encodes the number of returned blocks 
+    // first 4 bytes no longer include span (always grab what the user wants)
     BinaryDataPtr blockbinary = custom_request(endpoint, BinaryDataPtr(), GET);
-    const unsigned int* blocks_retrieved =
-        (const unsigned int*) blockbinary->get_raw();
-    extracted_span = *blocks_retrieved; 
-
-    // remove first 4 bytes from binary
-    string& data_ref = blockbinary->get_data();
-    data_ref.erase(0,4);
 
     return blockbinary;
 }

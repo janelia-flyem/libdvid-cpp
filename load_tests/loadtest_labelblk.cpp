@@ -11,10 +11,12 @@
 #include "ScopeTime.h"
 
 #include <iostream>
+#include <fstream>
 
 using std::cerr; using std::cout; using std::endl;
 using namespace libdvid;
 using std::vector;
+using std::ifstream;
 
 using std::string;
 
@@ -31,11 +33,13 @@ int NUM_FETCHES = 100;
 int SMALLFETCH = 128;
 
 /*!
- * Exercises the nD GETs and PUTs for the labelblk datatype.
+ * Exercises the nD GETs and PUTs for the labelblk datatype.  Assume input
+ * binary is VOLDIMxVOLDIMxVOLDIM 64bit numbers compressed with lz4 (example
+ * in the inputs directory of a segmentation of an EM dataset with 8nm voxels).
 */
 int main(int argc, char** argv)
 {
-    if (argc != 2) {
+    if (argc != 3) {
         cout << "Usage: <program> <server_name>" << endl;
         return -1;
     }
@@ -56,27 +60,23 @@ int main(int argc, char** argv)
             return -1;
         }
 
-        // ** Write and read labelblk data **
-        // create label 64 image volume
-        unsigned long long * img_labels = new unsigned long long [VOLDIM * VOLDIM * VOLDIM];
-        for (int i = 0; i < (VOLDIM*VOLDIM*VOLDIM); ++i) {
-            img_labels[i] = rand() % 1000000;
-        }
-
         // create binary data string wrapper (64 bits per pixel)
         // calculate time to post volume
         {
             Dims_t dims;
             dims.push_back(VOLDIM); dims.push_back(VOLDIM); dims.push_back(VOLDIM); 
-            Labels3D labelbin = Labels3D(img_labels,
-                VOLDIM * VOLDIM * VOLDIM, dims);
-            delete []img_labels;
+
+            // read a representative segmentation
+            ifstream fin(argv[2]);
+            BinaryDataPtr binary = BinaryData::create_binary_data(fin);
+            binary = BinaryData::decompress_lz4(binary, VOLDIM*VOLDIM*VOLDIM*sizeof(uint64));
+            Labels3D labelbin = Labels3D(binary, dims);
 
             vector<unsigned int> start;
             start.push_back(0); start.push_back(0); start.push_back(0);
 
             ScopeTime post_timer(false);
-            dvid_node.put_labels3D(label_datatype_name, labelbin, start);
+            dvid_node.put_labels3D(label_datatype_name, labelbin, start, true, true);
             double post_time = post_timer.getElapsed();
             cout << "Time to POST large label volume: " << post_time << " seconds" << endl;
             cout << int(VOLDIM * VOLDIM * VOLDIM  * sizeof(unsigned long long) / post_time)
@@ -92,7 +92,7 @@ int main(int argc, char** argv)
             lsizes.push_back(VOLDIM); lsizes.push_back(VOLDIM); lsizes.push_back(VOLDIM);
             
             ScopeTime get_timer(false);
-            Labels3D labelcomp = dvid_node.get_labels3D(label_datatype_name, lsizes, start);
+            Labels3D labelcomp = dvid_node.get_labels3D(label_datatype_name, lsizes, start, true, true);
             double read_time = get_timer.getElapsed();
             cout << "Time to GET large label volume: " << read_time << " seconds" << endl;
             cout << int(VOLDIM * VOLDIM * VOLDIM * sizeof(unsigned long long)/ read_time)
@@ -116,7 +116,7 @@ int main(int argc, char** argv)
             lsizes.push_back(SMALLFETCH);
             
             Labels3D labelcomp =
-                dvid_node.get_labels3D(label_datatype_name, lsizes, start);
+                dvid_node.get_labels3D(label_datatype_name, lsizes, start, true, true);
 
             double read_time = get_timer.getElapsed();
             cout << "Time to GET small label volume: " << read_time << " seconds" << endl;
