@@ -96,6 +96,9 @@ int main(int argc, char** argv)
         // post grayscale volume (note: that it is block aligned)
         dvid_node.put_gray3D(gray_datatype_name, graybin, start);
 
+        // exercise typeinfo interface
+        Json::Value blah = dvid_node.get_typeinfo(gray_datatype_name);
+
         // retrieve the image volume and make sure it makes the posted volume
         Grayscale3D graycomp = dvid_node.get_gray3D(gray_datatype_name, sizes, start);
         const unsigned char* datacomp = graycomp.get_raw();

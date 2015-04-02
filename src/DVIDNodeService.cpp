@@ -49,7 +49,7 @@ BinaryDataPtr DVIDNodeService::custom_request(string endpoint,
     
 Json::Value DVIDNodeService::get_typeinfo(string datatype_name)
 {
-    BinaryDataPtr binary = custom_request("/info", BinaryDataPtr(), GET);
+    BinaryDataPtr binary = custom_request("/" + datatype_name + "/info", BinaryDataPtr(), GET);
    
     // read into json from binary string 
     Json::Value data;
@@ -57,6 +57,7 @@ Json::Value DVIDNodeService::get_typeinfo(string datatype_name)
     if (!json_reader.parse(binary->get_data(), data)) {
         throw ErrMsg("Could not decode JSON");
     }
+    return data;
 }
 
 bool DVIDNodeService::create_grayscale8(string datatype_name)
