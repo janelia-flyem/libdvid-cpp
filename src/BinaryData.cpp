@@ -269,8 +269,7 @@ BinaryDataPtr BinaryData::decompress_jpeg(const BinaryDataPtr jpegbinary,
     // as the loop counter
     while (cinfo.output_scanline < cinfo.output_height) {
         // try to read as many lines as possible
-        int lines_read = jpeg_read_scanlines(&cinfo, &buffer,
-                cinfo.output_height);
+        int lines_read = jpeg_read_scanlines(&cinfo, &buffer, 1);
 
         // update buffer position
         buffer += (row_stride * lines_read);
