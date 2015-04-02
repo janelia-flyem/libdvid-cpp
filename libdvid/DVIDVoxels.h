@@ -92,6 +92,14 @@ class DVIDVoxels {
     }
 
     /*!
+     * Constructor that produces an empty object.
+    */
+    DVIDVoxels()
+    {
+        data = BinaryData::create_binary_data();
+    }
+
+    /*!
      * Retrieve binary data for the given volume.
      * \return binary data for volume
     */
