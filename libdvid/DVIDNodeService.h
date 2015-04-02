@@ -142,11 +142,12 @@ class DVIDNodeService {
      * \param offset X, Y, Z offset in voxel coordinates
      * \param throttle allow only one request at time (default: true)
      * \param compress enable lz4 compression
+     * \param roi specify DVID roi to mask GET operation (return 0s outside ROI)
      * \return 3D grayscale object that wraps a byte buffer
     */
     Grayscale3D get_gray3D(std::string datatype_instance, Dims_t dims,
             std::vector<unsigned int> offset, bool throttle=true,
-            bool compress=false);
+            bool compress=false, std::string roi="");
 
     /*!
      * Retrive a 3D 1-byte grayscale volume with the specified
@@ -166,12 +167,13 @@ class DVIDNodeService {
      * \param channels channel order (default: 0,1,2)
      * \param throttle allow only one request at time (default: true)
      * \param compress enable lz4 compression
+     * \param roi specify DVID roi to mask GET operation (return 0s outside ROI)
      * \return 3D grayscale object that wraps a byte buffer
     */
     Grayscale3D get_gray3D(std::string datatype_instance, Dims_t dims,
             std::vector<unsigned int> offset,
             std::vector<unsigned int> channels, bool throttle=true,
-            bool compress=false);
+            bool compress=false, std::string roi="");
     
      /*!
      * Retrive a 3D 8-byte label volume with the specified
@@ -189,11 +191,12 @@ class DVIDNodeService {
      * \param offset X, Y, Z offset in voxel coordinates
      * \param throttle allow only one request at time (default: true)
      * \param compress enable lz4 compression
+     * \param roi specify DVID roi to mask GET operation (return 0s outside ROI)
      * \return 3D label object that wraps a byte buffer
     */
     Labels3D get_labels3D(std::string datatype_instance, Dims_t dims,
             std::vector<unsigned int> offset, bool throttle=true,
-            bool compress=true);
+            bool compress=true, std::string roi="");
    
     /*!
      * Retrive a 3D 8-byte label volume with the specified
@@ -213,12 +216,13 @@ class DVIDNodeService {
      * \param channels channel order (default: 0,1,2)
      * \param throttle allow only one request at time (default: true)
      * \param compress enable lz4 compression
+     * \param roi specify DVID roi to mask GET operation (return 0s outside ROI)
      * \return 3D label object that wraps a byte buffer
     */
     Labels3D get_labels3D(std::string datatype_instance, Dims_t dims,
             std::vector<unsigned int> offset,
             std::vector<unsigned int> channels, bool throttle=true,
-            bool compress=true);
+            bool compress=true, std::string roi="");
 
     /*!
      * Put a 3D 1-byte grayscale volume to DVID with the specified
@@ -258,11 +262,12 @@ class DVIDNodeService {
      * \param volume label 3D volume encodes dimension sizes and binary buffer 
      * \param offset offset in voxel coordinates (order given by channels)
      * \param throttle allow only one request at time (default: true)
+     * \param roi specify DVID roi to mask PUT operation (default: empty)
      * \param compress enable lz4 compression
     */
     void put_labels3D(std::string datatype_instance, Labels3D& volume,
             std::vector<unsigned int> offset, bool throttle=true,
-            bool compress=true);
+            bool compress=true, std::string roi="");
 
     /************** API to access DVID blocks directly **************/
     // This API is probably most relevant for bulk transfers to and
@@ -503,10 +508,11 @@ class DVIDNodeService {
      * \param offset offset in voxel coordinates (order given by channels)
      * \param throttle allow only one request at time
      * \param compress enable lz4 compression
+     * \param roi specify DVID roi to mask PUT operation (default: empty)
     */
     void put_volume(std::string datatype_instance, BinaryDataPtr volume,
             std::vector<unsigned int> sizes, std::vector<unsigned int> offset,
-            bool throttle, bool compress);
+            bool throttle, bool compress, std::string roi);
 
     /*!
      * Helper to retrieve blocks from DVID for labels and grayscale.
@@ -551,11 +557,12 @@ class DVIDNodeService {
      * \param channels channel order (default: 0,1,2)
      * \param throttle allow only one request at time
      * \param compress enable lz4 compression
+     * \param roi specify DVID roi to mask GET operation (return 0s outside ROI)
      * \return byte buffer corresponding to volume
     */
     BinaryDataPtr get_volume3D(std::string datatype_inst, Dims_t sizes,
         std::vector<unsigned int> offset, std::vector<unsigned int> channels,
-        bool throttle, bool compress);
+        bool throttle, bool compress, std::string roi);
 
     /*!
      * Helper function to construct a REST endpoint strign for
@@ -566,10 +573,12 @@ class DVIDNodeService {
      * \param channels channel order (default: 0,1,2)
      * \param throttle allow only one request at time
      * \param compress enable lz4 compression
+     * \param roi specify DVID roi to mask operation (default: empty)
     */
     std::string construct_volume_uri(std::string datatype_inst, Dims_t sizes,
             std::vector<unsigned int> offset,
-            std::vector<unsigned int> channels, bool throttle, bool compress);
+            std::vector<unsigned int> channels, bool throttle, bool compress,
+            std::string roi);
 };
 
 }
