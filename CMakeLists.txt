@@ -109,7 +109,7 @@ if (${BUILDEM_DIR} STREQUAL "None")
     INSTALL(DIRECTORY ${PROJECT_SOURCE_DIR}/png++ DESTINATION include)
     INSTALL(TARGETS dvidcpp DESTINATION lib)
     INSTALL(FILES ${PROJECT_BINARY_DIR}/libdvidcppConfig.cmake
-    ${PROJECT_BINARY_DIR}/libdvidcppConfigVersion.cmake
+    ${PROJECT_BINARY_DIR}/libdvidcppConfigVersion.cmake ${PROJECT_BINARY_DIR}/libdvidcppTargets.cmake
     DESTINATION lib${LIB_SUFFIX}/libdvidcpp)
 else()
     add_custom_command (
