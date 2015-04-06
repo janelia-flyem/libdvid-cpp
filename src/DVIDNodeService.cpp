@@ -741,17 +741,17 @@ void DVIDNodeService::put_volume(string datatype_instance, BinaryDataPtr volume,
     
     BinaryDataPtr binary_result;
     
+    string endpoint =  construct_volume_uri(
+            datatype_instance, sizes, offset,
+            channels, throttle, compress, roi);
+
+    // compress using lz4
+    if (compress) {
+        volume = BinaryData::compress_lz4(volume);
+    }
+
     // try posting until DVID is available (no contention)
     while (waiting) {
-        string endpoint =  construct_volume_uri(
-                    datatype_instance, sizes, offset,
-                    channels, throttle, compress, roi);
-        
-        // compress using lz4
-        if (compress) {
-            volume = BinaryData::compress_lz4(volume);
-        }
-
         binary_result = BinaryData::create_binary_data();
         status_code = connection.make_request(endpoint, POST, volume,
                 binary_result, respdata, BINARY);
@@ -864,11 +864,12 @@ BinaryDataPtr DVIDNodeService::get_volume3D(string datatype_inst, Dims_t sizes,
         throw ErrMsg("Requested too large of a volume");
     }
 
+    string endpoint = 
+        construct_volume_uri(datatype_inst, sizes, offset,
+                channels, throttle, compress, roi);
+
     // try get until DVID is available (no contention)
     while (waiting) {
-        string endpoint = 
-            construct_volume_uri(datatype_inst, sizes, offset,
-                    channels, throttle, compress, roi);
         status_code = connection.make_request(endpoint, GET, BinaryDataPtr(),
                 binary_result, respdata, BINARY);
        
