@@ -2,6 +2,7 @@
 #define SCOPETIME_H
 
 #include <sys/time.h>
+#include <iostream>
 
 class ScopeTime {
   public:
