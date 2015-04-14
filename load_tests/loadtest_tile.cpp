@@ -99,41 +99,41 @@ int main(int argc, char** argv)
 
             tilepos[0] = xstart / TILESIZE;
             tilepos[1] = ystart / TILESIZE;
-            BinaryDataPtr dum1 = dvid_node.get_tile_slice_binary(tilename, XY, 1, tilepos); 
+            BinaryDataPtr dum1 = dvid_node.get_tile_slice_binary(tilename, XY, 0, tilepos); 
             bytes_read += dum1->length();            
 
             tilepos[0] += 1;
-            BinaryDataPtr dum2 = dvid_node.get_tile_slice_binary(tilename, XY, 1, tilepos); 
+            BinaryDataPtr dum2 = dvid_node.get_tile_slice_binary(tilename, XY, 0, tilepos); 
             bytes_read += dum2->length();            
 
             tilepos[0] += 1;
-            BinaryDataPtr dum3 = dvid_node.get_tile_slice_binary(tilename, XY, 1, tilepos); 
+            BinaryDataPtr dum3 = dvid_node.get_tile_slice_binary(tilename, XY, 0, tilepos); 
             bytes_read += dum3->length();            
 
             tilepos[0] -= 2;
             tilepos[1] += 1;
-            BinaryDataPtr dum4 = dvid_node.get_tile_slice_binary(tilename, XY, 1, tilepos); 
+            BinaryDataPtr dum4 = dvid_node.get_tile_slice_binary(tilename, XY, 0, tilepos); 
             bytes_read += dum4->length();            
 
             tilepos[0] += 1;
-            BinaryDataPtr dum5 = dvid_node.get_tile_slice_binary(tilename, XY, 1, tilepos); 
+            BinaryDataPtr dum5 = dvid_node.get_tile_slice_binary(tilename, XY, 0, tilepos); 
             bytes_read += dum5->length();            
 
             tilepos[0] += 1;
-            BinaryDataPtr dum6 = dvid_node.get_tile_slice_binary(tilename, XY, 1, tilepos); 
+            BinaryDataPtr dum6 = dvid_node.get_tile_slice_binary(tilename, XY, 0, tilepos); 
             bytes_read += dum6->length();            
 
             tilepos[0] -= 2;
             tilepos[1] += 1;
-            BinaryDataPtr dum7 = dvid_node.get_tile_slice_binary(tilename, XY, 1, tilepos); 
+            BinaryDataPtr dum7 = dvid_node.get_tile_slice_binary(tilename, XY, 0, tilepos); 
             bytes_read += dum7->length();            
 
             tilepos[0] += 1;
-            BinaryDataPtr dum8 = dvid_node.get_tile_slice_binary(tilename, XY, 1, tilepos); 
+            BinaryDataPtr dum8 = dvid_node.get_tile_slice_binary(tilename, XY, 0, tilepos); 
             bytes_read += dum8->length();            
 
             tilepos[0] += 1;
-            BinaryDataPtr dum9 = dvid_node.get_tile_slice_binary(tilename, XY, 1, tilepos); 
+            BinaryDataPtr dum9 = dvid_node.get_tile_slice_binary(tilename, XY, 0, tilepos); 
             bytes_read += dum9->length();            
 
             total_bytes_read += bytes_read;
@@ -160,7 +160,7 @@ int main(int argc, char** argv)
             for (int z = zstart; z < (zstart+NUM_FETCHES); ++z) {
                 ScopeTime get_timer(false);
                 start[2] = z;
-                Labels3D labelcomp = dvid_node.get_labels3D(segname, lsizes, start);
+                Labels3D labelcomp = dvid_node.get_labels3D(segname, lsizes, start, false);
                 double read_time = get_timer.getElapsed();
                 cout << "Read " << bytes_read << " bytes in " << read_time << " seconds" << endl;
             }
@@ -180,7 +180,7 @@ int main(int argc, char** argv)
         for (int z = zstart; z < (zstart+NUM_FETCHES); ++z) {
             ScopeTime get_timer(false);
             start[2] = z;
-            Grayscale3D graycomp = dvid_node.get_gray3D("grayscale", lsizes, start);
+            Grayscale3D graycomp = dvid_node.get_gray3D("grayscale", lsizes, start, false);
             double read_time = get_timer.getElapsed();
             cout << "Read " << bytes_read << " bytes in " << read_time << " seconds" << endl;
         }

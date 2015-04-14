@@ -848,7 +848,7 @@ BinaryDataPtr DVIDNodeService::get_volume3D(string datatype_inst, Dims_t sizes,
 {
     bool waiting = true;
     int status_code;
-    BinaryDataPtr binary_result = BinaryData::create_binary_data(); 
+    BinaryDataPtr binary_result; 
     string respdata;
 
     // ensure volume is 3D
@@ -870,6 +870,7 @@ BinaryDataPtr DVIDNodeService::get_volume3D(string datatype_inst, Dims_t sizes,
 
     // try get until DVID is available (no contention)
     while (waiting) {
+        binary_result = BinaryData::create_binary_data();
         status_code = connection.make_request(endpoint, GET, BinaryDataPtr(),
                 binary_result, respdata, BINARY);
        
