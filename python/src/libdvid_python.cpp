@@ -6,6 +6,7 @@
 
 #include <sstream>
 
+#include "DVIDConnection.h"
 #include "DVIDNodeService.h"
 #include "DVIDException.h"
 
@@ -78,10 +79,53 @@ boost::python::object get_keyvalue(libdvid::DVIDNodeService & nodeService, std::
     return object(handle<>(py_str));
 }
 
+boost::python::tuple make_request( libdvid::DVIDConnection & connection,
+                                   std::string endpoint,
+                                   libdvid::ConnectionMethod method,
+                                   boost::python::object payload_object,
+                                   int timeout )
+{
+    using namespace libdvid;
+    using namespace boost::python;
+
+    BinaryDataPtr results = BinaryData::create_binary_data();
+    std::string err_msg ;
+
+    BinaryDataPtr payload_data;
+
+    // Check for None
+    if (payload_object == object())
+    {
+        payload_data = BinaryData::create_binary_data();
+    }
+    else
+    {
+        payload_data = convert_python_value_to_binary_data( payload_object );
+    }
+
+    int status_code = connection.make_request(endpoint, method, payload_data, results, err_msg, DEFAULT, timeout);
+    PyObject * py_result_body_str = PyString_FromStringAndSize( results->get_data().c_str(), results->get_data().size() );
+    return make_tuple(status_code, object(handle<>(py_result_body_str )), err_msg);
+}
+
 BOOST_PYTHON_MODULE(_dvid_python)
 {
     using namespace libdvid;
     using namespace boost::python;
+
+    enum_<ConnectionMethod>("ConnectionMethod")
+        .value("GET", GET)
+        .value("POST", POST)
+        .value("PUT", PUT)
+        .value("DELETE", DELETE)
+    ;
+
+    class_<DVIDConnection>("DVIDConnection", init<std::string>())
+        .def("make_request", &make_request,
+                            ( arg("connection"), arg("endpoint"), arg("method"), arg("payload")=str(), arg("timeout")=DVIDConnection::DEFAULT_TIMEOUT ))
+        .def("get_addr", &DVIDConnection::get_addr)
+        .def("get_uri_root", &DVIDConnection::get_uri_root)
+    ;
 
     class_<DVIDNodeService>("DVIDNodeService", init<std::string, UUID>())
         .def("get_typeinfo", &python_get_typeinfo)
