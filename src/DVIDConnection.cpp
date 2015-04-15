@@ -1,3 +1,5 @@
+#include <cstring>
+
 #include "DVIDConnection.h"
 #include "DVIDException.h"
 
@@ -110,6 +112,7 @@ int DVIDConnection::make_request(string endpoint, ConnectionMethod method,
 
     // set error buffer
     char error_buf[CURL_ERROR_SIZE]; // size of the error buffer
+    memset(error_buf, 0, CURL_ERROR_SIZE);
     curl_easy_setopt(curl_connection, CURLOPT_ERRORBUFFER, error_buf);
 
     // actually perform the request
