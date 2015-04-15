@@ -69,8 +69,13 @@ if (NOT ${BUILDEM_DIR} STREQUAL "None")
 
     set (LIBDVID_DEPS ${jsoncpp_NAME} ${libpng_NAME} ${libcurl_NAME}
         ${libjpeg_NAME} ${lz4_NAME} ${boost_NAME})
-    set (boost_LIBS ${BUILDEM_LIB_DIR}/libboost_system.so)
-    set (support_LIBS ${json_LIB} ${boost_LIBS} ${BUILDEM_LIB_DIR}/libpng.so ${BUILDEM_LIB_DIR}/libcurl.so ${BUILDEM_LIB_DIR}/libjpeg.so ${BUILDEM_LIB_DIR}/liblz4.so )
+    set (boost_LIBS ${BUILDEM_LIB_DIR}/libboost_system.${BUILDEM_PLATFORM_DYLIB_EXTENSION})
+    set (support_LIBS ${json_LIB} 
+                      ${boost_LIBS} 
+                      ${BUILDEM_LIB_DIR}/libpng${BUILDEM_PLATFORM_DYLIB_EXTENSION} 
+                      ${BUILDEM_LIB_DIR}/libcurl${BUILDEM_PLATFORM_DYLIB_EXTENSION} 
+                      ${BUILDEM_LIB_DIR}/libjpeg${BUILDEM_PLATFORM_DYLIB_EXTENSION} 
+                      ${BUILDEM_LIB_DIR}/liblz4${BUILDEM_PLATFORM_DYLIB_EXTENSION} )
 else ()
     FIND_PACKAGE(Boost)
     include_directories(${Boost_INCLUDE_DIR})
