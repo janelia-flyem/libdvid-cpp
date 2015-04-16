@@ -31,6 +31,10 @@ typedef std::vector<unsigned int> Dims_t;
 template <typename T, unsigned int N>
 class DVIDVoxels {
   public:
+
+    typedef T voxel_type;
+    const static int num_dims = N;
+
     /*!
      * Construtor takes a constant buffer, creates a binary
      * buffer of a certain length and associates it with
