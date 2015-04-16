@@ -1,5 +1,6 @@
 #include <Python.h>
 #include <boost/python.hpp>
+#include <boost/python/stl_iterator.hpp>
 
 #define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
 
@@ -8,10 +9,21 @@
 #include <numpy/arrayobject.h>
 
 #include <sstream>
+#include <algorithm>
 
+#include "BinaryData.h"
 #include "DVIDConnection.h"
 #include "DVIDNodeService.h"
 #include "DVIDException.h"
+
+// PyBinaryData is the Python wrapper class defined below for the BinaryData class.
+// It is exposed here as a global so helper functions can instantiate new BinaryData objects.
+boost::python::object PyBinaryData;
+
+// Compile-time mapping from integer types to numpy typenumbers
+template <typename T> struct numpy_typenums {};
+template <> struct numpy_typenums<libdvid::uint8> { static const int typenum = NPY_UINT8; };
+template <> struct numpy_typenums<libdvid::uint64> { static const int typenum = NPY_UINT64; };
 
 boost::python::dict convert_json_to_dict(Json::Value const & json_value)
 {
@@ -117,6 +129,114 @@ boost::python::tuple make_request( libdvid::DVIDConnection & connection,
     return make_tuple(status_code, object(handle<>(py_result_body_str )), err_msg);
 }
 
+boost::python::object get_gray3D( libdvid::DVIDNodeService & nodeService,
+                                  std::string datatype_instance,
+                                  boost::python::object dims_tuple,
+                                  boost::python::object offset_tuple,
+                                  bool throttle,
+                                  bool compress,
+                                  boost::python::object roi_str )
+{
+    using namespace boost::python;
+    using namespace libdvid;
+
+    std::string roi = "";
+    if (roi_str != object())
+    {
+        roi = extract<std::string>(roi_str);
+    }
+
+    libdvid::Dims_t dims;
+    typedef stl_input_iterator<Dims_t::value_type> dims_iter_t;
+    dims.assign( dims_iter_t(dims_tuple), dims_iter_t() );
+
+    typedef stl_input_iterator<unsigned int> offset_iter_t;
+    std::vector<unsigned int> offset;
+    offset.assign( offset_iter_t(offset_tuple), offset_iter_t() );
+
+    // Create our own BinaryData instance, managed in Python
+    object py_managed_bd = PyBinaryData();
+    BinaryData & managed_bd = extract<BinaryData&>(py_managed_bd);
+
+    Grayscale3D volume = nodeService.get_gray3D( datatype_instance, dims, offset, throttle, compress, roi );
+    BinaryDataPtr volume_data = volume.get_binary();
+
+    // Swap the data into our managed object.
+    managed_bd.get_data().swap( volume_data->get_data() );
+
+    // Create a new array with the data from the existing PyBinaryData object (no copy).
+    // The basic idea is described in the following link, but can get away with a lot less code
+    // because boost-python already defined the new Python type for us (PyBinaryData).
+    // Also, this post is old so the particular API we're using here is slightly different.
+    // http://blog.enthought.com/python/numpy-arrays-with-pre-allocated-memory/
+    Dims_t volume_dims = volume.get_dims();
+    std::vector<npy_intp> numpy_dims;
+    std::copy( volume_dims.begin(), volume_dims.end(), std::back_inserter(numpy_dims) );
+    void const * raw_data = static_cast<void const*>(managed_bd.get_raw());
+
+    PyObject * array_object = PyArray_SimpleNewFromData( numpy_dims.size(),
+                                                         &numpy_dims[0],
+                                                         numpy_typenums<uint8>::typenum,
+                                                         const_cast<void*>(raw_data) );
+    if (!array_object)
+    {
+        throw ErrMsg("Failed to create array from BinaryData!");
+    }
+    Py_INCREF(py_managed_bd.ptr());
+    PyArrayObject * ndarray = reinterpret_cast<PyArrayObject *>( array_object );
+
+    // As described in the link above, assigning the 'base' pointer here ensures
+    //  that the memory is deallocated when the user is done with the ndarray.
+    int status = PyArray_SetBaseObject(ndarray, py_managed_bd.ptr());
+    if (status != 0)
+    {
+        throw ErrMsg("Failed to set array base object!");
+    }
+    return object(handle<>(array_object));
+}
+
+void put_gray3D( libdvid::DVIDNodeService & nodeService,
+                 std::string datatype_instance,
+                 boost::python::object ndarray,
+                 boost::python::object offset_tuple,
+                 bool throttle=true,
+                 bool compress=false )
+{
+    using namespace boost::python;
+    using namespace libdvid;
+
+    typedef stl_input_iterator<unsigned int> offset_iter_t;
+    std::vector<unsigned int> offset;
+    offset.assign( offset_iter_t(offset_tuple), offset_iter_t() );
+
+    if (str(ndarray.attr("dtype")) != "uint8")
+    {
+        std::string dtype = extract<std::string>(str(ndarray.attr("dtype")));
+        throw ErrMsg("Volume has wrong dtype.  Expected uint8, got " + dtype);
+    }
+    if (ndarray.attr("ndim") != 3)
+    {
+        std::string shape = extract<std::string>(str(ndarray.attr("shape")));
+        throw ErrMsg("Volume is not exactly 3D.  Shape is " + shape);
+    }
+    if (!ndarray.attr("flags")["C_CONTIGUOUS"])
+    {
+        throw ErrMsg("Volume is not C_CONTIGUOUS");
+    }
+
+    object shape = ndarray.attr("shape");
+    typedef stl_input_iterator<Dims_t::value_type> shape_iter_t;
+    Dims_t dims;
+    dims.assign( shape_iter_t(shape), shape_iter_t() );
+
+    PyArrayObject * array_object = reinterpret_cast<PyArrayObject *>( ndarray.ptr() );
+    Grayscale3D grayscale_vol( static_cast<uint8 const *>( PyArray_DATA(array_object) ),
+                               extract<int>(ndarray.attr("size")) * sizeof(Grayscale3D::voxel_type),
+                               dims );
+    nodeService.put_gray3D( datatype_instance, grayscale_vol, offset, throttle, compress );
+}
+
+
 BOOST_PYTHON_MODULE(_dvid_python)
 {
     using namespace libdvid;
@@ -139,9 +259,12 @@ BOOST_PYTHON_MODULE(_dvid_python)
         .def("get_uri_root", &DVIDConnection::get_uri_root)
     ;
 
+    PyBinaryData = class_<BinaryData, BinaryDataPtr>("BinaryData", no_init)
+        .def("__init__", make_constructor<BinaryDataPtr()>(&BinaryData::create_binary_data))
+    ;
+
     class_<DVIDNodeService>("DVIDNodeService", init<std::string, UUID>())
         .def("get_typeinfo", &python_get_typeinfo)
-        .def("create_grayscale8", &DVIDNodeService::create_grayscale8)
         .def("create_labelblk", &DVIDNodeService::create_labelblk)
         .def("create_graph", &DVIDNodeService::create_graph)
         
@@ -150,6 +273,13 @@ BOOST_PYTHON_MODULE(_dvid_python)
         .def("put", &put_keyvalue)
         .def("get", &get_keyvalue)
         .def("get_json", &get_keyvalue_json)
+
+        // grayscale
+        .def("create_grayscale8", &DVIDNodeService::create_grayscale8)
+        .def("get_gray3D", &get_gray3D,
+                           ( arg("service"), arg("instance"), arg("dims"), arg("offset"), arg("throttle")=true, arg("compress")=false, arg("roi")=object()))
+        .def("put_gray3D", &put_gray3D,
+                           ( arg("service"), arg("instance"), arg("ndarray"), arg("offset"), arg("throttle")=true, arg("compress")=false))
     ;
 
 }
