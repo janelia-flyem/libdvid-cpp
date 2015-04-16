@@ -129,7 +129,8 @@ endif()
 add_library( _dvid_python SHARED src/libdvid_python.cpp )
 
 target_link_libraries( _dvid_python dvidcpp ${support_LIBS} ${PYTHON_LIBRARIES} )
-set_target_properties( _dvid_python PROPERTIES PREFIX  "")
+set_target_properties( _dvid_python PROPERTIES PREFIX  ""
+                                               DEBUG_POSTFIX "" )
 
 if (APPLE)
     set_target_properties( _dvid_python PROPERTIES SUFFIX  ".so")
