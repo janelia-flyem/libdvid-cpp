@@ -12,7 +12,9 @@
 #include "Globals.h"
 
 #include <string>
+#include <sstream>
 #include <vector>
+#include <boost/foreach.hpp>
 
 namespace libdvid {
 
@@ -66,7 +68,14 @@ class DVIDVoxels {
             }
         }
         if (total*sizeof(T) != data->length()) {
-            throw ErrMsg("Dimension mismatch with buffer size");
+            std::stringstream ssMsg;
+            ssMsg << "Dimensions ( ";
+            BOOST_FOREACH( Dims_t::value_type d, dims )
+            {
+                ssMsg << d << " ";
+            }
+            ssMsg << ") do not match buffer size (" << data->length() << ").";
+            throw ErrMsg( ssMsg.str() );
         }
     }
 
