@@ -2,6 +2,9 @@
 #include <boost/python.hpp>
 
 #define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
+
+// http://docs.scipy.org/doc/numpy/reference/c-api.array.html#importing-the-api
+#define PY_ARRAY_UNIQUE_SYMBOL libdvid_PYTHON_BINDINGS
 #include <numpy/arrayobject.h>
 
 #include <sstream>
@@ -112,6 +115,9 @@ BOOST_PYTHON_MODULE(_dvid_python)
 {
     using namespace libdvid;
     using namespace boost::python;
+
+    // http://docs.scipy.org/doc/numpy/reference/c-api.array.html#importing-the-api
+    import_array()
 
     enum_<ConnectionMethod>("ConnectionMethod")
         .value("GET", GET)
