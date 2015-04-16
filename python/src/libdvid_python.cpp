@@ -69,6 +69,32 @@ boost::python::dict python_get_typeinfo(libdvid::DVIDNodeService & nodeService, 
     return convert_json_to_dict(value);
 }
 
+//! Python wrapper function for DVIDNodeService::custom_request()
+boost::python::object custom_request( libdvid::DVIDNodeService & nodeService,
+                                      std::string endpoint,
+                                      boost::python::object payload_object,
+                                      libdvid::ConnectionMethod method )
+{
+    using namespace libdvid;
+    using namespace boost::python;
+
+    BinaryDataPtr payload_data;
+
+    // Check for None
+    if (payload_object == object())
+    {
+        payload_data = BinaryData::create_binary_data();
+    }
+    else
+    {
+        payload_data = convert_python_value_to_binary_data( payload_object );
+    }
+
+    BinaryDataPtr results = nodeService.custom_request(endpoint, payload_data, method);
+    PyObject * py_result_body_str = PyString_FromStringAndSize( results->get_data().c_str(), results->get_data().size() );
+    return object(handle<>(py_result_body_str));
+}
+
 //! Python wrapper function for DVIDNodeService::put()
 void put_keyvalue(libdvid::DVIDNodeService & nodeService, std::string keyvalue, std::string key, boost::python::object & value)
 {
@@ -458,6 +484,7 @@ BOOST_PYTHON_MODULE(_dvid_python)
     class_<DVIDNodeService>("DVIDNodeService", init<std::string, UUID>())
         .def("get_typeinfo", &python_get_typeinfo)
         .def("create_graph", &DVIDNodeService::create_graph)
+        .def("custom_request", &custom_request)
         
         // keyvalue
         .def("create_keyvalue", &DVIDNodeService::create_keyvalue)

@@ -1,7 +1,8 @@
 import unittest
 import numpy
+import json
 
-from libdvid import DVIDNodeService 
+from libdvid import DVIDNodeService, ConnectionMethod
 
 TEST_SERVER = "127.0.0.1:8000"
 
@@ -16,6 +17,13 @@ class Test_DVIDNodeService(unittest.TestCase):
     def tearDownClass(cls):
         # TODO: clean up from setUpClass. 
         pass
+
+    def test_custom_request(self):
+        node_service = DVIDNodeService(TEST_SERVER, self.uuid)
+        response_body = node_service.custom_request( "log", "", ConnectionMethod.GET)
+        
+        # This shouldn't raise an exception
+        json_data = json.loads(response_body)
 
     def test_keyvalue(self):
         node_service = DVIDNodeService(TEST_SERVER, self.uuid)
