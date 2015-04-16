@@ -17,6 +17,7 @@
 
 #include "BinaryData.h"
 #include "DVIDConnection.h"
+#include "DVIDServerService.h"
 #include "DVIDNodeService.h"
 #include "DVIDException.h"
 
@@ -478,6 +479,11 @@ BOOST_PYTHON_MODULE(_dvid_python)
         .value("POST", POST)
         .value("PUT", PUT)
         .value("DELETE", DELETE)
+    ;
+
+    // DVIDServerService python class definition
+    class_<DVIDServerService>("DVIDServerService", init<std::string>())
+        .def("create_new_repo", &DVIDServerService::create_new_repo)
     ;
 
     // DVIDNodeService python class definition
