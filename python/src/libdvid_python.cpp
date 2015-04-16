@@ -82,6 +82,12 @@ boost::python::object get_keyvalue(libdvid::DVIDNodeService & nodeService, std::
     return object(handle<>(py_str));
 }
 
+boost::python::dict get_keyvalue_json(libdvid::DVIDNodeService & nodeService, std::string keyvalue, std::string key)
+{
+    Json::Value value = nodeService.get_json(keyvalue, key);
+    return convert_json_to_dict(value);
+}
+
 boost::python::tuple make_request( libdvid::DVIDConnection & connection,
                                    std::string endpoint,
                                    libdvid::ConnectionMethod method,
@@ -143,6 +149,7 @@ BOOST_PYTHON_MODULE(_dvid_python)
         .def("create_keyvalue", &DVIDNodeService::create_keyvalue)
         .def("put", &put_keyvalue)
         .def("get", &get_keyvalue)
+        .def("get_json", &get_keyvalue_json)
     ;
 
 }
