@@ -134,7 +134,7 @@ BOOST_PYTHON_MODULE(_dvid_python)
 
     class_<DVIDConnection>("DVIDConnection", init<std::string>())
         .def("make_request", &make_request,
-                            ( arg("connection"), arg("endpoint"), arg("method"), arg("payload")=str(), arg("timeout")=DVIDConnection::DEFAULT_TIMEOUT ))
+                             ( arg("connection"), arg("endpoint"), arg("method"), arg("payload")=object(), arg("timeout")=DVIDConnection::DEFAULT_TIMEOUT ))
         .def("get_addr", &DVIDConnection::get_addr)
         .def("get_uri_root", &DVIDConnection::get_uri_root)
     ;
