@@ -3,6 +3,8 @@ project (libdvidcpp)
 
 include (ExternalProject)
 
+enable_testing()
+
 set (RUN_ENVIRONMENT "Workstation" CACHE TYPE STRING)
 if (NOT CMAKE_BUILD_TYPE)
     set (CMAKE_BUILD_TYPE Release)
@@ -172,8 +174,6 @@ target_link_libraries(dvidloadtest_labelgraph dvidcpp ${support_LIBS})
 
 add_executable(dvidloadtest_tile "load_tests/loadtest_tile.cpp")
 target_link_libraries(dvidloadtest_tile dvidcpp ${support_LIBS})
-
-enable_testing()
 
 add_test(
     newrepo

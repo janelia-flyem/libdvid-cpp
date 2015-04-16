@@ -146,3 +146,19 @@ install(TARGETS _dvid_python
         LIBRARY DESTINATION ${LIBDVID_PYTHON_INSTALL_DIR}/libdvid)
 install(FILES libdvid/__init__.py 
         DESTINATION ${LIBDVID_PYTHON_INSTALL_DIR}/libdvid)
+
+######################################################################
+#
+#      specify python tests
+#
+######################################################################
+add_test(
+    python_test_connection
+    ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/tests/test_connection.py
+)
+
+add_test(
+    python_test_node_service
+    ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/tests/test_node_service.py
+)
+        
