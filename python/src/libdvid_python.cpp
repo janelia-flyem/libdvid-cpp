@@ -21,6 +21,8 @@
 #include "DVIDNodeService.h"
 #include "DVIDException.h"
 
+#include "converters.hpp"
+
 //! PyBinaryData is the Python wrapper class defined below for the BinaryData class.
 //! It is exposed here as a global so helper functions can instantiate new BinaryData objects.
 boost::python::object PyBinaryData;
@@ -179,279 +181,173 @@ static boost::unordered_map<int, std::string> dtype_names =
     (NPY_UINT64, "uint64");
 
 /*
- * This struct contains a generic function get_volume() which can be used to
- * retrieve ND data from DVID.  The struct is parameterized on the voxel_type
- * and dimensionality of the volume to be retrieved.
- *
- * Type-specific functions like get_gray3D are implemented below as thin
- * wrappers around get_volume, which does the real work.
+ * Converts the given DVIDVoxels object into a numpy array.
+ * NOTE:The ndarray will *steal* the data from the DVIDVoxels object.
  */
-template <typename voxel_type, int N>
-struct GetVolumeHelper
-{
-    static const int numpy_typenum = numpy_typenums<voxel_type>::typenum;
-
-    typedef libdvid::DVIDVoxels<voxel_type, N> volume_type;
-    typedef volume_type get_volume_fn_signature( std::string datatype_instance,
-                                                 libdvid::Dims_t dims,
-                                                 std::vector<unsigned int> offset,
-                                                 bool throttle,
-                                                 bool compress,
-                                                 std::string roi );
-    typedef boost::function<get_volume_fn_signature> get_volume_fn_t;
-
-    //! Retrieve generic ND data from DVID.
-    //! See struct documentation above.
-    //!
-    //! \param get_volume_fn A function that can retrieve data of type volume_type.
-    static boost::python::object get_volume( std::string datatype_instance,
-                                             boost::python::object dims_tuple,
-                                             boost::python::object offset_tuple,
-                                             bool throttle,
-                                             bool compress,
-                                             boost::python::object roi_str,
-                                             get_volume_fn_t const & get_volume_fn )
-    {
-        using namespace boost::python;
-        using namespace libdvid;
-
-        // Extract roi from python string
-        std::string roi = "";
-        if (roi_str != object())
-        {
-            roi = extract<std::string>(roi_str);
-        }
-
-        // Extract dimensions from python list/tuple
-        libdvid::Dims_t dims;
-        typedef stl_input_iterator<Dims_t::value_type> dims_iter_t;
-        dims.assign( dims_iter_t(dims_tuple), dims_iter_t() );
-
-        // Extract offset from python list/tuple
-        typedef stl_input_iterator<unsigned int> offset_iter_t;
-        std::vector<unsigned int> offset;
-        offset.assign( offset_iter_t(offset_tuple), offset_iter_t() );
-
-        // Create our own BinaryData instance, managed in Python
-        object py_managed_bd = PyBinaryData();
-        BinaryData & managed_bd = extract<BinaryData&>(py_managed_bd);
-
-        // Retrieve the ND data
-        volume_type volume = get_volume_fn( datatype_instance, dims, offset, throttle, compress, roi );
-        BinaryDataPtr volume_data = volume.get_binary();
-
-        // Swap the retrieved data into our own (Python-managed) PyBinaryData object.
-        managed_bd.get_data().swap( volume_data->get_data() );
-
-        // Prepare the dims array for numpy to read.
-        Dims_t volume_dims = volume.get_dims();
-        std::vector<npy_intp> numpy_dims;
-        std::copy( volume_dims.begin(), volume_dims.end(), std::back_inserter(numpy_dims) );
-
-        // We will create a new array with the data from the existing PyBinaryData object (no copy).
-        // The basic idea is described in the following link, but can get away with a lot less code
-        // because boost-python already defined the new Python type for us (PyBinaryData).
-        // Also, this post is old so the particular API we're using here is slightly different.
-        // http://blog.enthought.com/python/numpy-arrays-with-pre-allocated-memory/
-        void const * raw_data = static_cast<void const*>(managed_bd.get_raw());
-        PyObject * array_object = PyArray_SimpleNewFromData( numpy_dims.size(),
-                                                             &numpy_dims[0],
-                                                             numpy_typenum,
-                                                             const_cast<void*>(raw_data) );
-        if (!array_object)
-        {
-            throw ErrMsg("Failed to create array from BinaryData!");
-        }
-        PyArrayObject * ndarray = reinterpret_cast<PyArrayObject *>( array_object );
-
-        // As described in the link above, assigning the 'base' pointer here ensures
-        //  that the memory is deallocated when the user is done with the ndarray.
-        int status = PyArray_SetBaseObject(ndarray, py_managed_bd.ptr());
-        if (status != 0)
-        {
-            throw ErrMsg("Failed to set array base object!");
-        }
-        // PyArray_SetBaseObject *steals* the reference, so we need to INCREF here
-        //  to make sure the binary data object isn't destroyed when we return.
-        Py_INCREF(py_managed_bd.ptr());
-
-        // Return the new array.
-        return object(handle<>(array_object));
-    }
-};
-template <typename voxel_type, int N>
-const int GetVolumeHelper<voxel_type, N>::numpy_typenum;
-
-//! Python wrapper function for DVIDNodeService::get_gray3D()
-boost::python::object get_gray3D( libdvid::DVIDNodeService & nodeService,
-                                  std::string datatype_instance,
-                                  boost::python::object dims_tuple,
-                                  boost::python::object offset_tuple,
-                                  bool throttle,
-                                  bool compress,
-                                  boost::python::object roi_str )
+template <class VolumeType>
+boost::python::object convert_volume_to_ndarray( VolumeType & volume )
 {
     using namespace boost::python;
     using namespace libdvid;
 
-    return GetVolumeHelper<uint8, 3>::get_volume(
-        datatype_instance,
-        dims_tuple,
-        offset_tuple,
-        throttle,
-        compress,
-        roi_str,
-        boost::bind(&DVIDNodeService::get_gray3D, boost::ref(nodeService), _1, _2, _3, _4, _5, _6) );
+    typedef typename VolumeType::voxel_type voxel_type;
+
+    BinaryDataPtr volume_data = volume.get_binary();
+
+    // Create our own BinaryData instance, managed in Python
+    object py_managed_bd = PyBinaryData();
+    BinaryData & managed_bd = extract<BinaryData&>(py_managed_bd);
+
+    // Swap the retrieved data into our own (Python-managed) PyBinaryData object.
+    managed_bd.get_data().swap( volume_data->get_data() );
+
+    // Copy dims to type numpy expects.
+    std::vector<npy_intp> numpy_dims( volume.get_dims().begin(), volume.get_dims().end() );
+
+    // We will create a new array with the data from the existing PyBinaryData object (no copy).
+    // The basic idea is described in the following link, but can get away with a lot less code
+    // because boost-python already defined the new Python type for us (PyBinaryData).
+    // Also, this post is old so the particular API we're using here is slightly different.
+    // http://blog.enthought.com/python/numpy-arrays-with-pre-allocated-memory/
+    void const * raw_data = static_cast<void const*>(managed_bd.get_raw());
+    PyObject * array_object = PyArray_SimpleNewFromData( numpy_dims.size(),
+                                                         &numpy_dims[0],
+                                                         numpy_typenums<voxel_type>::typenum,
+                                                         const_cast<void*>(raw_data) );
+    if (!array_object)
+    {
+        throw ErrMsg("Failed to create array from BinaryData!");
+    }
+    PyArrayObject * ndarray = reinterpret_cast<PyArrayObject *>( array_object );
+
+    // As described in the link above, assigning the 'base' pointer here ensures
+    //  that the memory is deallocated when the user is done with the ndarray.
+    int status = PyArray_SetBaseObject(ndarray, py_managed_bd.ptr());
+    if (status != 0)
+    {
+        throw ErrMsg("Failed to set array base object!");
+    }
+    // PyArray_SetBaseObject *steals* the reference, so we need to INCREF here
+    //  to make sure the binary data object isn't destroyed when we return.
+    incref(py_managed_bd.ptr());
+
+    // Return the new array.
+    return object(handle<>(array_object));
+}
+
+//! Python wrapper function for DVIDNodeService::get_gray3D()
+boost::python::object get_gray3D( libdvid::DVIDNodeService & nodeService,
+                                  std::string datatype_instance,
+                                  std::vector<unsigned int> dims,
+                                  std::vector<unsigned int> offset,
+                                  bool throttle,
+                                  bool compress,
+                                  std::string roi )
+{
+    using namespace libdvid;
+    DVIDVoxels<uint8, 3> volume = nodeService.get_gray3D(datatype_instance, dims, offset, throttle, compress, roi);
+    return convert_volume_to_ndarray( volume );
 }
 
 //! Python wrapper function for DVIDNodeService::get_labels3D()
 boost::python::object get_labels3D( libdvid::DVIDNodeService & nodeService,
                                     std::string datatype_instance,
-                                    boost::python::object dims_tuple,
-                                    boost::python::object offset_tuple,
+                                    std::vector<unsigned int> dims,
+                                    std::vector<unsigned int> offset,
                                     bool throttle,
                                     bool compress,
-                                    boost::python::object roi_str )
+                                    std::string roi )
 {
-    using namespace boost::python;
     using namespace libdvid;
-
-    return GetVolumeHelper<uint64, 3>::get_volume(
-        datatype_instance,
-        dims_tuple,
-        offset_tuple,
-        throttle,
-        compress,
-        roi_str,
-        boost::bind(&DVIDNodeService::get_labels3D, boost::ref(nodeService), _1, _2, _3, _4, _5, _6) );
+    DVIDVoxels<uint64, 3> volume = nodeService.get_labels3D(datatype_instance, dims, offset, throttle, compress, roi);
+    return convert_volume_to_ndarray( volume );
 }
 
 
 /*
- * This struct contains a generic function put_volume() which can be used to
- * send ND data to DVID.  The struct is parameterized on the voxel_type and
- * dimensionality of the volume to be sent.
- *
- * Type-specific functions like put_gray3D are implemented below as thin
- * wrappers around put_volume, which does the real work.
+ * Converts the given numpy ndarray object into a DVIDVoxels object.
+ * NOTE: The data from the ndarray is *copied* into the new DVIDVoxels object.
  */
-template <typename voxel_type, int N>
-struct PutVolumeHelper
+template <class VolumeType>
+VolumeType convert_ndarray_to_volume( boost::python::object ndarray )
 {
-    static const int numpy_typenum = numpy_typenums<voxel_type>::typenum;
+    using namespace boost::python;
+    using namespace libdvid;
 
-    typedef libdvid::DVIDVoxels<voxel_type, N> volume_type;
-    typedef void put_volume_fn_signature( std::string datatype_instance,
-                                          volume_type & volume,
-                                          std::vector<unsigned int> offset,
-                                          bool throttle,
-                                          bool compress );
-    typedef boost::function<put_volume_fn_signature> put_volume_fn_t;
+    typedef typename VolumeType::voxel_type voxel_type;
 
-    //! Send generic ND data to DVID.
-    //! See struct documentation above.
-    //!
-    //! \param put_volume_fn A function that can retrieve data of type volume_type.
-    static void put_volume( std::string datatype_instance,
-                            boost::python::object ndarray,
-                            boost::python::object offset_tuple,
-                            bool throttle,
-                            bool compress,
-                            put_volume_fn_t const & put_volume_fn )
+    // Verify ndarray.dtype
+    std::string dtype = extract<std::string>(str(ndarray.attr("dtype")));
+    const int numpy_typenum = numpy_typenums<voxel_type>::typenum;
+    if (dtype != dtype_names[numpy_typenum])
     {
-        using namespace boost::python;
-        using namespace libdvid;
-
-        // Verify ndarray.dtype
-        std::string dtype = extract<std::string>(str(ndarray.attr("dtype")));
-        if (dtype != dtype_names[numpy_typenum])
-        {
-            std::ostringstream ssMsg;
-            ssMsg << "Volume has wrong dtype.  Expected " << dtype_names[numpy_typenum] << ", got " << dtype;
-            throw ErrMsg(ssMsg.str());
-        }
-
-        // Verify ndarray dimensionality.
-        if (ndarray.attr("ndim") != N)
-        {
-            std::string shape = extract<std::string>(str(ndarray.attr("shape")));
-            std::ostringstream ssMsg;
-            ssMsg << "Volume is not exactly " << N << "D.  Shape is " << shape;
-            throw ErrMsg( ssMsg.str() );
-        }
-        // Verify ndarray memory order
-        if (!ndarray.attr("flags")["C_CONTIGUOUS"])
-        {
-            throw ErrMsg("Volume is not C_CONTIGUOUS");
-        }
-
-        // Extract dimensions from python list/tuple
-        typedef stl_input_iterator<unsigned int> offset_iter_t;
-        std::vector<unsigned int> offset;
-        offset.assign( offset_iter_t(offset_tuple), offset_iter_t() );
-
-        // Extract dims from ndarray.shape
-        object shape = ndarray.attr("shape");
-        typedef stl_input_iterator<Dims_t::value_type> shape_iter_t;
-        Dims_t dims;
-        dims.assign( shape_iter_t(shape), shape_iter_t() );
-
-        // Extract the voxel count
-        int voxel_count = extract<int>(ndarray.attr("size"));
-
-        // Obtain a pointer to the array's data
-        PyArrayObject * array_object = reinterpret_cast<PyArrayObject *>( ndarray.ptr() );
-        voxel_type const * voxel_data = static_cast<voxel_type const *>( PyArray_DATA(array_object) );
-
-        // Create DVIDVoxels<> from ndarray data
-        // FIXME: This copies the data.  Is that really necessary?
-        volume_type grayscale_vol( voxel_data, voxel_count, dims );
-
-        // Send to DVID
-        put_volume_fn( datatype_instance, grayscale_vol, offset, throttle, compress );
+        std::ostringstream ssMsg;
+        ssMsg << "Volume has wrong dtype.  Expected " << dtype_names[numpy_typenum] << ", got " << dtype;
+        throw ErrMsg(ssMsg.str());
     }
-};
-template <typename voxel_type, int N>
-const int PutVolumeHelper<voxel_type, N>::numpy_typenum;
+
+    // Verify ndarray dimensionality.
+    int ndarray_ndim = extract<int>(ndarray.attr("ndim"));
+    if (ndarray_ndim != VolumeType::num_dims)
+    {
+        std::string shape = extract<std::string>(str(ndarray.attr("shape")));
+        std::ostringstream ssMsg;
+        ssMsg << "Volume is not exactly " << VolumeType::num_dims << "D.  Shape is " << shape;
+        throw ErrMsg( ssMsg.str() );
+    }
+    // Verify ndarray memory order
+    if (!ndarray.attr("flags")["C_CONTIGUOUS"])
+    {
+        throw ErrMsg("Volume is not C_CONTIGUOUS");
+    }
+
+    // Extract dims from ndarray.shape
+    object shape = ndarray.attr("shape");
+    typedef stl_input_iterator<Dims_t::value_type> shape_iter_t;
+    Dims_t dims;
+    dims.assign( shape_iter_t(shape), shape_iter_t() );
+
+    // Extract the voxel count
+    int voxel_count = extract<int>(ndarray.attr("size"));
+
+    // Obtain a pointer to the array's data
+    PyArrayObject * array_object = reinterpret_cast<PyArrayObject *>( ndarray.ptr() );
+    voxel_type const * voxel_data = static_cast<voxel_type const *>( PyArray_DATA(array_object) );
+
+    // Create DVIDVoxels<> from ndarray data
+    // FIXME: This copies the data.  Is that really necessary?
+    VolumeType grayscale_vol( voxel_data, voxel_count, dims );
+    return grayscale_vol;
+}
 
 //! Python wrapper function for DVIDNodeService::put_gray3D()
 void put_gray3D( libdvid::DVIDNodeService & nodeService,
                  std::string datatype_instance,
                  boost::python::object ndarray,
-                 boost::python::object offset_tuple,
+                 std::vector<unsigned int> offset,
                  bool throttle,
                  bool compress)
 {
     using namespace boost::python;
     using namespace libdvid;
 
-    PutVolumeHelper<uint8, 3>::put_volume(
-        datatype_instance,
-        ndarray,
-        offset_tuple,
-        throttle,
-        compress,
-        boost::bind(&DVIDNodeService::put_gray3D, boost::ref(nodeService), _1, _2, _3, _4, _5) );
+    Grayscale3D volume = convert_ndarray_to_volume<Grayscale3D>( ndarray );
+    nodeService.put_gray3D( datatype_instance, volume, offset, throttle, compress );
 }
 
 //! Python wrapper function for DVIDNodeService::put_labels3D()
 void put_labels3D( libdvid::DVIDNodeService & nodeService,
                  std::string datatype_instance,
                  boost::python::object ndarray,
-                 boost::python::object offset_tuple,
+                 std::vector<unsigned int> offset,
                  bool throttle,
                  bool compress)
 {
     using namespace boost::python;
     using namespace libdvid;
 
-    PutVolumeHelper<uint64, 3>::put_volume(
-        datatype_instance,
-        ndarray,
-        offset_tuple,
-        throttle,
-        compress,
-        boost::bind(&DVIDNodeService::put_labels3D, boost::ref(nodeService), _1, _2, _3, _4, _5, "") );
+    Labels3D volume = convert_ndarray_to_volume<Labels3D>( ndarray );
+    nodeService.put_labels3D( datatype_instance, volume, offset, throttle, compress );
 }
 
 /*
@@ -465,6 +361,10 @@ BOOST_PYTHON_MODULE(_dvid_python)
 
     // http://docs.scipy.org/doc/numpy/reference/c-api.array.html#importing-the-api
     import_array()
+
+    // Custom converters.
+    libdvid::python::std_vector_from_python_iterable<unsigned int>();
+    libdvid::python::std_string_from_python_none(); // None -> std::string("")
 
     // DVIDConnection python class definition
     class_<DVIDConnection>("DVIDConnection", init<std::string>())

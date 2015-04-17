@@ -134,7 +134,7 @@ class DVIDVoxels {
      * Get the dimensions of this volume.
      * \return volume dimensions
     */
-    Dims_t get_dims() const
+    Dims_t const & get_dims() const
     {
         return dims;
     }
