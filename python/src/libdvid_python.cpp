@@ -18,21 +18,6 @@
 #include "converters.hpp"
 
 //! Helper function.
-//! Converts the given Json::Value into a Python dict.
-boost::python::dict convert_json_to_dict(Json::Value const & json_value)
-{
-    using namespace boost::python;
-    
-    // For now, easiest thing to do is just export as 
-    //  string and re-parse via python's json module.
-    std::ostringstream ss;
-    ss << json_value;
-    
-    object json = import("json");
-    return extract<dict>( json.attr("loads")( ss.str() ) );
-}
-
-//! Helper function.
 //! Converts the given Python object into a BinaryData object.
 //! The Python object must support the buffer protocol (e.g. str, bytearray).
 libdvid::BinaryDataPtr convert_python_value_to_binary_data(boost::python::object const & value)
@@ -53,13 +38,6 @@ libdvid::BinaryDataPtr convert_python_value_to_binary_data(boost::python::object
     BinaryDataPtr data = BinaryData::create_binary_data(static_cast<char*>(py_buffer.buf), py_buffer.len);
     PyBuffer_Release(&py_buffer);
     return data;
-}
-
-//! Python wrapper function for DVIDNodeService::get_typeinfo()
-boost::python::dict python_get_typeinfo(libdvid::DVIDNodeService & nodeService, std::string datatype_name)
-{
-    Json::Value value = nodeService.get_typeinfo(datatype_name);
-    return convert_json_to_dict(value);
 }
 
 //! Python wrapper function for DVIDNodeService::custom_request()
@@ -103,28 +81,6 @@ void put_keyvalue(libdvid::DVIDNodeService & nodeService, std::string keyvalue, 
         throw ErrMsg("Writing to key '" + keyvalue + "/" + key + "' failed: " + ex.what());
     }
     nodeService.put(keyvalue, key, data );
-}
-
-//! Python wrapper function for DVIDNodeService::get()
-boost::python::object get_keyvalue(libdvid::DVIDNodeService & nodeService, std::string keyvalue, std::string key)
-{
-    using namespace libdvid;
-    using namespace boost::python;
-
-    // Request value
-    BinaryDataPtr value = nodeService.get(keyvalue, key);
-
-    // Copy into a python buffer object
-    // Is there a way to avoid this copy?
-    PyObject * py_str = PyString_FromStringAndSize( value->get_data().c_str(), value->get_data().size() );
-    return object(handle<>(py_str));
-}
-
-//! Python wrapper function for DVIDNodeService::get_json()
-boost::python::dict get_keyvalue_json(libdvid::DVIDNodeService & nodeService, std::string keyvalue, std::string key)
-{
-    Json::Value value = nodeService.get_json(keyvalue, key);
-    return convert_json_to_dict(value);
 }
 
 //! Python wrapper function for DVIDConnection::make_request().
@@ -173,6 +129,7 @@ BOOST_PYTHON_MODULE(_dvid_python)
     // Register custom Python -> C++ converters.
     libdvid::python::std_vector_from_python_iterable<unsigned int>();
     libdvid::python::std_string_from_python_none(); // None -> std::string("")
+
     libdvid::python::ndarray_to_volume<Grayscale3D>();
     libdvid::python::ndarray_to_volume<Labels3D>();
     libdvid::python::ndarray_to_volume<Grayscale2D>();
@@ -180,6 +137,8 @@ BOOST_PYTHON_MODULE(_dvid_python)
 
     // Register custom C++ -> Python converters.
     to_python_converter<BinaryDataPtr, libdvid::python::binary_data_ptr_to_python_str>();
+    to_python_converter<Json::Value, libdvid::python::json_value_to_dict>();
+
     to_python_converter<Grayscale3D, libdvid::python::volume_to_ndarray<Grayscale3D> >();
     to_python_converter<Labels3D, libdvid::python::volume_to_ndarray<Labels3D> >();
     to_python_converter<Grayscale2D, libdvid::python::volume_to_ndarray<Grayscale2D> >();
@@ -214,15 +173,15 @@ BOOST_PYTHON_MODULE(_dvid_python)
 
     // DVIDNodeService python class definition
     class_<DVIDNodeService>("DVIDNodeService", init<std::string, UUID>())
-        .def("get_typeinfo", &python_get_typeinfo)
+        .def("get_typeinfo", &DVIDNodeService::get_typeinfo)
         .def("create_graph", &DVIDNodeService::create_graph)
         .def("custom_request", &custom_request)
         
         // keyvalue
         .def("create_keyvalue", &DVIDNodeService::create_keyvalue)
         .def("put", &put_keyvalue)
-        .def("get", &get_keyvalue)
-        .def("get_json", &get_keyvalue_json)
+        .def("get", &DVIDNodeService::get)
+        .def("get_json", &DVIDNodeService::get_json)
 
         // grayscale
         .def("create_grayscale8", &DVIDNodeService::create_grayscale8)

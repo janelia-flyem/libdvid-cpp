@@ -319,5 +319,25 @@ namespace libdvid { namespace python {
             return array_object;
         }
     };
+
+    //!*********************************************************************************************
+    //! This converts Json::Value objects into python dict objects.
+    //! NOTE: This isn't an efficient conversion method.
+    //!*********************************************************************************************
+    struct json_value_to_dict
+    {
+        static PyObject* convert(Json::Value const & json_value)
+        {
+            using namespace boost::python;
+
+            // For now, easiest thing to do is just export as
+            //  string and re-parse via python's json module.
+            std::ostringstream ss;
+            ss << json_value;
+
+            object json = import("json");
+            return incref(json.attr("loads")( ss.str() ).ptr());
+        }
+    };
     
 }} // namespace libdvid::python
