@@ -2,7 +2,7 @@ import unittest
 import numpy
 import json
 
-from libdvid import DVIDNodeService, ConnectionMethod
+from libdvid import DVIDNodeService, ConnectionMethod, Slice2D
 from _test_utils import TEST_DVID_SERVER, get_testrepo_root_uuid, delete_all_data_instances
 
 class Test_DVIDNodeService(unittest.TestCase):
@@ -47,6 +47,13 @@ class Test_DVIDNodeService(unittest.TestCase):
         node_service.put_labels3D( "test_labels_3d", data, (0,0,0) )
         retrieved_data = node_service.get_labels3D( "test_labels_3d", (30,30,30), (20,20,20) )
         self.assertTrue( (retrieved_data == data[20:50, 20:50, 20:50]).all() )
+
+    @unittest.skip("FIXME: No way to create tile data via the DVID http API.")
+    def test_grayscale_2d_tile(self):
+        # Create tile data here...
+
+        # Now retrieve a tile.
+        retrieved_tile = node_service.get_tile_slice( "test_grayscale_2d_tile", Slice2D.XY, 0, (0,0,0) )
 
 if __name__ == "__main__":
     unittest.main()

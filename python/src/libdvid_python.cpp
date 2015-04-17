@@ -175,11 +175,15 @@ BOOST_PYTHON_MODULE(_dvid_python)
     libdvid::python::std_string_from_python_none(); // None -> std::string("")
     libdvid::python::ndarray_to_volume<Grayscale3D>();
     libdvid::python::ndarray_to_volume<Labels3D>();
+    libdvid::python::ndarray_to_volume<Grayscale2D>();
+    libdvid::python::ndarray_to_volume<Labels2D>();
 
     // Register custom C++ -> Python converters.
     to_python_converter<BinaryDataPtr, libdvid::python::binary_data_ptr_to_python_str>();
     to_python_converter<Grayscale3D, libdvid::python::volume_to_ndarray<Grayscale3D> >();
     to_python_converter<Labels3D, libdvid::python::volume_to_ndarray<Labels3D> >();
+    to_python_converter<Grayscale2D, libdvid::python::volume_to_ndarray<Grayscale2D> >();
+    to_python_converter<Labels2D, libdvid::python::volume_to_ndarray<Labels2D> >();
 
     // DVIDConnection python class definition
     class_<DVIDConnection>("DVIDConnection", init<std::string>())
@@ -233,6 +237,16 @@ BOOST_PYTHON_MODULE(_dvid_python)
             ( arg("service"), arg("instance"), arg("dims"), arg("offset"), arg("throttle")=true, arg("compress")=false, arg("roi")=object() ))
        .def("put_labels3D", put_labels3D,
             ( arg("service"), arg("instance"), arg("ndarray"), arg("offset"), arg("throttle")=true, arg("compress")=false, arg("roi")=object() ))
+
+        // 2D slices
+        .def("get_tile_slice", &DVIDNodeService::get_tile_slice)
+        .def("get_tile_slice_binary", &DVIDNodeService::get_tile_slice_binary)
+    ;
+
+    enum_<Slice2D>("Slice2D")
+        .value("XY", XY)
+        .value("XZ", XZ)
+        .value("YZ", YZ)
     ;
 
     // Define a python version of BinaryDataHolder, and keep a global
