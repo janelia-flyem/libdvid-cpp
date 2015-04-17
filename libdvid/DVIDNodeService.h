@@ -242,7 +242,7 @@ class DVIDNodeService {
      * \param throttle allow only one request at time (default: true)
      * \param compress enable lz4 compression
     */
-    void put_gray3D(std::string datatype_instance, Grayscale3D& volume,
+    void put_gray3D(std::string datatype_instance, Grayscale3D const & volume,
             std::vector<unsigned int> offset, bool throttle=true,
             bool compress=false);
 
@@ -265,7 +265,7 @@ class DVIDNodeService {
      * \param roi specify DVID roi to mask PUT operation (default: empty)
      * \param compress enable lz4 compression
     */
-    void put_labels3D(std::string datatype_instance, Labels3D& volume,
+    void put_labels3D(std::string datatype_instance, Labels3D const & volume,
             std::vector<unsigned int> offset, bool throttle=true,
             bool compress=true, std::string roi="");
 

@@ -116,7 +116,7 @@ class DVIDVoxels {
      * Retrieve binary data for the given volume.
      * \return binary data for volume
     */
-    BinaryDataPtr get_binary()
+    BinaryDataPtr get_binary() const
     {
         return data;
     }
