@@ -350,11 +350,11 @@ namespace libdvid { namespace python {
             // Copy dims to type numpy expects.
             std::vector<npy_intp> numpy_dims( volume.get_dims().begin(), volume.get_dims().end() );
     
-            // We will create a new array with the data from the existing PyBinaryData object (no copy).
+            // We will create a new array with the data from the existing PyBinaryDataHolder object (no copy).
             // The basic idea is described in the following link, but can get away with a lot less code
-            // because boost-python already defined the new Python type for us (PyBinaryData).
-            // Also, this post is old so the particular API we're using here is slightly different.
-            // http://blog.enthought.com/python/numpy-arrays-with-pre-allocated-memory/
+            // because we used boost-python to define the Python type (PyBinaryDataHolder).
+            // (Note: this post is old, so the particular API we're using here is slightly different.)
+            // http://blog.enthought.com/python/numpy-arrays-with-pre-allocated-memory
             void const * raw_data = static_cast<void const*>(volume_data->get_raw());
             PyObject * array_object = PyArray_SimpleNewFromData( numpy_dims.size(),
                                                                  &numpy_dims[0],
