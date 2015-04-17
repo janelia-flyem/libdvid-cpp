@@ -17,78 +17,13 @@
 
 #include "converters.hpp"
 
-//! Helper function.
-//! Converts the given Python object into a BinaryData object.
-//! The Python object must support the buffer protocol (e.g. str, bytearray).
-libdvid::BinaryDataPtr convert_python_value_to_binary_data(boost::python::object const & value)
-{
-    using namespace libdvid;
-    using namespace boost::python;
-
-    PyObject* py_value = value.ptr();
-    if (!PyObject_CheckBuffer(py_value))
-    {
-        std::string value_str = extract<std::string>(str(value));
-        throw ErrMsg("Value is not a buffer: " + value_str);
-    }
-    Py_buffer py_buffer;
-    PyObject_GetBuffer(py_value, &py_buffer, PyBUF_SIMPLE);
-
-    // Copy buffer into BinaryData
-    BinaryDataPtr data = BinaryData::create_binary_data(static_cast<char*>(py_buffer.buf), py_buffer.len);
-    PyBuffer_Release(&py_buffer);
-    return data;
-}
-
-//! Python wrapper function for DVIDNodeService::custom_request()
-boost::python::object custom_request( libdvid::DVIDNodeService & nodeService,
-                                      std::string endpoint,
-                                      boost::python::object payload_object,
-                                      libdvid::ConnectionMethod method )
-{
-    using namespace libdvid;
-    using namespace boost::python;
-
-    BinaryDataPtr payload_data;
-
-    // Check for None
-    if (payload_object == object())
-    {
-        payload_data = BinaryData::create_binary_data();
-    }
-    else
-    {
-        payload_data = convert_python_value_to_binary_data( payload_object );
-    }
-
-    BinaryDataPtr results = nodeService.custom_request(endpoint, payload_data, method);
-    PyObject * py_result_body_str = PyString_FromStringAndSize( results->get_data().c_str(), results->get_data().size() );
-    return object(handle<>(py_result_body_str));
-}
-
-//! Python wrapper function for DVIDNodeService::put()
-void put_keyvalue(libdvid::DVIDNodeService & nodeService, std::string keyvalue, std::string key, boost::python::object & value)
-{
-    using namespace libdvid;
-
-    BinaryDataPtr data;
-    try
-    {
-        data = convert_python_value_to_binary_data(value);
-    }
-    catch (ErrMsg const & ex)
-    {
-        throw ErrMsg("Writing to key '" + keyvalue + "/" + key + "' failed: " + ex.what());
-    }
-    nodeService.put(keyvalue, key, data );
-}
-
 //! Python wrapper function for DVIDConnection::make_request().
-//! The payload_object must support the Python buffer protocol (e.g. str, bytearray).
+//! Since "return-by-reference" is not an option in Python, this function can't be directly wrapped.
+//! Returns a tuple: (status, result_body, error_msg)
 boost::python::tuple make_request( libdvid::DVIDConnection & connection,
                                    std::string endpoint,
                                    libdvid::ConnectionMethod method,
-                                   boost::python::object payload_object,
+                                   libdvid::BinaryDataPtr payload_data,
                                    int timeout )
 {
     using namespace libdvid;
@@ -97,21 +32,8 @@ boost::python::tuple make_request( libdvid::DVIDConnection & connection,
     BinaryDataPtr results = BinaryData::create_binary_data();
     std::string err_msg ;
 
-    BinaryDataPtr payload_data;
-
-    // Check for None
-    if (payload_object == object())
-    {
-        payload_data = BinaryData::create_binary_data();
-    }
-    else
-    {
-        payload_data = convert_python_value_to_binary_data( payload_object );
-    }
-
     int status_code = connection.make_request(endpoint, method, payload_data, results, err_msg, DEFAULT, timeout);
-    PyObject * py_result_body_str = PyString_FromStringAndSize( results->get_data().c_str(), results->get_data().size() );
-    return make_tuple(status_code, object(handle<>(py_result_body_str )), err_msg);
+    return make_tuple(status_code, object(results), err_msg);
 }
 
 /*
@@ -129,6 +51,7 @@ BOOST_PYTHON_MODULE(_dvid_python)
     // Register custom Python -> C++ converters.
     libdvid::python::std_vector_from_python_iterable<unsigned int>();
     libdvid::python::std_string_from_python_none(); // None -> std::string("")
+    libdvid::python::binary_data_ptr_from_python_buffer();
 
     libdvid::python::ndarray_to_volume<Grayscale3D>();
     libdvid::python::ndarray_to_volume<Labels3D>();
@@ -166,6 +89,7 @@ BOOST_PYTHON_MODULE(_dvid_python)
 
     // For overloaded functions, boost::python needs help figuring out which one we're aiming for.
     // These function pointers specify the ones we want.
+    void (DVIDNodeService::*put_binary)(std::string, std::string, BinaryDataPtr) = &DVIDNodeService::put;
     Grayscale3D (DVIDNodeService::*get_gray3D)(std::string, Dims_t, std::vector<unsigned int>, bool, bool, std::string) = &DVIDNodeService::get_gray3D;
     Labels3D (DVIDNodeService::*get_labels3D)(std::string, Dims_t, std::vector<unsigned int>, bool, bool, std::string) = &DVIDNodeService::get_labels3D;
     void (DVIDNodeService::*put_gray3D)(std::string, Grayscale3D const&, std::vector<unsigned int>, bool, bool) = &DVIDNodeService::put_gray3D;
@@ -175,11 +99,11 @@ BOOST_PYTHON_MODULE(_dvid_python)
     class_<DVIDNodeService>("DVIDNodeService", init<std::string, UUID>())
         .def("get_typeinfo", &DVIDNodeService::get_typeinfo)
         .def("create_graph", &DVIDNodeService::create_graph)
-        .def("custom_request", &custom_request)
+        .def("custom_request", &DVIDNodeService::custom_request)
         
         // keyvalue
         .def("create_keyvalue", &DVIDNodeService::create_keyvalue)
-        .def("put", &put_keyvalue)
+        .def("put", put_binary)
         .def("get", &DVIDNodeService::get)
         .def("get_json", &DVIDNodeService::get_json)
 

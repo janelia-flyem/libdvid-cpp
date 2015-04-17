@@ -245,6 +245,68 @@ namespace libdvid { namespace python {
         }
     };
 
+    //!*********************************************************************************************
+    //! Convert Python buffer objects (e.g. str, bytearray) -> BinaryDataPtr
+    //!*********************************************************************************************
+    struct binary_data_ptr_from_python_buffer
+    {
+        binary_data_ptr_from_python_buffer()
+        {
+          converter::registry::push_back(
+              &convertible,
+              &construct,
+              type_id<BinaryDataPtr>());
+        }
+
+        static void* convertible(PyObject* obj_ptr)
+        {
+            // The "proper" thing here would be to check if this object is a buffer,
+            // but I think it's more helpful to the user if we check inside construct()
+            // and raise a descriptive exception if they tried to supply a non-buffer.
+
+            // return PyObject_CheckBuffer(obj_ptr) ? obj_ptr : 0;
+
+            return obj_ptr;
+        }
+
+        static void construct( PyObject* obj_ptr, converter::rvalue_from_python_stage1_data* data)
+        {
+            using namespace libdvid;
+            using namespace boost::python;
+
+            BinaryDataPtr binary_data;
+            if (obj_ptr == Py_None)
+            {
+                // As a special convenience, we auto-convert None to an empty buffer.
+                binary_data = BinaryData::create_binary_data();
+            }
+            else
+            {
+                if (!PyObject_CheckBuffer(obj_ptr))
+                {
+                    std::string value_str = extract<std::string>(str(object(handle<>(borrowed(obj_ptr)))));
+                    throw ErrMsg("Value is not a buffer: " + value_str);
+                }
+                Py_buffer py_buffer;
+                PyObject_GetBuffer(obj_ptr, &py_buffer, PyBUF_SIMPLE);
+
+                // Copy buffer into BinaryData
+                binary_data = BinaryData::create_binary_data(static_cast<char*>(py_buffer.buf), py_buffer.len);
+                PyBuffer_Release(&py_buffer);
+            }
+
+            // Grab pointer to memory into which to construct the BinaryDataPtr
+            void* storage = ((converter::rvalue_from_python_storage<BinaryDataPtr>*) data)->storage.bytes;
+
+            // in-place construct the new std::string
+            // extraced from the python object
+            new (storage) BinaryDataPtr(binary_data);
+
+            // Stash the memory chunk pointer for later use by boost.python
+            data->convertible = storage;
+        }
+    };
+
     //*********************************************************************************************
     //*********************************************************************************************
     //* C++ -> Python
