@@ -71,9 +71,10 @@ if (NOT ${BUILDEM_DIR} STREQUAL "None")
     include (libcurl)
     include (lz4)
     include (boost)
+    include (numpy)
 
     set (LIBDVID_DEPS ${jsoncpp_NAME} ${libpng_NAME} ${libcurl_NAME}
-        ${libjpeg_NAME} ${lz4_NAME} ${boost_NAME})
+        ${libjpeg_NAME} ${lz4_NAME} ${boost_NAME} ${numpy_NAME})
     set (boost_LIBS ${BUILDEM_LIB_DIR}/libboost_system.${BUILDEM_PLATFORM_DYLIB_EXTENSION})
     if (LIBDVID_WRAP_PYTHON)
         set(boost_LIBS ${boost_LIBS} 
@@ -206,7 +207,7 @@ add_test(
 )
 
 add_test(
-    compression 
+    compression
     dvidtest_compression
     ${CMAKE_SOURCE_DIR}/tests/inputs/testimage.jpeg
     ${CMAKE_SOURCE_DIR}/tests/inputs/testimage.png

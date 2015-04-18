@@ -3,7 +3,8 @@
 libdvid-cpp provides a c++ wrapper to HTTP calls to
 [DVID](https://github.com/janelia-flyem/dvid).
 It exposes only part of the DVID REST API.  Extra functionality
-will be added as needed.
+will be added as needed.  Some of this functionality has been exposed
+through a Python API.
 
 ## Installation
 
@@ -14,6 +15,12 @@ The primary dependencies are:
 * libpng
 * libcurl
 * [lz4](https://github.com/Cyan4973/lz4)
+* numpy (>=1.7) (when building the python wrapper)
+
+To build bindings for Python, please add the cmake flag -DLIBDVID_WRAP_PYTHON=1.
+
+To run the regression tests, type "make test" after building.  To successfully
+run, DVID must be installed on 127.0.0.1:8000.
 
 ### standalone installation
 
@@ -78,7 +85,8 @@ DIMS and spatial offset by a vector given by OFFSET:
 
 For some simple examples of using libdvid, please review *tests/*.  For
 detailed explanation of available API, please examined DVIDNodeService.h
-and DVIDServerService.h.
+and DVIDServerService.h.  For information on the Python interface,
+consult python/src/libdvid_python.cpp and the tests in python/tests.
 
 ## Important Notes
 
@@ -104,7 +112,6 @@ that the libdvid installation matches the DVID installation.
 
 ## TODO
 
-* Add Python bindings
-
-* Expand support to more datatype instances in DVID (like sparse volumes) and handling DVID meta-data
+* Expand support for sparse volumes and ROI datatypes
+* Better handling of DVID metadata and verification of interface versions
 

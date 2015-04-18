@@ -23,7 +23,7 @@ using std::string;
 int BLK_SIZE = 32;
 
 // sample grayscale to write
-unsigned char img1_mask[] = {
+uint8 img1_mask[] = {
     0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
     0,0,1,0,0,1,0,1,1,1,1,0,1,0,0,0,0,1,0,0,0,0,0,0,1,1,0,0,
     0,0,1,0,0,1,0,1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,0,1,0,0,1,0,
@@ -37,7 +37,7 @@ unsigned char img1_mask[] = {
     0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
 
 // more grayscale to write
-unsigned char img2_mask[] = {
+uint8 img2_mask[] = {
     0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
     0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,
     0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,
@@ -81,7 +81,7 @@ int main(int argc, char** argv)
 
         // ** Write and read grayscale data **
         // create grayscale image volume
-        unsigned char * img_gray = new unsigned char [BLK_SIZE*BLK_SIZE*BLK_SIZE];
+        uint8 * img_gray = new uint8 [BLK_SIZE*BLK_SIZE*BLK_SIZE];
         for (int i = 0; i < sizeof(img1_mask); ++i) {
             img_gray[i] = img1_mask[i] * 255;
             img_gray[i+BLK_SIZE*BLK_SIZE] = img2_mask[i] * 255;
@@ -101,7 +101,7 @@ int main(int argc, char** argv)
 
         // retrieve the image volume and make sure it makes the posted volume
         Grayscale3D graycomp = dvid_node.get_gray3D(gray_datatype_name, sizes, start);
-        const unsigned char* datacomp = graycomp.get_raw();
+        const uint8* datacomp = graycomp.get_raw();
         for (int i = 0; i < (BLK_SIZE*BLK_SIZE*BLK_SIZE); ++i) {
             if (datacomp[i] != img_gray[i]) {
                 cerr << "Read/write mismatch" << endl;
