@@ -68,7 +68,7 @@ class DVIDConnection {
     */ 
     int make_request(std::string endpoint, ConnectionMethod method, BinaryDataPtr payload,
             BinaryDataPtr results, std::string& error_msg, ConnectionType type=DEFAULT,
-            int timeout=TIMEOUT); 
+            int timeout=DEFAULT_TIMEOUT);
 
     /*!
      * Get the address for the DVID connection.
@@ -86,6 +86,9 @@ class DVIDConnection {
         return (addr + DVID_PREFIX);
     }
 
+    //! default timeout in seconds
+    static const int DEFAULT_TIMEOUT = 60;
+
   private:
     /*!
      * Assignment doesn't really make much sense -- just disable.
@@ -101,9 +104,6 @@ class DVIDConnection {
 
     //! prefix for all DVID calls (versioning may be added here in the future) 
     static std::string DVID_PREFIX;
-
-    //! default timeout in seconds
-    static const int TIMEOUT = 60;
 };
 
 }

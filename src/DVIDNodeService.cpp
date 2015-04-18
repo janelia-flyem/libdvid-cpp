@@ -186,7 +186,7 @@ Labels3D DVIDNodeService::get_labels3D(string datatype_instance, Dims_t sizes,
             throttle, compress, roi);
 }
 
-void DVIDNodeService::put_labels3D(string datatype_instance, Labels3D& volume,
+void DVIDNodeService::put_labels3D(string datatype_instance, Labels3D const & volume,
             vector<unsigned int> offset, bool throttle, bool compress, string roi)
 {
     Dims_t sizes = volume.get_dims();
@@ -194,7 +194,7 @@ void DVIDNodeService::put_labels3D(string datatype_instance, Labels3D& volume,
             offset, throttle, compress, roi);
 }
 
-void DVIDNodeService::put_gray3D(string datatype_instance, Grayscale3D& volume,
+void DVIDNodeService::put_gray3D(string datatype_instance, Grayscale3D const & volume,
             vector<unsigned int> offset, bool throttle, bool compress)
 {
     Dims_t sizes = volume.get_dims();

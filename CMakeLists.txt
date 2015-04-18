@@ -3,6 +3,8 @@ project (libdvidcpp)
 
 include (ExternalProject)
 
+enable_testing()
+
 set (RUN_ENVIRONMENT "Workstation" CACHE TYPE STRING)
 if (NOT CMAKE_BUILD_TYPE)
     set (CMAKE_BUILD_TYPE Release)
@@ -31,6 +33,9 @@ if (${BUILDEM_DIR} STREQUAL "None")
 else()
     set (BUILDLOC ${BUILDEM_DIR})
 endif()
+
+
+set (LIBDVID_WRAP_PYTHON NO CACHE BOOL "Build the libdvid python bindings (requires boost_python)")
 
 if (NOT ${BUILDEM_DIR} STREQUAL "None")
     ###############################################################################
@@ -70,6 +75,10 @@ if (NOT ${BUILDEM_DIR} STREQUAL "None")
     set (LIBDVID_DEPS ${jsoncpp_NAME} ${libpng_NAME} ${libcurl_NAME}
         ${libjpeg_NAME} ${lz4_NAME} ${boost_NAME})
     set (boost_LIBS ${BUILDEM_LIB_DIR}/libboost_system.${BUILDEM_PLATFORM_DYLIB_EXTENSION})
+    if (LIBDVID_WRAP_PYTHON)
+        set(boost_LIBS ${boost_LIBS} 
+                       ${BUILDEM_LIB_DIR}/libboost_python${BUILDEM_PLATFORM_DYLIB_EXTENSION})
+    endif()
     set (support_LIBS ${json_LIB} 
                       ${boost_LIBS} 
                       ${BUILDEM_LIB_DIR}/libpng${BUILDEM_PLATFORM_DYLIB_EXTENSION} 
@@ -82,6 +91,9 @@ else ()
 
     set (json_LIB jsoncpp)
     set (boost_LIBS boost_system)
+    if (LIBDVID_WRAP_PYTHON)
+        set(boost_LIBS ${boost_LIBS} boost_python)
+    endif()
     set (support_LIBS ${json_LIB} ${boost_LIBS} png curl jpeg lz4)
 endif (NOT ${BUILDEM_DIR} STREQUAL "None")
 
@@ -126,6 +138,10 @@ else()
     )
 endif()
 
+if (LIBDVID_WRAP_PYTHON)
+    add_subdirectory(python)    
+endif()
+
 add_executable(dvidtest_newrepo "tests/test_newrepo.cpp")
 target_link_libraries(dvidtest_newrepo dvidcpp ${support_LIBS})
 
@@ -158,8 +174,6 @@ target_link_libraries(dvidloadtest_labelgraph dvidcpp ${support_LIBS})
 
 add_executable(dvidloadtest_tile "load_tests/loadtest_tile.cpp")
 target_link_libraries(dvidloadtest_tile dvidcpp ${support_LIBS})
-
-enable_testing()
 
 add_test(
     newrepo

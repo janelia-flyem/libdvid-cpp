@@ -31,6 +31,8 @@ WriteMemoryCallback(void *contents, size_t size, size_t nmemb, void *userp)
 
 namespace libdvid {
 
+const int DVIDConnection::DEFAULT_TIMEOUT;
+
 //! Defines DVID prefix -- this might have a version ID eventually 
 string DVIDConnection::DVID_PREFIX = "/api";
 
