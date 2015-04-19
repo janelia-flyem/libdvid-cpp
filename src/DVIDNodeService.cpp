@@ -80,6 +80,11 @@ bool DVIDNodeService::create_graph(string graph_name)
     return create_datatype("labelgraph", graph_name);
 }
 
+bool DVIDNodeService::create_roi(string name)
+{
+    return create_datatype("roi", name);
+}
+
 Grayscale2D DVIDNodeService::get_tile_slice(string datatype_instance,
         Slice2D slice, unsigned int scaling, vector<unsigned int> tile_loc)
 {
@@ -715,6 +720,191 @@ void DVIDNodeService::set_properties(string graph_name, std::vector<Edge>& edges
         }
     }
 }
+
+void DVIDNodeService::post_roi(std::string roi_name,
+        const std::vector<BlockXYZ>& blockcoords)
+{
+    // Do not assume the blocks are sorted, first
+    // sort and then encode as runlengths in X.
+    // This will also eliminate duplicate blocks
+    set<BlockXYZ> sorted_blocks;
+    for (int i = 0; i < blockcoords.size(); ++i) {
+        sorted_blocks.insert(blockcoords[i]);    
+    }
+
+    // encode JSON as z,y,x0,x1 (inclusive)
+    int z = INT_MAX;
+    int y = INT_MAX;
+    int xmin, xmax;
+    Json::Value blocks_data(Json::arrayValue);
+    unsigned int blockrle_count = 0;
+    for (set<BlockXYZ>::iterator iter = sorted_blocks.begin();
+            iter != sorted_blocks.end(); ++iter) {
+        if (iter->z != z || iter->y != y) {
+            if (z != INT_MAX) {
+                // add run length
+                Json::Value block_data(Json::arrayValue);
+                block_data[0] = z;
+                block_data[1] = y;
+                block_data[2] = xmin;
+                block_data[3] = xmax;
+                blocks_data[blockrle_count] = block_data;
+                ++blockrle_count;
+            }
+        
+            z = iter->z;
+            y = iter->y;
+            xmin = iter->x;
+            xmax = xmin;
+        } else {
+            xmax = iter->x;
+        }
+    }
+    
+    if (z != INT_MAX) {
+        // add run length
+        Json::Value block_data(Json::arrayValue);
+        block_data[0] = z;
+        block_data[1] = y;
+        block_data[2] = xmin;
+        block_data[3] = xmax;
+        blocks_data[blockrle_count] = block_data;
+    }
+    
+    // write json to string and post
+    stringstream datastr;
+    datastr << blocks_data;
+    BinaryDataPtr binary_data = BinaryData::create_binary_data(
+            datastr.str().c_str(), datastr.str().length());
+    BinaryDataPtr binary = custom_request("/" + roi_name + "/roi",
+            binary_data, POST);
+}
+
+void DVIDNodeService::get_roi(std::string roi_name,
+        std::vector<BlockXYZ>& blockcoords)
+{
+    // clear blockcoords
+    blockcoords.clear();
+
+    BinaryDataPtr binary = custom_request("/" + roi_name + "/roi",
+            BinaryDataPtr(), GET);
+
+    // read json from binary string  
+    Json::Reader json_reader;
+    Json::Value returned_data;
+    if (!json_reader.parse(binary->get_data(), returned_data)) {
+        throw ErrMsg("Could not decode JSON");
+    }
+
+    // order the blocks (might be redundant depending on DVID output order)
+    set<BlockXYZ> sorted_blocks;
+
+    // insert blocks from JSON (decode block run lengths)
+    for (unsigned int i = 0; i < returned_data.size(); ++i) {
+        int z = returned_data[i][0].asInt();
+        int y = returned_data[i][1].asInt();
+        int xmin = returned_data[i][2].asInt();
+        int xmax = returned_data[i][3].asInt();
+
+        for (int xiter = xmin; xiter <= xmax; ++xiter) {
+            sorted_blocks.insert(BlockXYZ(xiter, y, z));
+        }
+    }
+
+    // returned sorted blocks back to caller
+    for (set<BlockXYZ>::iterator iter = sorted_blocks.begin();
+            iter != sorted_blocks.end(); ++iter) {
+        blockcoords.push_back(*iter);  
+    }
+}
+
+double DVIDNodeService::get_roi_partition(std::string roi_name,
+        std::vector<SubstackXYZ>& substacks, unsigned int partition_size)
+{
+    // clear substacks
+    substacks.clear();
+
+    stringstream querystring;
+    querystring << "/" <<  roi_name << "/partition?" << partition_size;
+
+    BinaryDataPtr binary = custom_request(querystring.str(),
+            BinaryDataPtr(), GET);
+
+    // read json from binary string  
+    Json::Reader json_reader;
+    Json::Value returned_data;
+    if (!json_reader.parse(binary->get_data(), returned_data)) {
+        throw ErrMsg("Could not decode JSON");
+    }
+
+    // order the substacks (might be redundant depending on DVID output order)
+    set<SubstackXYZ> sorted_substacks;
+
+    // insert substacks from JSON
+    for (unsigned int i = 0; i < returned_data["Subvolumes"].size(); ++i) {
+        int x = returned_data["Subvolumes"][i]["MinPoint"][0].asInt();
+        int y = returned_data["Subvolumes"][i]["MinPoint"][1].asInt();
+        int z = returned_data["Subvolumes"][i]["MinPoint"][2].asInt();
+        
+        sorted_substacks.insert(SubstackXYZ(x, y, z,
+                    DEFBLOCKSIZE*partition_size));
+    }
+
+    // returned sorted substacks back to caller
+    for (set<SubstackXYZ>::iterator iter = sorted_substacks.begin();
+            iter != sorted_substacks.end(); ++iter) {
+        substacks.push_back(*iter);  
+    }
+
+    // determine the packing factor for the given partition
+    unsigned int total_blocks = returned_data["NumTotalBlocks"].asUInt();
+    unsigned int roi_blocks = returned_data["NumActiveBlocks"].asUInt();
+
+    return double(roi_blocks)/total_blocks;
+}
+
+void DVIDNodeService::roi_ptquery(std::string roi_name,
+        const std::vector<PointXYZ>& points,
+        std::vector<bool>& inroi)
+{
+    inroi.clear();
+
+    // load into JSON array
+    Json::Value points_data(Json::arrayValue);
+    for (unsigned int i = 0; i < points.size(); ++i) {
+        Json::Value point_data(Json::arrayValue);
+        point_data[0] = points[i].x;
+        point_data[1] = points[i].y;
+        point_data[2] = points[i].z;
+        points_data[i] = point_data;
+    }
+
+    // make request with point list
+    stringstream datastr;
+    datastr << points_data;
+    BinaryDataPtr binary_data = BinaryData::create_binary_data(
+            datastr.str().c_str(), datastr.str().length());
+    BinaryDataPtr binary = custom_request("/" + roi_name + "/ptquery",
+            binary_data, POST);
+
+    
+    // read json from binary string  
+    Json::Reader json_reader;
+    Json::Value returned_data;
+    if (!json_reader.parse(binary->get_data(), returned_data)) {
+        throw ErrMsg("Could not decode JSON");
+    }
+
+    // insert status of each point (true if in ROI) (true if in ROI) (true if in ROI) 
+    for (unsigned int i = 0; i < returned_data.size(); ++i) {
+        bool ptinroi = returned_data[i].asBool();
+        inroi.push_back(ptinroi);
+    }
+}
+
+
+
+
 
 // ******************** PRIVATE HELPER FUNCTIONS *******************************
 

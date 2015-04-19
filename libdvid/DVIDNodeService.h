@@ -18,6 +18,7 @@
 #include "DVIDGraph.h"
 #include "DVIDConnection.h"
 #include "DVIDBlocks.h"
+#include "DVIDRoi.h"
 
 #include <json/value.h>
 #include <vector>
@@ -92,10 +93,17 @@ class DVIDNodeService {
     
     /*!
      * Create an instance of labelgraph datatype.
-     * \param datatype_name name of new datatype instance
+     * \param name name of new datatype instance
      * \return true if create, false if already exists
     */
     bool create_graph(std::string name);
+
+    /*!
+     * Create an instance of ROI datatype.
+     * \param name name of new datatype instance
+     * \return true if create, false if already exists
+    */
+    bool create_roi(std::string name);
 
     /********** API to access labels and grayscale data **********/   
     // TODO: maybe support custom byte buffers for getting and putting 
@@ -491,6 +499,52 @@ class DVIDNodeService {
             std::vector<BinaryDataPtr>& properties,
             VertexTransactions& transactions,
             std::vector<Edge>& leftover_edges);
+    
+    /************** API to access ROI interface **************/
+    
+    /*!
+     * Load an ROI defined by a list of blocks.  This command
+     * will extend the ROI if it defines blocks outside of the
+     * currently defined ROI.  The blocks can be provided in
+     * any order.
+     * \param roi_name name of the roi instance
+     * \param blockcoords vector of block coordinates
+    */
+    void post_roi(std::string roi_name,
+            const std::vector<BlockXYZ>& blockcoords);
+   
+    /*!
+     * Retrieve an ROI and store in a vector of block coordinates.
+     * The blocks returned will be ordered by Z then Y then X.
+     * \param roi_name name of the roi instance
+     * \param blockcoords vector of block coordinates retrieved
+    */
+    void get_roi(std::string roi_name,
+            std::vector<BlockXYZ>& blockcoords);
+    
+    /*!
+     * Retrieve a partition of the ROI covered by substacks
+     * of the specified partition size.  The substacks will be ordered
+     * by Z then Y then X.
+     * \param roi_name name of the roi instance
+     * \param substacks vector of substacks that coer the ROI
+     * \param partition_size substack size as number of blocks in one dimension
+     * \return fraction of substack volume that cover blocks (packing factor)
+    */
+    double get_roi_partition(std::string roi_name,
+            std::vector<SubstackXYZ>& substacks, unsigned int partition_size);
+
+    /*!
+     * Check whether a list of points (any order) exists in
+     * the given ROI.  A vector of true and false has the same order
+     * as the list of points.
+     * \param roi_name name of the roi instance
+     * \param points list of X,Y,Z points
+     * \param inroi list of true/false on whether points are in the ROI
+    */
+    void roi_ptquery(std::string roi_name,
+            const std::vector<PointXYZ>& points,
+            std::vector<bool>& inroi);
 
   private:
     //! uuid for instance

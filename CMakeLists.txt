@@ -72,20 +72,20 @@ if (NOT ${BUILDEM_DIR} STREQUAL "None")
     include (lz4)
     include (boost)
     include (numpy)
-
+    include (python)
+    
     set (LIBDVID_DEPS ${jsoncpp_NAME} ${libpng_NAME} ${libcurl_NAME}
         ${libjpeg_NAME} ${lz4_NAME} ${boost_NAME} ${numpy_NAME})
     set (boost_LIBS ${BUILDEM_LIB_DIR}/libboost_system.${BUILDEM_PLATFORM_DYLIB_EXTENSION})
     if (LIBDVID_WRAP_PYTHON)
-        set(boost_LIBS ${boost_LIBS} 
-                       ${BUILDEM_LIB_DIR}/libboost_python${BUILDEM_PLATFORM_DYLIB_EXTENSION})
+        set(boostpython_LIB ${BUILDEM_LIB_DIR}/libboost_python.${BUILDEM_PLATFORM_DYLIB_EXTENSION})
     endif()
     set (support_LIBS ${json_LIB} 
                       ${boost_LIBS} 
-                      ${BUILDEM_LIB_DIR}/libpng${BUILDEM_PLATFORM_DYLIB_EXTENSION} 
-                      ${BUILDEM_LIB_DIR}/libcurl${BUILDEM_PLATFORM_DYLIB_EXTENSION} 
-                      ${BUILDEM_LIB_DIR}/libjpeg${BUILDEM_PLATFORM_DYLIB_EXTENSION} 
-                      ${BUILDEM_LIB_DIR}/liblz4${BUILDEM_PLATFORM_DYLIB_EXTENSION} )
+                      ${BUILDEM_LIB_DIR}/libpng.${BUILDEM_PLATFORM_DYLIB_EXTENSION} 
+                      ${BUILDEM_LIB_DIR}/libcurl.${BUILDEM_PLATFORM_DYLIB_EXTENSION} 
+                      ${BUILDEM_LIB_DIR}/libjpeg.${BUILDEM_PLATFORM_DYLIB_EXTENSION} 
+                      ${BUILDEM_LIB_DIR}/liblz4.${BUILDEM_PLATFORM_DYLIB_EXTENSION} )
 else ()
     FIND_PACKAGE(Boost)
     include_directories(${Boost_INCLUDE_DIR})
@@ -93,7 +93,7 @@ else ()
     set (json_LIB jsoncpp)
     set (boost_LIBS boost_system)
     if (LIBDVID_WRAP_PYTHON)
-        set(boost_LIBS ${boost_LIBS} boost_python)
+        set(boostpython_LIB boost_python)
     endif()
     set (support_LIBS ${json_LIB} ${boost_LIBS} png curl jpeg lz4)
 endif (NOT ${BUILDEM_DIR} STREQUAL "None")
