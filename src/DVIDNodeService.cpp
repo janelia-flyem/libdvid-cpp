@@ -404,7 +404,13 @@ void DVIDNodeService::get_properties(string graph_name,
         VertexTransactions& transactions)
 {
     int num_examined = 0;
+        
+    #ifdef __clang__
+    std::unordered_map<VertexID, BinaryDataPtr> properties_map;
+    #else
     std::tr1::unordered_map<VertexID, BinaryDataPtr> properties_map;
+    #endif
+    
     int num_verts = vertices.size();
 
     // keep extending vertices with failed ones
@@ -482,7 +488,12 @@ void DVIDNodeService::get_properties(string graph_name, std::vector<Edge> edges,
             std::vector<BinaryDataPtr>& properties, VertexTransactions& transactions)
 {
     int num_examined = 0;
+    
+    #ifdef __clang__
+    std::unordered_map<Edge, BinaryDataPtr, Edge> properties_map;
+    #else
     std::tr1::unordered_map<Edge, BinaryDataPtr, Edge> properties_map;
+    #endif
     int num_edges = edges.size();
 
     // keep extending vertices with failed ones

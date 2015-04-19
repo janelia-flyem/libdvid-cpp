@@ -13,11 +13,17 @@
 #include "BinaryData.h"
 
 #include <vector>
-#include <tr1/unordered_map>
-#include <tr1/unordered_set>
 #include <json/json.h>
 #include <boost/functional/hash.hpp>
 #include <boost/static_assert.hpp>
+
+#ifdef __clang__
+#include <unordered_map>
+#include <unordered_set>
+#else
+#include <tr1/unordered_map>
+#include <tr1/unordered_set>
+#endif
 
 namespace libdvid {
 
@@ -157,11 +163,16 @@ struct Edge {
  * Transaction IDs are used to ensure that graph manipulations
  * act on the last known state of the data.  An ID of 0 means
  * there is no current transaction ID.
-*/
-typedef std::tr1::unordered_map<VertexID, TransactionID> VertexTransactions; 
-
+ */
+#ifdef __clang__
+typedef std::unordered_map<VertexID, TransactionID> VertexTransactions;
 //! A collection of vertex IDs for processing
-typedef std::tr1::unordered_set<VertexID> VertexSet; 
+typedef std::unordered_set<VertexID> VertexSet;
+#else
+typedef std::tr1::unordered_map<VertexID, TransactionID> VertexTransactions;
+//! A collection of vertex IDs for processing
+typedef std::tr1::unordered_set<VertexID> VertexSet;
+#endif
 
 /*! 
  * Retrieve transactions map from binary data.

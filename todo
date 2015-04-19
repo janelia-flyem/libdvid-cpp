@@ -1,14 +1,13 @@
--make lz4 r126 version
+
+-API versioning and checking
+-support ROI
+-support sparse volume
+-add python bindings for ROI
+
 
 -fix c++ warnings and look for any other memory leaks -- appears to be some, not sure if important
--add compression for blocks when available
--add load test for volume gets using compression (dependent on Bill)
 -improve test coverage
 -incorporate user opinions
--support ROI
--python bindings
--python tests
--API versioning and checking
 
 -public release
 
@@ -17,5 +16,8 @@
 -make a constants file with all of the supported endpoints and allow sprintf modification of UUID, etc -- add version number of API, add transaction limit, add GET/PUT data limit, add connectype as well (GET, PUT, etc)? -- do not document, refer users to service APIs for more details
 -add better parameters for the load test
 -fast user buffer support
+-add compression for blocks when available
+-make lz4 r126 version
+
 
 
