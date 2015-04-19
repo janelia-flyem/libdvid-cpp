@@ -501,7 +501,13 @@ class DVIDNodeService {
             std::vector<Edge>& leftover_edges);
     
     /************** API to access ROI interface **************/
-    
+    // Currently, there is no API to work directly on the RLE
+    // encoded blocks.  This might lead to excessive memory use
+    // and runtime for some use cases.  Furthermore, this API
+    // handles block and substack ordering (regardless of whether
+    // it is necessary or whether it is already sorted).  This
+    // might lead to some runtime inefficiencies.
+
     /*!
      * Load an ROI defined by a list of blocks.  This command
      * will extend the ROI if it defines blocks outside of the

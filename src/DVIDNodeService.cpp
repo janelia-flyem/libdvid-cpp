@@ -825,7 +825,7 @@ double DVIDNodeService::get_roi_partition(std::string roi_name,
     substacks.clear();
 
     stringstream querystring;
-    querystring << "/" <<  roi_name << "/partition?" << partition_size;
+    querystring << "/" <<  roi_name << "/partition?batchsize=" << partition_size;
 
     BinaryDataPtr binary = custom_request(querystring.str(),
             BinaryDataPtr(), GET);

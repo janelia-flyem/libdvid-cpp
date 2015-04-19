@@ -23,7 +23,7 @@ struct SubstackXYZ {
      * \param z_ starting z coordinate
      * \param size_ size along one dimension (same for all dimensions)
     */
-    SubstackXYZ(int x_, int y_, int z_, int size_) : x(x_), y(y_), z(z_) {}
+    SubstackXYZ(int x_, int y_, int z_, int size_) : x(x_), y(y_), z(z_), size(size_) {}
    
     /*!
      * Used to order substacks by Z then Y then X.

@@ -1,7 +1,6 @@
--support ROI (implement interface, add tests)
+-fix c++ warnings
 -support sparse volume
 -add python bindings for ROI
--fix c++ warnings
 
 -API versioning and checking
 -look for any other memory leaks -- appears to be some, not sure if important

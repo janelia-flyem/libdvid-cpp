@@ -167,6 +167,9 @@ target_link_libraries(dvidtest_compression dvidcpp ${support_LIBS})
 add_executable(dvidtest_blocks "tests/test_blocks.cpp")
 target_link_libraries(dvidtest_blocks dvidcpp ${support_LIBS})
 
+add_executable(dvidtest_roi "tests/test_roi.cpp")
+target_link_libraries(dvidtest_roi dvidcpp ${support_LIBS})
+
 add_executable(dvidloadtest_labelblk "load_tests/loadtest_labelblk.cpp")
 target_link_libraries(dvidloadtest_labelblk dvidcpp ${support_LIBS})
 
@@ -217,5 +220,10 @@ add_test(
 add_test(
     blocks 
     dvidtest_blocks http://127.0.0.1:8000
+)
+
+add_test(
+    roi
+    dvidtest_roi http://127.0.0.1:8000
 )
 

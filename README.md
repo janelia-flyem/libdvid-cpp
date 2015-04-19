@@ -112,6 +112,6 @@ that the libdvid installation matches the DVID installation.
 
 ## TODO
 
-* Expand support for sparse volumes and ROI datatypes
+* Add support for sparse volumes datatypes
 * Better handling of DVID metadata and verification of interface versions
 
