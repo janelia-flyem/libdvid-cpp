@@ -94,7 +94,36 @@ ENDIF()
 
 SET(PYTHON_NUMPY_INCLUDE_DIR ${PYTHON_NUMPY_INCLUDE_DIR}
     CACHE PATH "Path to numpy include files" FORCE)
-    
+
+######################################################################
+#
+#      get numpy version
+#
+######################################################################
+IF(NOT PYTHON_NUMPY_NOT_FOUND)
+    execute_process(COMMAND "${PYTHON_EXECUTABLE}" "-c"
+                            "import numpy; print(numpy.__version__)"
+                    RESULT_VARIABLE _NUMPY_VERSION_FAIL
+                    OUTPUT_VARIABLE NUMPY_VERSION
+                    ERROR_VARIABLE _NUMPY_VERSION_ERROR_VALUE
+                    OUTPUT_STRIP_TRAILING_WHITESPACE)
+    IF(NOT _NUMPY_VERSION_FAIL)
+        string(REGEX MATCH "^[0-9]+\\.[0-9]+\\.[0-9]+" _VER_CHECK "${NUMPY_VERSION}")
+        if("${_VER_CHECK}" STREQUAL "")
+            # The output from Python was unexpected. Raise an error always
+            # here, because we found NumPy, but it appears to be corrupted somehow.
+            message(FATAL_ERROR "Requested version from NumPy, got instead:\n${NUMPY_VERSION}\n")
+        endif()
+            # Get the major and minor version numbers
+            string(REGEX REPLACE "\\." ";" _NUMPY_VERSION_LIST ${NUMPY_VERSION})
+            list(GET _NUMPY_VERSION_LIST 0 NUMPY_VERSION_MAJOR)
+            list(GET _NUMPY_VERSION_LIST 1 NUMPY_VERSION_MINOR)
+            list(GET _NUMPY_VERSION_LIST 2 NUMPY_VERSION_PATCH)
+    ELSE()
+        message(FATAL_ERROR "Could not determine numpy version: ${_NUMPY_VERSION_ERROR_VALUE}")
+    ENDIF()
+ENDIF()
+
 ######################################################################
 #
 #      status output
@@ -110,6 +139,7 @@ ENDIF()
     
 IF(PYTHON_NUMPY_INCLUDE_DIR)
     MESSAGE(STATUS "Python numpy includes: ${PYTHON_NUMPY_INCLUDE_DIR}")
+    MESSAGE(STATUS "Python numpy verion: ${NUMPY_VERSION}")
 ELSE()
     MESSAGE(FATAL_ERROR "Could NOT find Python numpy ('import numpy.distutils.misc_util' failed)")
 ENDIF()
@@ -119,6 +149,11 @@ ENDIF()
 #      configure package
 #
 ######################################################################
+
+set(LIBDVID_MIN_NUMPY_VERSION "1.7.0")
+if (NUMPY_VERSION VERSION_LESS LIBDVID_MIN_NUMPY_VERSION)
+    message(FATAL_ERROR "Numpy version (${NUMPY_VERSION}) is too old.  libdvid requires numpy >= ${LIBDVID_MIN_NUMPY_VERSION}")
+endif()
 
 include_directories(${PYTHON_INCLUDE_PATH} ${PYTHON_NUMPY_INCLUDE_DIR})
 
