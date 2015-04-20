@@ -168,7 +168,6 @@ namespace libdvid { namespace python {
         ndarray_to_volume()
         {
           converter::registry::push_back( &convertible, &construct, type_id<VolumeType>() );
-          converter::registry::push_back( &convertible, &construct, type_id<VolumeType&>() );
         }
     
         static void* convertible(PyObject* obj_ptr)
