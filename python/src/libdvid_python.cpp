@@ -48,7 +48,7 @@ namespace libdvid { namespace python {
         using namespace boost::python;
 
         // http://docs.scipy.org/doc/numpy/reference/c-api.array.html#importing-the-api
-        import_array()
+        import_array();
 
         // Register custom Python -> C++ converters.
         std_vector_from_python_iterable<unsigned int>();
