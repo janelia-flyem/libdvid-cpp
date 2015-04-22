@@ -9,12 +9,15 @@
 #ifndef DVIDROI_H
 #define DVIDROI_H
 
+#include <algorithm>
+#include <boost/operators.hpp>
+
 namespace libdvid {
 
 /*!
  * Defines a substack at a given offset and size.
 */
-struct SubstackXYZ {
+struct SubstackXYZ : boost::totally_ordered<SubstackXYZ> {
     /*!
      * Constructs a substack based on the smallest coordinate that
      * the substack intersects and its size.
@@ -30,15 +33,19 @@ struct SubstackXYZ {
      * \param sbustack2 substack being compared to
      * \returns true if less than other block
     */ 
-    bool operator<(const SubstackXYZ& substack2) const
+    bool operator<(SubstackXYZ const & other) const
     {
-        if ((z < substack2.z) ||
-            ((z == substack2.z) && (y < substack2.y)) ||
-            ((z == substack2.z) && (y == substack2.y) && (x < substack2.x))) {
-            return true;
-        }
+    	int params[] = {z, y, x, size};
+    	int other_params[] = {other.z, other.y, other.x, other.size};
+		return std::lexicographical_compare( &params[0], 	   &params[4],
+											 &other_params[0], &other_params[4] );
+    }
 
-        return false;
+    bool operator==(SubstackXYZ const & other) const
+    {
+    	int params[] = {z, y, x, size};
+    	int other_params[] = {other.z, other.y, other.x, other.size};
+		return std::equal( &params[0], &params[4], &other_params[0] );
     }
 
     //! public access to member data
@@ -48,7 +55,7 @@ struct SubstackXYZ {
 /*
  * Defines a block position in block coordinate space (assume DEFBLOCKSIZE).
 */
-struct BlockXYZ {
+struct BlockXYZ : boost::totally_ordered<BlockXYZ> {
     /*!
      * Constructs a block location using block coordinates
      * which is dvid voxel coordinates / DEFBLOCKSIZE.
@@ -63,15 +70,19 @@ struct BlockXYZ {
      * \param block2 block being compared to
      * \returns true if less than other block
     */ 
-    bool operator<(const BlockXYZ& block2) const
+    bool operator<(BlockXYZ const & other) const
     {
-        if ((z < block2.z) ||
-            ((z == block2.z) && (y < block2.y)) ||
-            ((z == block2.z) && (y == block2.y) && (x < block2.x))) {
-            return true;
-        }
+    	int params[] = {z, y, x};
+    	int other_params[] = {other.z, other.y, other.x};
+		return std::lexicographical_compare( &params[0], 	   &params[3],
+											 &other_params[0], &other_params[3] );
+    }
 
-        return false;
+    bool operator==(BlockXYZ const & other) const
+    {
+    	int params[] = {z, y, x};
+    	int other_params[] = {other.z, other.y, other.x};
+		return std::equal( &params[0], &params[3], &other_params[0] );
     }
 
     //! public access to member data
@@ -81,7 +92,7 @@ struct BlockXYZ {
 /*
  * Defines a voxel point in voxel coordinate space.
 */
-struct PointXYZ {
+struct PointXYZ : boost::totally_ordered<PointXYZ>{
     /*!
      * Constructs a voxel location using voxel coordinates.
      * \param x_ x coordinate
@@ -92,6 +103,22 @@ struct PointXYZ {
     
     //! public access to member data
     int x,y,z;
+
+    // Like blocks, points are ordered z-y-x, not x-y-z
+    bool operator<(PointXYZ const & other) const
+    {
+    	int params[] = {z, y, x};
+    	int other_params[] = {other.z, other.y, other.x};
+		return std::lexicographical_compare( &params[0], 	   &params[3],
+											 &other_params[0], &other_params[3] );
+    }
+
+    bool operator==(PointXYZ const & other) const
+    {
+    	int params[] = {z, y, x};
+    	int other_params[] = {other.z, other.y, other.x};
+		return std::equal( &params[0], &params[3], &other_params[0] );
+    }
 };
 
 }
