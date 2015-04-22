@@ -2,7 +2,7 @@ import unittest
 import numpy
 import json
 
-from libdvid import DVIDNodeService, ConnectionMethod, Slice2D
+from libdvid import DVIDNodeService, ConnectionMethod, Slice2D, BlockXYZ, SubstackXYZ
 from _test_utils import TEST_DVID_SERVER, get_testrepo_root_uuid, delete_all_data_instances
 
 class Test_DVIDNodeService(unittest.TestCase):
@@ -54,6 +54,41 @@ class Test_DVIDNodeService(unittest.TestCase):
 
         # Now retrieve a tile.
         retrieved_tile = node_service.get_tile_slice( "test_grayscale_2d_tile", Slice2D.XY, 0, (0,0,0) )
+    
+    def test_roi(self):
+        node_service = DVIDNodeService(TEST_DVID_SERVER, self.uuid)
+        node_service.create_roi("test_roi")
+        node_service.post_roi("test_roi", [(1,2,3),(2,3,4),(4,5,6)])
+        roi_blocks = node_service.get_roi("test_roi")
+        self.assertEqual(roi_blocks, [(1,2,3),(2,3,4),(4,5,6)])
+
+    def test_roi_partition(self):
+        node_service = DVIDNodeService(TEST_DVID_SERVER, self.uuid)
+        node_service.create_roi("test_roi_partition")
+        
+        blocks = [(0,0,0),(1,1,1),(2,2,2),(3,3,3)]
+        node_service.post_roi("test_roi_partition", blocks)
+        substacks, packing_factor = node_service.get_roi_partition("test_roi_partition", 4)
+        
+        self.assertEqual(substacks, [SubstackXYZ(0,0,0,4*32)])        
+        self.assertEqual( packing_factor, float(len(blocks))/(len(substacks) * 4**3) )
+
+        blocks += [(4,0,0)]
+        node_service.post_roi("test_roi_partition", blocks)
+        substacks, packing_factor = node_service.get_roi_partition("test_roi_partition", 4)
+ 
+        self.assertEqual(substacks, [SubstackXYZ(0,0,0,4*32), SubstackXYZ(128,0,0,4*32)])
+ 
+        # FIXME: DVID returns "NumActiveBlocks: 8" here, even though there should only be 5.
+        #        That's wack, right?
+        #  self.assertEqual( packing_factor, float(len(blocks))/(len(substacks) * 4**3) )
+
+    def test_roi_ptquery(self):
+        node_service = DVIDNodeService(TEST_DVID_SERVER, self.uuid)
+        node_service.create_roi("test_roi")
+        node_service.post_roi("test_roi", [(1,2,3),(2,3,4),(4,5,6)])
+        query_results = node_service.roi_ptquery( "test_roi", [(0,0,0), (32, 64, 32*3)] )
+        self.assertEqual( query_results, [False, True] )        
 
 if __name__ == "__main__":
     unittest.main()

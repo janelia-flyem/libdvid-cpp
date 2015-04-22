@@ -1,5 +1,6 @@
 #include <Python.h>
 #include <boost/python.hpp>
+#include <boost/foreach.hpp>
 
 #define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
 
@@ -20,7 +21,7 @@
 namespace libdvid { namespace python {
 
     //! Python wrapper function for DVIDConnection::make_request().
-    //! Since "return-by-reference" is not an option in Python, this function can't be directly wrapped.
+    //! (Since "return-by-reference" is not an option in Python, boost::python can't provide an automatic wrapper.)
     //! Returns a tuple: (status, result_body, error_msg)
     boost::python::tuple make_request( DVIDConnection & connection,
                                        std::string endpoint,
@@ -36,6 +37,70 @@ namespace libdvid { namespace python {
 
         int status_code = connection.make_request(endpoint, method, payload_data, results, err_msg, DEFAULT, timeout);
         return make_tuple(status_code, object(results), err_msg);
+    }
+
+    //! Python wrapper function for DVIDNodeService::get_roi().
+    //! Instead of requiring the user to pass an "out-parameter" (not idiomatic in python),
+    //! This wrapper function returns the result as a python list of BlockXYZ objects.
+    boost::python::list get_roi( DVIDNodeService & nodeService, std::string roi_name )
+    {
+    	using namespace libdvid;
+    	using namespace boost::python;
+
+    	// Retrieve from DVID
+    	std::vector<BlockXYZ> result_vector;
+    	nodeService.get_roi( roi_name, result_vector );
+
+    	// Convert to Python list
+    	list result_list;
+    	BOOST_FOREACH(BlockXYZ const & block, result_vector)
+    	{
+    		result_list.append( static_cast<object>(block) );
+    	}
+    	return result_list;
+    }
+
+    //! Python wrapper function for DVIDConnection::get_roi_partition().
+    //! (Since "return-by-reference" is not an option in Python, boost::python can't provide an automatic wrapper.)
+    //! Returns a tuple: (status, result_body, error_msg)
+    boost::python::tuple get_roi_partition( DVIDNodeService & nodeService,
+    										std::string roi_name,
+											unsigned int partition_size )
+    {
+    	// Retrieve from DVID
+    	std::vector<SubstackXYZ> result_substacks;
+    	double packing_factor = nodeService.get_roi_partition( roi_name, result_substacks, partition_size );
+
+    	// Convert to Python list
+    	list result_list;
+    	BOOST_FOREACH(SubstackXYZ const & substack, result_substacks)
+    	{
+    		result_list.append( static_cast<object>(substack) );
+    	}
+    	return make_tuple(result_list, packing_factor);
+    }
+
+    //! Python wrapper function for DVIDNodeService::roi_ptquery().
+    //! Instead of requiring the user to pass an "out-parameter" (not idiomatic in python),
+    //! This wrapper function returns the result as a python list of bools.
+    boost::python::list roi_ptquery( DVIDNodeService & nodeService,
+    				  	  	  	     std::string roi_name,
+									 const std::vector<PointXYZ>& points )
+    {
+    	using namespace libdvid;
+    	using namespace boost::python;
+
+    	// Retrieve from DVID
+    	std::vector<bool> result_vector;
+    	nodeService.roi_ptquery( roi_name, points, result_vector );
+
+    	// Convert to Python list
+    	list result_list;
+    	BOOST_FOREACH(bool b, result_vector)
+    	{
+    		result_list.append( static_cast<object>(b) );
+    	}
+    	return result_list;
     }
 
     /*
@@ -133,6 +198,13 @@ namespace libdvid { namespace python {
             // 2D slices
             .def("get_tile_slice", &DVIDNodeService::get_tile_slice)
             .def("get_tile_slice_binary", &DVIDNodeService::get_tile_slice_binary)
+
+            // ROI
+            .def("create_roi", &DVIDNodeService::create_roi)
+            .def("get_roi", &get_roi)
+            .def("post_roi", &DVIDNodeService::post_roi)
+            .def("get_roi_partition", &get_roi_partition)
+            .def("roi_ptquery", &roi_ptquery)
         ;
 
         enum_<Slice2D>("Slice2D")
