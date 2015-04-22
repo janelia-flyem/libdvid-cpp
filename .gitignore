@@ -4,3 +4,4 @@ build
 .cproject
 .pydevproject
 *.pyc
+.settings
