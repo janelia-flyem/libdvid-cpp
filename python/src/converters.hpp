@@ -313,6 +313,245 @@ namespace libdvid { namespace python {
     //*********************************************************************************************
 
     //!*********************************************************************************************
+    //! Convert BlockXYZ in both directions:
+    //! tuple (Python) --> BlockXYZ (C++)
+    //! BlockXYZ (C++) --> namedtuple("BlockXYZ", "x y z") (Python)
+    //!*********************************************************************************************
+    struct block_to_python_block
+    {
+        block_to_python_block()
+        {
+            block_to_python_block::register_to_python();
+            block_to_python_block::register_from_python();
+        }
+
+        static object PyBlockXYZ;
+        static void register_to_python()
+        {
+            object collections = import("collections");
+            PyBlockXYZ = collections.attr("namedtuple")("BlockXYZ", "x y z");
+            scope().attr("BlockXYZ") = PyBlockXYZ;
+            to_python_converter<BlockXYZ, block_to_python_block>();
+        }
+
+        static void register_from_python()
+        {
+            converter::registry::push_back(
+                &block_to_python_block::convertible,
+                &block_to_python_block::construct,
+                type_id<BlockXYZ>());
+        }
+
+        // Determine if obj_ptr can be converted to a BlockXYZ
+        static void* convertible(PyObject* obj_ptr)
+        {
+            if (!PySequence_Check(obj_ptr))
+            {
+                return 0;
+            }
+
+            // We could check the length here, but it's nicer to
+            // give the user an explanatory exception in construct()
+            return obj_ptr;
+        }
+
+        // Convert obj_ptr into a BlockXYZ
+        static void construct( PyObject* obj_ptr, converter::rvalue_from_python_stage1_data* data)
+        {
+            assert( PySequence_Check(obj_ptr) );
+
+            // Grab pointer to memory into which to construct the new vector_t
+            void* storage = ((converter::rvalue_from_python_storage<BlockXYZ>*) data)->storage.bytes;
+
+            object sequence = object(handle<>(borrowed(obj_ptr)));
+            int len = extract<int>(sequence.attr("__len__")());
+            if (len != 3)
+            {
+                std::ostringstream msg;
+                msg << "BlockXYZ must have exactly 3 entries, but this sequence contains "
+                    << len << " entries.";
+                throw ErrMsg(msg.str());
+            }
+
+            // in-place construct the new BlockXYZ
+            int x = extract<int>(sequence[0]);
+            int y = extract<int>(sequence[1]);
+            int z = extract<int>(sequence[2]);
+            new (storage) BlockXYZ(x, y, z);
+
+            // Stash the memory chunk pointer for later use by boost::python
+            data->convertible = storage;
+        }
+
+
+        static PyObject* convert(BlockXYZ const& block)
+        {
+            return incref(PyBlockXYZ(block.x, block.y, block.z).ptr());
+        }
+    };
+    object block_to_python_block::PyBlockXYZ;
+
+    //!*********************************************************************************************
+    //! Convert PointXYZ in both directions:
+    //! tuple (Python) --> PointXYZ (C++)
+    //! PointXYZ (C++) --> namedtuple("PointXYZ", "x y z") (Python)
+    //!*********************************************************************************************
+    struct point_to_python_point
+    {
+    	point_to_python_point()
+        {
+    		point_to_python_point::register_to_python();
+    		point_to_python_point::register_from_python();
+        }
+
+        static object PyPointXYZ;
+        static void register_to_python()
+        {
+            object collections = import("collections");
+            PyPointXYZ = collections.attr("namedtuple")("PointXYZ", "x y z");
+            scope().attr("PointXYZ") = PyPointXYZ;
+            to_python_converter<PointXYZ, point_to_python_point>();
+        }
+
+        static void register_from_python()
+        {
+            converter::registry::push_back(
+                &point_to_python_point::convertible,
+                &point_to_python_point::construct,
+                type_id<PointXYZ>());
+        }
+
+        // Determine if obj_ptr can be converted to a PointXYZ
+        static void* convertible(PyObject* obj_ptr)
+        {
+            if (!PySequence_Check(obj_ptr))
+            {
+                return 0;
+            }
+
+            // We could check the length here, but it's nicer to
+            // give the user an explanatory exception in construct()
+            return obj_ptr;
+        }
+
+        // Convert obj_ptr into a PointXYZ
+        static void construct( PyObject* obj_ptr, converter::rvalue_from_python_stage1_data* data)
+        {
+            assert( PySequence_Check(obj_ptr) );
+
+            // Grab pointer to memory into which to construct the new vector_t
+            void* storage = ((converter::rvalue_from_python_storage<PointXYZ>*) data)->storage.bytes;
+
+            object sequence = object(handle<>(borrowed(obj_ptr)));
+            int len = extract<int>(sequence.attr("__len__")());
+            if (len != 3)
+            {
+                std::ostringstream msg;
+                msg << "PointXYZ must have exactly 3 entries, but this sequence contains "
+                    << len << " entries.";
+                throw ErrMsg(msg.str());
+            }
+
+            // in-place construct the new PointXYZ
+            int x = extract<int>(sequence[0]);
+            int y = extract<int>(sequence[1]);
+            int z = extract<int>(sequence[2]);
+            new (storage) PointXYZ(x, y, z);
+
+            // Stash the memory chunk pointer for later use by boost::python
+            data->convertible = storage;
+        }
+
+
+        static PyObject* convert(PointXYZ const& point)
+        {
+            return incref(PyPointXYZ(point.x, point.y, point.z).ptr());
+        }
+    };
+    object point_to_python_point::PyPointXYZ;
+
+
+    //!*********************************************************************************************
+    //! Convert SubstackXYZ in both directions:
+    //! tuple (Python) --> SubstackXYZ (C++)
+    //! SubstackXYZ (C++) --> namedtuple("SubstackXYZ", "x y z size") (Python)
+    //!*********************************************************************************************
+    struct substack_to_python_substack
+    {
+    	substack_to_python_substack()
+        {
+    		substack_to_python_substack::register_to_python();
+    		substack_to_python_substack::register_from_python();
+        }
+
+        static object PySubstackXYZ;
+        static void register_to_python()
+        {
+            object collections = import("collections");
+            PySubstackXYZ = collections.attr("namedtuple")("SubstackXYZ", "x y z size");
+            scope().attr("SubstackXYZ") = PySubstackXYZ;
+            to_python_converter<SubstackXYZ, substack_to_python_substack>();
+        }
+
+        static void register_from_python()
+        {
+            converter::registry::push_back(
+                &substack_to_python_substack::convertible,
+                &substack_to_python_substack::construct,
+                type_id<SubstackXYZ>());
+        }
+
+        // Determine if obj_ptr can be converted to a SubstackXYZ
+        static void* convertible(PyObject* obj_ptr)
+        {
+            if (!PySequence_Check(obj_ptr))
+            {
+                return 0;
+            }
+
+            // We could check the length here, but it's nicer to
+            // give the user an explanatory exception in construct()
+            return obj_ptr;
+        }
+
+        // Convert obj_ptr into a SubstackXYZ
+        static void construct( PyObject* obj_ptr, converter::rvalue_from_python_stage1_data* data)
+        {
+            assert( PySequence_Check(obj_ptr) );
+
+            // Grab pointer to memory into which to construct the new vector_t
+            void* storage = ((converter::rvalue_from_python_storage<SubstackXYZ>*) data)->storage.bytes;
+
+            object sequence = object(handle<>(borrowed(obj_ptr)));
+            int len = extract<int>(sequence.attr("__len__")());
+            if (len != 4)
+            {
+                std::ostringstream msg;
+                msg << "SubstackXYZ must have exactly 4 entries, but this sequence contains "
+                    << len << " entries.";
+                throw ErrMsg(msg.str());
+            }
+
+            // in-place construct the new SubstackXYZ
+            int x = extract<int>(sequence[0]);
+            int y = extract<int>(sequence[1]);
+            int z = extract<int>(sequence[2]);
+            int size = extract<int>(sequence[3]);
+            new (storage) SubstackXYZ(x, y, z, size);
+
+            // Stash the memory chunk pointer for later use by boost::python
+            data->convertible = storage;
+        }
+
+        static PyObject* convert(SubstackXYZ const& substack)
+        {
+            return incref(PySubstackXYZ(substack.x, substack.y, substack.z, substack.size).ptr());
+        }
+    };
+    object substack_to_python_substack::PySubstackXYZ;
+
+
+    //!*********************************************************************************************
     //! This converts BinaryDataPtr objects into Python strings.
     //! NOTE: It copies the data.
     //!*********************************************************************************************

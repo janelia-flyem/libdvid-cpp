@@ -50,8 +50,15 @@ namespace libdvid { namespace python {
         // http://docs.scipy.org/doc/numpy/reference/c-api.array.html#importing-the-api
         import_array();
 
+        block_to_python_block();
+        point_to_python_point();
+        substack_to_python_substack();
+
         // Register custom Python -> C++ converters.
         std_vector_from_python_iterable<unsigned int>();
+        std_vector_from_python_iterable<BlockXYZ>();
+        std_vector_from_python_iterable<SubstackXYZ>();
+        std_vector_from_python_iterable<PointXYZ>();
         std_string_from_python_none(); // None -> std::string("")
         binary_data_ptr_from_python_buffer();
 
