@@ -32,7 +32,7 @@ To install libdvid:
 
 This will install the library libdvidcpp.a.
 
-### buildem instanllation
+### buildem installation
 
 We also enable installation using [buildem](https://github.com/janelia-flyem/buildem).
 Buildem automatically builds all of libdvid dependencies and installs
