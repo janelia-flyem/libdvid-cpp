@@ -104,6 +104,11 @@ endif (NOT ${BUILDEM_DIR} STREQUAL "None")
 
 include_directories (BEFORE ${CMAKE_SOURCE_DIR}/libdvid ${CMAKE_SOURCE_DIR})
 
+if (NOT MSVC)
+    # The -fPIC flag is necessary for "relocatable" code that might be included in an .so
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC")
+endif()
+
 # Compile libdvidcpp library components
 add_library (dvidcpp src/DVIDNodeService.cpp src/DVIDServerService.cpp src/DVIDConnection.cpp src/DVIDException.cpp src/DVIDGraph.cpp src/BinaryData.cpp)
 target_link_libraries (dvidcpp ${LIBDVID_EXT_LIBS})

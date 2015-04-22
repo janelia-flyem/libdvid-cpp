@@ -157,10 +157,6 @@ endif()
 
 include_directories(${PYTHON_INCLUDE_PATH} ${PYTHON_NUMPY_INCLUDE_DIR})
 
-if (NOT MSVC)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC")
-endif()
-
 add_library( _dvid_python SHARED src/libdvid_python.cpp )
 
 target_link_libraries( _dvid_python dvidcpp ${support_LIBS} ${boostpython_LIB} ${PYTHON_LIBRARIES} )
