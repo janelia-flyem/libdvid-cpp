@@ -99,7 +99,16 @@ else ()
     if (LIBDVID_WRAP_PYTHON)
         set(boostpython_LIB boost_python)
     endif()
-    set (support_LIBS ${json_LIB} ${boost_LIBS} png curl jpeg lz4)
+
+    FIND_PACKAGE(PNG REQUIRED)
+    FIND_PACKAGE(JPEG REQUIRED)
+    FIND_PACKAGE(CURL REQUIRED)
+    FIND_LIBRARY(LZ4_LIBRARY lz4)
+    if (NOT LZ4_LIBRARY)
+        message(FATAL_ERROR "*** Could not find lz4 library ***")
+    endif()    
+
+    set (support_LIBS ${json_LIB} ${boost_LIBS} ${PNG_LIBRARIES} ${CURL_LIBRARIES} ${JPEG_LIBRARIES} ${LZ4_LIBRARY})
 endif (NOT ${BUILDEM_DIR} STREQUAL "None")
 
 include_directories (BEFORE ${CMAKE_SOURCE_DIR}/libdvid ${CMAKE_SOURCE_DIR})
