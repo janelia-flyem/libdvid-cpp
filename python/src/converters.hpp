@@ -17,8 +17,6 @@
 #include "BinaryData.h"
 #include "DVIDException.h"
 
-using namespace boost::python;
-
 namespace libdvid { namespace python {
 
 	//*********************************************************************************************
@@ -66,10 +64,8 @@ namespace libdvid { namespace python {
     
         std_vector_from_python_iterable()
         {
-          converter::registry::push_back(
-              &convertible,
-              &construct,
-              type_id<vector_t>());
+            using namespace boost::python;
+            converter::registry::push_back( &convertible, &construct, type_id<vector_t>());
         }
     
         // Determine if obj_ptr can be converted in a vector
@@ -83,8 +79,10 @@ namespace libdvid { namespace python {
         }
     
         // Convert obj_ptr into a vector
-        static void construct( PyObject* obj_ptr, converter::rvalue_from_python_stage1_data* data)
+        static void construct( PyObject* obj_ptr, boost::python::converter::rvalue_from_python_stage1_data* data)
         {
+            using namespace boost::python;
+
             assert( PySequence_Check(obj_ptr) );
     
             // Grab pointer to memory into which to construct the new vector_t
@@ -110,10 +108,8 @@ namespace libdvid { namespace python {
     {
         std_string_from_python_none()
         {
-          converter::registry::push_back(
-              &convertible,
-              &construct,
-              type_id<std::string>());
+            using namespace boost::python;
+            converter::registry::push_back(&convertible, &construct, type_id<std::string>());
         }
     
         // Determine if obj_ptr is None
@@ -127,8 +123,10 @@ namespace libdvid { namespace python {
         }
     
         // Convert obj_ptr into a std::string
-        static void construct( PyObject* obj_ptr, converter::rvalue_from_python_stage1_data* data)
+        static void construct( PyObject* obj_ptr, boost::python::converter::rvalue_from_python_stage1_data* data)
         {
+            using namespace boost::python;
+
             assert (obj_ptr == Py_None);
     
             // Grab pointer to memory into which to construct the std::string
@@ -150,10 +148,8 @@ namespace libdvid { namespace python {
     {
         binary_data_ptr_from_python_buffer()
         {
-          converter::registry::push_back(
-              &convertible,
-              &construct,
-              type_id<BinaryDataPtr>());
+            using namespace boost::python;
+            converter::registry::push_back(&convertible, &construct, type_id<BinaryDataPtr>());
         }
 
         static void* convertible(PyObject* obj_ptr)
@@ -167,9 +163,8 @@ namespace libdvid { namespace python {
             return obj_ptr;
         }
 
-        static void construct( PyObject* obj_ptr, converter::rvalue_from_python_stage1_data* data)
+        static void construct( PyObject* obj_ptr, boost::python::converter::rvalue_from_python_stage1_data* data)
         {
-            using namespace libdvid;
             using namespace boost::python;
 
             BinaryDataPtr binary_data;
@@ -219,12 +214,14 @@ namespace libdvid { namespace python {
     {
     	binary_data_ptr_to_python_str()
     	{
+            using namespace boost::python;
             to_python_converter<BinaryDataPtr, binary_data_ptr_to_python_str>();
     	}
 
     	static PyObject* convert(BinaryDataPtr const& binary_data)
         {
-            return PyString_FromStringAndSize( binary_data->get_data().c_str(), binary_data->get_data().size() );
+            return PyString_FromStringAndSize( binary_data->get_data().c_str(),
+            								   binary_data->get_data().size() );
         }
     };
 
@@ -236,6 +233,7 @@ namespace libdvid { namespace python {
     {
     	json_value_to_dict()
     	{
+            using namespace boost::python;
             to_python_converter<Json::Value, json_value_to_dict>();
     	}
 
@@ -265,8 +263,8 @@ namespace libdvid { namespace python {
     //! compile-time mapping from integer types to numpy typenumbers.
     //!*********************************************************************************************
     template <typename T> struct numpy_typenums {};
-    template <> struct numpy_typenums<libdvid::uint8> { static const int typenum = NPY_UINT8; };
-    template <> struct numpy_typenums<libdvid::uint64> { static const int typenum = NPY_UINT64; };
+    template <> struct numpy_typenums<uint8> { static const int typenum = NPY_UINT8; };
+    template <> struct numpy_typenums<uint64> { static const int typenum = NPY_UINT64; };
 
     //!*********************************************************************************************
     //! Declares a mapping between numpy typenumbers and the corresponding dtype names
@@ -286,11 +284,13 @@ namespace libdvid { namespace python {
 
         struct BinaryDataHolder
         {
-            libdvid::BinaryDataPtr ptr;
+            BinaryDataPtr ptr;
         };
 
         ndarray_to_volume()
         {
+            using namespace boost::python;
+
         	// Register python -> C++
         	converter::registry::push_back( &convertible, &construct, type_id<VolumeType>() );
 
@@ -313,10 +313,9 @@ namespace libdvid { namespace python {
 
         //! Converts the given numpy ndarray object into a DVIDVoxels object.
         //! NOTE: The data from the ndarray is *copied* into the new DVIDVoxels object.
-        static void construct( PyObject* obj_ptr, converter::rvalue_from_python_stage1_data* data)
+        static void construct( PyObject* obj_ptr, boost::python::converter::rvalue_from_python_stage1_data* data)
         {
             using namespace boost::python;
-            using namespace libdvid;
 
             assert(PyArray_Check(obj_ptr));
 
@@ -379,7 +378,6 @@ namespace libdvid { namespace python {
         static PyObject* convert( VolumeType volume )
         {
             using namespace boost::python;
-            using namespace libdvid;
 
             typedef typename VolumeType::voxel_type voxel_type;
 
@@ -429,7 +427,7 @@ namespace libdvid { namespace python {
     //  reference to it so we can instantiate it ourselves.
     template <class VolumeType>
     boost::python::object ndarray_to_volume<VolumeType>::PyBinaryDataHolder =
-		class_<ndarray_to_volume<VolumeType>::BinaryDataHolder>("BinaryDataHolder");
+		boost::python::class_<ndarray_to_volume<VolumeType>::BinaryDataHolder>("BinaryDataHolder");
 
 
     //!*********************************************************************************************
@@ -445,9 +443,10 @@ namespace libdvid { namespace python {
             block_to_python_block::register_from_python();
         }
 
-        static object PyBlockXYZ;
+        static boost::python::object PyBlockXYZ;
         static void register_to_python()
         {
+            using namespace boost::python;
             object collections = import("collections");
             PyBlockXYZ = collections.attr("namedtuple")("BlockXYZ", "x y z");
             scope().attr("BlockXYZ") = PyBlockXYZ;
@@ -456,10 +455,10 @@ namespace libdvid { namespace python {
 
         static void register_from_python()
         {
-            converter::registry::push_back(
-                &block_to_python_block::convertible,
-                &block_to_python_block::construct,
-                type_id<BlockXYZ>());
+            using namespace boost::python;
+            converter::registry::push_back( &block_to_python_block::convertible,
+            								&block_to_python_block::construct,
+											type_id<BlockXYZ>() );
         }
 
         // Determine if obj_ptr can be converted to a BlockXYZ
@@ -476,8 +475,10 @@ namespace libdvid { namespace python {
         }
 
         // Convert obj_ptr into a BlockXYZ
-        static void construct( PyObject* obj_ptr, converter::rvalue_from_python_stage1_data* data)
+        static void construct( PyObject* obj_ptr, boost::python::converter::rvalue_from_python_stage1_data* data)
         {
+            using namespace boost::python;
+
             assert( PySequence_Check(obj_ptr) );
 
             // Grab pointer to memory into which to construct the new vector_t
@@ -506,10 +507,11 @@ namespace libdvid { namespace python {
 
         static PyObject* convert(BlockXYZ const& block)
         {
+            using namespace boost::python;
             return incref(PyBlockXYZ(block.x, block.y, block.z).ptr());
         }
     };
-    object block_to_python_block::PyBlockXYZ;
+    boost::python::object block_to_python_block::PyBlockXYZ;
 
     //!*********************************************************************************************
     //! Convert PointXYZ in both directions:
@@ -524,9 +526,10 @@ namespace libdvid { namespace python {
     		point_to_python_point::register_from_python();
         }
 
-        static object PyPointXYZ;
+    	static boost::python::object PyPointXYZ;
         static void register_to_python()
         {
+            using namespace boost::python;
             object collections = import("collections");
             PyPointXYZ = collections.attr("namedtuple")("PointXYZ", "x y z");
             scope().attr("PointXYZ") = PyPointXYZ;
@@ -535,10 +538,10 @@ namespace libdvid { namespace python {
 
         static void register_from_python()
         {
-            converter::registry::push_back(
-                &point_to_python_point::convertible,
-                &point_to_python_point::construct,
-                type_id<PointXYZ>());
+            using namespace boost::python;
+            converter::registry::push_back( &point_to_python_point::convertible,
+            								&point_to_python_point::construct,
+											type_id<PointXYZ>() );
         }
 
         // Determine if obj_ptr can be converted to a PointXYZ
@@ -555,8 +558,9 @@ namespace libdvid { namespace python {
         }
 
         // Convert obj_ptr into a PointXYZ
-        static void construct( PyObject* obj_ptr, converter::rvalue_from_python_stage1_data* data)
+        static void construct( PyObject* obj_ptr, boost::python::converter::rvalue_from_python_stage1_data* data)
         {
+            using namespace boost::python;
             assert( PySequence_Check(obj_ptr) );
 
             // Grab pointer to memory into which to construct the new vector_t
@@ -585,10 +589,11 @@ namespace libdvid { namespace python {
 
         static PyObject* convert(PointXYZ const& point)
         {
+            using namespace boost::python;
             return incref(PyPointXYZ(point.x, point.y, point.z).ptr());
         }
     };
-    object point_to_python_point::PyPointXYZ;
+    boost::python::object point_to_python_point::PyPointXYZ;
 
 
     //!*********************************************************************************************
@@ -604,9 +609,10 @@ namespace libdvid { namespace python {
     		substack_to_python_substack::register_from_python();
         }
 
-        static object PySubstackXYZ;
+    	static boost::python::object PySubstackXYZ;
         static void register_to_python()
         {
+            using namespace boost::python;
             object collections = import("collections");
             PySubstackXYZ = collections.attr("namedtuple")("SubstackXYZ", "x y z size");
             scope().attr("SubstackXYZ") = PySubstackXYZ;
@@ -615,10 +621,10 @@ namespace libdvid { namespace python {
 
         static void register_from_python()
         {
-            converter::registry::push_back(
-                &substack_to_python_substack::convertible,
-                &substack_to_python_substack::construct,
-                type_id<SubstackXYZ>());
+            using namespace boost::python;
+            converter::registry::push_back( &substack_to_python_substack::convertible,
+            								&substack_to_python_substack::construct,
+											type_id<SubstackXYZ>() );
         }
 
         // Determine if obj_ptr can be converted to a SubstackXYZ
@@ -635,8 +641,9 @@ namespace libdvid { namespace python {
         }
 
         // Convert obj_ptr into a SubstackXYZ
-        static void construct( PyObject* obj_ptr, converter::rvalue_from_python_stage1_data* data)
+        static void construct( PyObject* obj_ptr, boost::python::converter::rvalue_from_python_stage1_data* data)
         {
+            using namespace boost::python;
             assert( PySequence_Check(obj_ptr) );
 
             // Grab pointer to memory into which to construct the new vector_t
@@ -665,10 +672,11 @@ namespace libdvid { namespace python {
 
         static PyObject* convert(SubstackXYZ const& substack)
         {
+            using namespace boost::python;
             return incref(PySubstackXYZ(substack.x, substack.y, substack.z, substack.size).ptr());
         }
     };
-    object substack_to_python_substack::PySubstackXYZ;
+    boost::python::object substack_to_python_substack::PySubstackXYZ;
 
 
 }} // namespace libdvid::python

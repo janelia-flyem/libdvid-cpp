@@ -29,7 +29,6 @@ namespace libdvid { namespace python {
                                        BinaryDataPtr payload_data,
                                        int timeout )
     {
-        using namespace libdvid;
         using namespace boost::python;
 
         BinaryDataPtr results = BinaryData::create_binary_data();
@@ -44,7 +43,6 @@ namespace libdvid { namespace python {
     //! This wrapper function returns the result as a python list of BlockXYZ objects.
     boost::python::list get_roi( DVIDNodeService & nodeService, std::string roi_name )
     {
-    	using namespace libdvid;
     	using namespace boost::python;
 
     	// Retrieve from DVID
@@ -67,7 +65,9 @@ namespace libdvid { namespace python {
     										std::string roi_name,
 											unsigned int partition_size )
     {
-    	// Retrieve from DVID
+        using namespace boost::python;
+
+        // Retrieve from DVID
     	std::vector<SubstackXYZ> result_substacks;
     	double packing_factor = nodeService.get_roi_partition( roi_name, result_substacks, partition_size );
 
@@ -87,7 +87,6 @@ namespace libdvid { namespace python {
     				  	  	  	     std::string roi_name,
 									 const std::vector<PointXYZ>& points )
     {
-    	using namespace libdvid;
     	using namespace boost::python;
 
     	// Retrieve from DVID
@@ -109,7 +108,6 @@ namespace libdvid { namespace python {
      */
     BOOST_PYTHON_MODULE(_dvid_python)
     {
-        using namespace libdvid;
         using namespace boost::python;
 
         // http://docs.scipy.org/doc/numpy/reference/c-api.array.html#importing-the-api
