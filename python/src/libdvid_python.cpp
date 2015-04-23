@@ -1,5 +1,6 @@
 #include <boost/python.hpp>
 #include <boost/foreach.hpp>
+#include <boost/assign/list_of.hpp>
 
 #define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
 
@@ -120,9 +121,20 @@ namespace libdvid { namespace python {
         ndarray_to_volume<Grayscale2D>();
         ndarray_to_volume<Labels2D>();
 
-        block_to_python_block();
-        point_to_python_point();
-        substack_to_python_substack();
+        // BlockXYZ
+        namedtuple_converter<BlockXYZ, int, 3>::class_member_ptr_vec block_members =
+			boost::assign::list_of(&BlockXYZ::x)(&BlockXYZ::y)(&BlockXYZ::z);
+        namedtuple_converter<BlockXYZ, int, 3>("BlockXYZ", "x y z", block_members);
+
+        // PointXYZ
+        namedtuple_converter<PointXYZ, int, 3>::class_member_ptr_vec point_members =
+			boost::assign::list_of(&PointXYZ::x)(&PointXYZ::y)(&PointXYZ::z);
+        namedtuple_converter<PointXYZ, int, 3>("PointXYZ", "x y z", point_members);
+
+        // SubstackXYZ
+        namedtuple_converter<SubstackXYZ, int, 4>::class_member_ptr_vec substack_members =
+			boost::assign::list_of(&SubstackXYZ::x)(&SubstackXYZ::y)(&SubstackXYZ::z)(&SubstackXYZ::size);
+        namedtuple_converter<SubstackXYZ, int, 4>("SubstackXYZ", "x y z size", substack_members);
 
         binary_data_ptr_to_python_str();
         binary_data_ptr_from_python_buffer();

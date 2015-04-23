@@ -4,6 +4,7 @@
 
 #include <boost/unordered_map.hpp>
 #include <boost/assign/list_of.hpp>
+#include <boost/utility/enable_if.hpp>
 
 #include <Python.h>
 #include <boost/python.hpp>
@@ -424,45 +425,53 @@ namespace libdvid { namespace python {
             return array_object;
         }
     };
-    // Define a python version of BinaryDataHolder, and keep a global
-    //  reference to it so we can instantiate it ourselves.
     template <class VolumeType>
     boost::python::object ndarray_to_volume<VolumeType>::PyBinaryDataHolder =
 		boost::python::class_<ndarray_to_volume<VolumeType>::BinaryDataHolder>("BinaryDataHolder");
 
-
     //!*********************************************************************************************
-    //! Convert BlockXYZ in both directions:
+    //! Convert tuple-like types (e.g. BlockXYZ, PointXYZ, SubstackXYZ)
     //! tuple (Python) --> BlockXYZ (C++)
     //! BlockXYZ (C++) --> namedtuple("BlockXYZ", "x y z") (Python)
     //!*********************************************************************************************
-    struct block_to_python_block
+	template <class ClassType, typename ElementType, int N>
+    struct namedtuple_converter
     {
-        block_to_python_block()
+		typedef const int ClassType::* class_member_ptr;
+		typedef std::vector<class_member_ptr> class_member_ptr_vec;
+
+		static std::string classname;
+		static class_member_ptr_vec class_member_ptrs;
+
+		namedtuple_converter( std::string const & classname_,
+							  std::string const & elementnames,
+							  class_member_ptr_vec member_ptrs )
         {
-            block_to_python_block::register_to_python();
-            block_to_python_block::register_from_python();
+			assert(member_ptrs.size() == N && "Must pass exactly N member pointers for an N-arity type.");
+			classname = classname_;
+			class_member_ptrs = member_ptrs;
+			register_to_python( classname_, elementnames );
+			register_from_python();
         }
 
-        static boost::python::object PyBlockXYZ;
-        static void register_to_python()
+        static boost::python::object PyTupleLikeClass;
+        static void register_to_python( std::string const & classname,
+        								std::string const & elementnames )
         {
             using namespace boost::python;
             object collections = import("collections");
-            PyBlockXYZ = collections.attr("namedtuple")("BlockXYZ", "x y z");
-            scope().attr("BlockXYZ") = PyBlockXYZ;
-            to_python_converter<BlockXYZ, block_to_python_block>();
+            PyTupleLikeClass = collections.attr("namedtuple")(classname, elementnames);
+            scope().attr(classname.c_str()) = PyTupleLikeClass;
+            to_python_converter<ClassType, namedtuple_converter<ClassType,ElementType,N> >();
         }
 
         static void register_from_python()
         {
             using namespace boost::python;
-            converter::registry::push_back( &block_to_python_block::convertible,
-            								&block_to_python_block::construct,
-											type_id<BlockXYZ>() );
+            converter::registry::push_back( &convertible, &construct, type_id<ClassType>() );
         }
 
-        // Determine if obj_ptr can be converted to a BlockXYZ
+        // Determine if obj_ptr can be converted to our ClassType
         static void* convertible(PyObject* obj_ptr)
         {
             if (!PySequence_Check(obj_ptr))
@@ -475,7 +484,7 @@ namespace libdvid { namespace python {
             return obj_ptr;
         }
 
-        // Convert obj_ptr into a BlockXYZ
+        // Convert obj_ptr into a ClassType
         static void construct( PyObject* obj_ptr, boost::python::converter::rvalue_from_python_stage1_data* data)
         {
             using namespace boost::python;
@@ -483,201 +492,151 @@ namespace libdvid { namespace python {
             assert( PySequence_Check(obj_ptr) );
 
             // Grab pointer to memory into which to construct the new vector_t
-            void* storage = ((converter::rvalue_from_python_storage<BlockXYZ>*) data)->storage.bytes;
+            void* storage = ((converter::rvalue_from_python_storage<ClassType>*) data)->storage.bytes;
 
             object sequence = object(handle<>(borrowed(obj_ptr)));
             int len = extract<int>(sequence.attr("__len__")());
-            if (len != 3)
+            if (len != N)
             {
                 std::ostringstream msg;
-                msg << "BlockXYZ must have exactly 3 entries, but this sequence contains "
+                msg << classname << " must have exactly "
+					<< N << " entries, but this sequence contains "
                     << len << " entries.";
                 throw ErrMsg(msg.str());
             }
 
-            // in-place construct the new BlockXYZ
-            int x = extract<int>(sequence[0]);
-            int y = extract<int>(sequence[1]);
-            int z = extract<int>(sequence[2]);
-            new (storage) BlockXYZ(x, y, z);
+            //construct_in_place_from_sequence<ClassType, ElementType, N>::construct(storage, sequence);
+            in_place_new_from_sequence<N>(storage, sequence);
 
             // Stash the memory chunk pointer for later use by boost::python
             data->convertible = storage;
         }
 
+        //!
+        //! construction function.
+        //! Thanks to enable_if, only one of the following overloads will be active for a given N.
+        //!
 
-        static PyObject* convert(BlockXYZ const& block)
+		template<int NN> // 1
+		static void in_place_new_from_sequence( void* storage, boost::python::object sequence,
+												typename boost::enable_if_c<NN == 1>::type* = 0 )
+	    {
+            using namespace boost::python;
+	        new (storage) ClassType( extract<ElementType>(sequence[0]) );
+	    }
+
+		template<int NN> // 2
+		static void in_place_new_from_sequence( void* storage, boost::python::object sequence,
+												typename boost::enable_if_c<NN == 2>::type* = 0 )
+	    {
+            using namespace boost::python;
+	        new (storage) ClassType( extract<ElementType>(sequence[0]),
+	        						 extract<ElementType>(sequence[1]) );
+	    }
+
+		template<int NN> // 3
+		static void in_place_new_from_sequence( void* storage, boost::python::object sequence,
+												typename boost::enable_if_c<NN == 3>::type* = 0 )
+	    {
+            using namespace boost::python;
+	        new (storage) ClassType( extract<ElementType>(sequence[0]),
+	        						 extract<ElementType>(sequence[1]),
+	        						 extract<ElementType>(sequence[2]) );
+	    }
+
+		template<int NN> // 4
+		static void in_place_new_from_sequence( void* storage, boost::python::object sequence,
+												typename boost::enable_if_c<NN == 4>::type* = 0 )
+	    {
+            using namespace boost::python;
+	        new (storage) ClassType( extract<ElementType>(sequence[0]),
+	        						 extract<ElementType>(sequence[1]),
+	        						 extract<ElementType>(sequence[2]),
+	        						 extract<ElementType>(sequence[3]) );
+	    }
+
+		template<int NN> // 5
+		static void in_place_new_from_sequence( void* storage, boost::python::object sequence,
+												typename boost::enable_if_c<NN == 5>::type* = 0 )
+	    {
+            using namespace boost::python;
+	        new (storage) ClassType( extract<ElementType>(sequence[0]),
+	        						 extract<ElementType>(sequence[1]),
+	        						 extract<ElementType>(sequence[2]),
+	        						 extract<ElementType>(sequence[3]),
+	        						 extract<ElementType>(sequence[4]) );
+	    }
+
+		//!
+		//! Conversion functions (C++ -> Python)
+        //! Thanks to enable_if, only one of the following convert_impl()
+		//!  overloads will be active for a given N.
+		//!
+
+        static PyObject* convert( ClassType const& block )
+        {
+        	return convert_impl<N>( block );
+        }
+
+		template <int NN> // 1
+        static PyObject* convert_impl( ClassType const& block,
+        						  	   typename boost::enable_if_c<NN == 1>::type* = 0 )
         {
             using namespace boost::python;
-            return incref(PyBlockXYZ(block.x, block.y, block.z).ptr());
+            return incref(PyTupleLikeClass( block.*class_member_ptrs[0] ).ptr());
         }
+
+		template <int NN> // 2
+        static PyObject* convert_impl( ClassType const& block,
+        						  	   typename boost::enable_if_c<NN == 2>::type* = 0 )
+        {
+            using namespace boost::python;
+            return incref(PyTupleLikeClass( block.*class_member_ptrs[0],
+            								block.*class_member_ptrs[1] ).ptr());
+        }
+
+		template <int NN> // 3
+        static PyObject* convert_impl( ClassType const& block,
+        						   	   typename boost::enable_if_c<NN == 3>::type* = 0 )
+        {
+            using namespace boost::python;
+            return incref(PyTupleLikeClass( block.*class_member_ptrs[0],
+            								block.*class_member_ptrs[1],
+            								block.*class_member_ptrs[2] ).ptr());
+        }
+
+		template <int NN> // 4
+        static PyObject* convert_impl( ClassType const& block,
+        						  	   typename boost::enable_if_c<NN == 4>::type* = 0 )
+        {
+            using namespace boost::python;
+            return incref(PyTupleLikeClass( block.*class_member_ptrs[0],
+            								block.*class_member_ptrs[1],
+            								block.*class_member_ptrs[2],
+            								block.*class_member_ptrs[3] ).ptr());
+        }
+
+		template <int NN> // 5
+        static PyObject* convert_impl( ClassType const& block,
+        						  	   typename boost::enable_if_c<NN == 5>::type* = 0 )
+        {
+            using namespace boost::python;
+            return incref(PyTupleLikeClass( block.*class_member_ptrs[0],
+            								block.*class_member_ptrs[1],
+            								block.*class_member_ptrs[2],
+            								block.*class_member_ptrs[3],
+            								block.*class_member_ptrs[4] ).ptr());
+        }
+
     };
-    boost::python::object block_to_python_block::PyBlockXYZ;
+	// Linkage for static members
+	template <class T, typename E, int N>
+    boost::python::object namedtuple_converter<T,E,N>::PyTupleLikeClass;
 
-    //!*********************************************************************************************
-    //! Convert PointXYZ in both directions:
-    //! tuple (Python) --> PointXYZ (C++)
-    //! PointXYZ (C++) --> namedtuple("PointXYZ", "x y z") (Python)
-    //!*********************************************************************************************
-    struct point_to_python_point
-    {
-    	point_to_python_point()
-        {
-    		point_to_python_point::register_to_python();
-    		point_to_python_point::register_from_python();
-        }
+	template <class T, typename E, int N>
+	std::string namedtuple_converter<T,E,N>::classname;
 
-    	static boost::python::object PyPointXYZ;
-        static void register_to_python()
-        {
-            using namespace boost::python;
-            object collections = import("collections");
-            PyPointXYZ = collections.attr("namedtuple")("PointXYZ", "x y z");
-            scope().attr("PointXYZ") = PyPointXYZ;
-            to_python_converter<PointXYZ, point_to_python_point>();
-        }
-
-        static void register_from_python()
-        {
-            using namespace boost::python;
-            converter::registry::push_back( &point_to_python_point::convertible,
-            								&point_to_python_point::construct,
-											type_id<PointXYZ>() );
-        }
-
-        // Determine if obj_ptr can be converted to a PointXYZ
-        static void* convertible(PyObject* obj_ptr)
-        {
-            if (!PySequence_Check(obj_ptr))
-            {
-                return 0;
-            }
-
-            // We could check the length here, but it's nicer to
-            // give the user an explanatory exception in construct()
-            return obj_ptr;
-        }
-
-        // Convert obj_ptr into a PointXYZ
-        static void construct( PyObject* obj_ptr, boost::python::converter::rvalue_from_python_stage1_data* data)
-        {
-            using namespace boost::python;
-            assert( PySequence_Check(obj_ptr) );
-
-            // Grab pointer to memory into which to construct the new vector_t
-            void* storage = ((converter::rvalue_from_python_storage<PointXYZ>*) data)->storage.bytes;
-
-            object sequence = object(handle<>(borrowed(obj_ptr)));
-            int len = extract<int>(sequence.attr("__len__")());
-            if (len != 3)
-            {
-                std::ostringstream msg;
-                msg << "PointXYZ must have exactly 3 entries, but this sequence contains "
-                    << len << " entries.";
-                throw ErrMsg(msg.str());
-            }
-
-            // in-place construct the new PointXYZ
-            int x = extract<int>(sequence[0]);
-            int y = extract<int>(sequence[1]);
-            int z = extract<int>(sequence[2]);
-            new (storage) PointXYZ(x, y, z);
-
-            // Stash the memory chunk pointer for later use by boost::python
-            data->convertible = storage;
-        }
-
-
-        static PyObject* convert(PointXYZ const& point)
-        {
-            using namespace boost::python;
-            return incref(PyPointXYZ(point.x, point.y, point.z).ptr());
-        }
-    };
-    boost::python::object point_to_python_point::PyPointXYZ;
-
-
-    //!*********************************************************************************************
-    //! Convert SubstackXYZ in both directions:
-    //! tuple (Python) --> SubstackXYZ (C++)
-    //! SubstackXYZ (C++) --> namedtuple("SubstackXYZ", "x y z size") (Python)
-    //!*********************************************************************************************
-    struct substack_to_python_substack
-    {
-    	substack_to_python_substack()
-        {
-    		substack_to_python_substack::register_to_python();
-    		substack_to_python_substack::register_from_python();
-        }
-
-    	static boost::python::object PySubstackXYZ;
-        static void register_to_python()
-        {
-            using namespace boost::python;
-            object collections = import("collections");
-            PySubstackXYZ = collections.attr("namedtuple")("SubstackXYZ", "x y z size");
-            scope().attr("SubstackXYZ") = PySubstackXYZ;
-            to_python_converter<SubstackXYZ, substack_to_python_substack>();
-        }
-
-        static void register_from_python()
-        {
-            using namespace boost::python;
-            converter::registry::push_back( &substack_to_python_substack::convertible,
-            								&substack_to_python_substack::construct,
-											type_id<SubstackXYZ>() );
-        }
-
-        // Determine if obj_ptr can be converted to a SubstackXYZ
-        static void* convertible(PyObject* obj_ptr)
-        {
-            if (!PySequence_Check(obj_ptr))
-            {
-                return 0;
-            }
-
-            // We could check the length here, but it's nicer to
-            // give the user an explanatory exception in construct()
-            return obj_ptr;
-        }
-
-        // Convert obj_ptr into a SubstackXYZ
-        static void construct( PyObject* obj_ptr, boost::python::converter::rvalue_from_python_stage1_data* data)
-        {
-            using namespace boost::python;
-            assert( PySequence_Check(obj_ptr) );
-
-            // Grab pointer to memory into which to construct the new vector_t
-            void* storage = ((converter::rvalue_from_python_storage<SubstackXYZ>*) data)->storage.bytes;
-
-            object sequence = object(handle<>(borrowed(obj_ptr)));
-            int len = extract<int>(sequence.attr("__len__")());
-            if (len != 4)
-            {
-                std::ostringstream msg;
-                msg << "SubstackXYZ must have exactly 4 entries, but this sequence contains "
-                    << len << " entries.";
-                throw ErrMsg(msg.str());
-            }
-
-            // in-place construct the new SubstackXYZ
-            int x = extract<int>(sequence[0]);
-            int y = extract<int>(sequence[1]);
-            int z = extract<int>(sequence[2]);
-            int size = extract<int>(sequence[3]);
-            new (storage) SubstackXYZ(x, y, z, size);
-
-            // Stash the memory chunk pointer for later use by boost::python
-            data->convertible = storage;
-        }
-
-        static PyObject* convert(SubstackXYZ const& substack)
-        {
-            using namespace boost::python;
-            return incref(PySubstackXYZ(substack.x, substack.y, substack.z, substack.size).ptr());
-        }
-    };
-    boost::python::object substack_to_python_substack::PySubstackXYZ;
-
+	template <class T, typename E, int N>
+	typename namedtuple_converter<T,E,N>::class_member_ptr_vec namedtuple_converter<T,E,N>::class_member_ptrs;
 
 }} // namespace libdvid::python
