@@ -115,31 +115,25 @@ namespace libdvid { namespace python {
         // http://docs.scipy.org/doc/numpy/reference/c-api.array.html#importing-the-api
         import_array();
 
-        block_to_python_block();
-        point_to_python_point();
-        substack_to_python_substack();
-
         // Register custom Python -> C++ converters.
         std_vector_from_python_iterable<unsigned int>();
         std_vector_from_python_iterable<BlockXYZ>();
         std_vector_from_python_iterable<SubstackXYZ>();
         std_vector_from_python_iterable<PointXYZ>();
-        std_string_from_python_none(); // None -> std::string("")
-        binary_data_ptr_from_python_buffer();
 
         ndarray_to_volume<Grayscale3D>();
         ndarray_to_volume<Labels3D>();
         ndarray_to_volume<Grayscale2D>();
         ndarray_to_volume<Labels2D>();
 
-        // Register custom C++ -> Python converters.
-        to_python_converter<BinaryDataPtr, binary_data_ptr_to_python_str>();
-        to_python_converter<Json::Value, json_value_to_dict>();
+        block_to_python_block();
+        point_to_python_point();
+        substack_to_python_substack();
 
-        to_python_converter<Grayscale3D, volume_to_ndarray<Grayscale3D> >();
-        to_python_converter<Labels3D, volume_to_ndarray<Labels3D> >();
-        to_python_converter<Grayscale2D, volume_to_ndarray<Grayscale2D> >();
-        to_python_converter<Labels2D, volume_to_ndarray<Labels2D> >();
+        binary_data_ptr_to_python_str();
+        binary_data_ptr_from_python_buffer();
+        json_value_to_dict();
+        std_string_from_python_none(); // None -> std::string("")
 
         // DVIDConnection python class definition
         class_<DVIDConnection>("DVIDConnection", init<std::string>())
@@ -213,9 +207,6 @@ namespace libdvid { namespace python {
             .value("YZ", YZ)
         ;
 
-        // Define a python version of BinaryDataHolder, and keep a global
-        //  reference to it so we can instantiate it ourselves.
-        PyBinaryDataHolder = class_<BinaryDataHolder>("BinaryDataHolder");
     }
 
 }} // namespace libdvid::python

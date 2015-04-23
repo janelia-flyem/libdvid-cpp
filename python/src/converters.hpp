@@ -21,23 +21,27 @@ using namespace boost::python;
 
 namespace libdvid { namespace python {
 
-    //*********************************************************************************************
-    //* Helpers
-    //*********************************************************************************************
-
-    //! PyBinaryDataHolder is the Python wrapper class for the SmartPtrHolder<BinaryDataPtr> class.
-    //! It is exposed here as a global so helper functions can use it to manage BinaryData objects.
-    //! It must be assigned in the module init section (see libdvid_python.cpp).
-    boost::python::object PyBinaryDataHolder;
-    
-    template<class SmartPtr>
-    struct SmartPtrHolder
-    {
-        SmartPtrHolder() {}
-        SmartPtr ptr;
-    };
-    typedef SmartPtrHolder<libdvid::BinaryDataPtr> BinaryDataHolder;
-
+	//*********************************************************************************************
+	//! The structs in this file implement the functions boost-python needs to convert between
+	//!  custom C++ objects and Python objects.
+	//!
+	//! The functions are actually registered within these structs' constructors, so to activate a
+	//!  particular conversion, simply instantiate the appropriate struct in your module
+	//!  initialization code.  For example:
+	//!
+	//!  BOOST_PYTHON_MODULE(_my_module)
+	//!  {
+	//!     [... import_array(), other initializations, etc. ...]
+	//!
+	//!     libdvid::python::std_vector_from_python_iterable<unsigned int>();
+	//!
+	//!     [... function definitions, etc. ...]
+	//!  }
+	//!
+	//! For explanation and examples of the general method, see the following links:
+	//! https://misspent.wordpress.com/2009/09/27/how-to-write-boost-python-converters
+	//! http://www.boost.org/doc/libs/1_39_0/libs/python/doc/v2/faq.html#custom_string
+	//*********************************************************************************************
 
     //*********************************************************************************************
     //*********************************************************************************************
@@ -54,9 +58,6 @@ namespace libdvid { namespace python {
     //! NOTE: This does NOT convert the other way, i.e. from std::vector<T> into Python list.
     //!      If you need to return a std::vector<T>, you'll have to implement that separately.
     //!
-    //! For explanation and examples, see the following links:
-    //! https://misspent.wordpress.com/2009/09/27/how-to-write-boost-python-converters
-    //! http://www.boost.org/doc/libs/1_39_0/libs/python/doc/v2/faq.html#custom_string
     //!*********************************************************************************************
     template <typename T>
     struct std_vector_from_python_iterable
@@ -143,108 +144,6 @@ namespace libdvid { namespace python {
     };
 
     //!*********************************************************************************************
-    //! This helper struct is specialized over integer types to provide a
-    //! compile-time mapping from integer types to numpy typenumbers.
-    //!*********************************************************************************************
-    template <typename T> struct numpy_typenums {};
-    template <> struct numpy_typenums<libdvid::uint8> { static const int typenum = NPY_UINT8; };
-    template <> struct numpy_typenums<libdvid::uint64> { static const int typenum = NPY_UINT64; };
-
-    //!*********************************************************************************************
-    //! Declares a mapping between numpy typenumbers and the corresponding dtype names
-    //!*********************************************************************************************
-    static boost::unordered_map<int, std::string> dtype_names =
-        boost::assign::map_list_of
-        (NPY_UINT8, "uint8")
-        (NPY_UINT64, "uint64");
-
-    //!*********************************************************************************************
-    //! Converts the given numpy ndarray object into a DVIDVoxels object.
-    //! NOTE: The data from the ndarray is *copied* into the new DVIDVoxels object.
-    //!*********************************************************************************************
-    template <class VolumeType>
-    struct ndarray_to_volume
-    {
-        ndarray_to_volume()
-        {
-          converter::registry::push_back( &convertible, &construct, type_id<VolumeType>() );
-        }
-    
-        static void* convertible(PyObject* obj_ptr)
-        {
-            if (!PyArray_Check(obj_ptr))
-            {
-                return 0;
-            }
-            // We could also check shape, dtype, etc. here, but it's more helpful to 
-            // wait until construction time, and then throw a specific exception to
-            // tell the user what he did wrong.
-            return obj_ptr;
-        }
-
-        static void construct( PyObject* obj_ptr, converter::rvalue_from_python_stage1_data* data)
-        {
-            using namespace boost::python;
-            using namespace libdvid;
-
-            assert(PyArray_Check(obj_ptr));
-    
-            typedef typename VolumeType::voxel_type voxel_type;
-    
-            object ndarray = object(handle<>(borrowed(obj_ptr)));
-            
-            // Verify ndarray.dtype
-            std::string dtype = extract<std::string>(str(ndarray.attr("dtype")));
-            const int numpy_typenum = numpy_typenums<voxel_type>::typenum;
-            if (dtype != dtype_names[numpy_typenum])
-            {
-                std::ostringstream ssMsg;
-                ssMsg << "Volume has wrong dtype.  Expected " << dtype_names[numpy_typenum] << ", got " << dtype;
-                throw ErrMsg(ssMsg.str());
-            }
-    
-            // Verify ndarray dimensionality.
-            int ndarray_ndim = extract<int>(ndarray.attr("ndim"));
-            if (ndarray_ndim != VolumeType::num_dims)
-            {
-                std::string shape = extract<std::string>(str(ndarray.attr("shape")));
-                std::ostringstream ssMsg;
-                ssMsg << "Volume is not exactly " << VolumeType::num_dims << "D.  Shape is " << shape;
-                throw ErrMsg( ssMsg.str() );
-            }
-
-            // Verify ndarray memory order
-            if (!ndarray.attr("flags")["C_CONTIGUOUS"])
-            {
-                throw ErrMsg("Volume is not C_CONTIGUOUS");
-            }
-    
-            // Extract dims from ndarray.shape
-            object shape = ndarray.attr("shape");
-            typedef stl_input_iterator<Dims_t::value_type> shape_iter_t;
-            Dims_t dims;
-            dims.assign( shape_iter_t(shape), shape_iter_t() );
-    
-            // Extract the voxel count
-            int voxel_count = extract<int>(ndarray.attr("size"));
-    
-            // Obtain a pointer to the array's data
-            PyArrayObject * array_object = reinterpret_cast<PyArrayObject *>( ndarray.ptr() );
-            voxel_type const * voxel_data = static_cast<voxel_type const *>( PyArray_DATA(array_object) );
-
-            // Grab pointer to memory into which to construct the DVIDVoxels
-            void* storage = ((converter::rvalue_from_python_storage<VolumeType>*) data)->storage.bytes;
-
-            // Create DVIDVoxels<> from ndarray data using "in-place" new().
-            // FIXME: The DVIDVoxels constructor copies the data. Is that really necessary?
-            VolumeType * volume = new (storage) VolumeType( voxel_data, voxel_count, dims );
-
-            // Stash the memory chunk pointer for later use by boost.python
-            data->convertible = storage;
-        }
-    };
-
-    //!*********************************************************************************************
     //! Convert Python buffer objects (e.g. str, bytearray) -> BinaryDataPtr
     //!*********************************************************************************************
     struct binary_data_ptr_from_python_buffer
@@ -311,6 +210,227 @@ namespace libdvid { namespace python {
     //* C++ -> Python
     //*********************************************************************************************
     //*********************************************************************************************
+
+    //!*********************************************************************************************
+    //! This converts BinaryDataPtr objects into Python strings.
+    //! NOTE: It copies the data.
+    //!*********************************************************************************************
+    struct binary_data_ptr_to_python_str
+    {
+    	binary_data_ptr_to_python_str()
+    	{
+            to_python_converter<BinaryDataPtr, binary_data_ptr_to_python_str>();
+    	}
+
+    	static PyObject* convert(BinaryDataPtr const& binary_data)
+        {
+            return PyString_FromStringAndSize( binary_data->get_data().c_str(), binary_data->get_data().size() );
+        }
+    };
+
+    //!*********************************************************************************************
+    //! This converts Json::Value objects into python dict objects.
+    //! NOTE: This isn't an efficient conversion method.
+    //!*********************************************************************************************
+    struct json_value_to_dict
+    {
+    	json_value_to_dict()
+    	{
+            to_python_converter<Json::Value, json_value_to_dict>();
+    	}
+
+        static PyObject* convert(Json::Value const & json_value)
+        {
+            using namespace boost::python;
+
+            // For now, easiest thing to do is just export as
+            //  string and re-parse via python's json module.
+            std::ostringstream ss;
+            ss << json_value;
+
+            object json = import("json");
+            return incref(json.attr("loads")( ss.str() ).ptr());
+        }
+    };
+
+
+    //*********************************************************************************************
+    //*********************************************************************************************
+    //* C++ <--> Python
+    //*********************************************************************************************
+    //*********************************************************************************************
+
+    //!*********************************************************************************************
+    //! This helper struct is specialized over integer types to provide a
+    //! compile-time mapping from integer types to numpy typenumbers.
+    //!*********************************************************************************************
+    template <typename T> struct numpy_typenums {};
+    template <> struct numpy_typenums<libdvid::uint8> { static const int typenum = NPY_UINT8; };
+    template <> struct numpy_typenums<libdvid::uint64> { static const int typenum = NPY_UINT64; };
+
+    //!*********************************************************************************************
+    //! Declares a mapping between numpy typenumbers and the corresponding dtype names
+    //!*********************************************************************************************
+    static boost::unordered_map<int, std::string> dtype_names =
+        boost::assign::map_list_of
+        (NPY_UINT8, "uint8")
+        (NPY_UINT64, "uint64");
+
+    //!*********************************************************************************************
+    //! Converts between numpy ndarray objects DVIDVoxels objects.
+    //!*********************************************************************************************
+    template <class VolumeType>
+    struct ndarray_to_volume
+    {
+        static boost::python::object PyBinaryDataHolder;
+
+        struct BinaryDataHolder
+        {
+            libdvid::BinaryDataPtr ptr;
+        };
+
+        ndarray_to_volume()
+        {
+        	// Register python -> C++
+        	converter::registry::push_back( &convertible, &construct, type_id<VolumeType>() );
+
+        	// Register C++ -> Python
+        	to_python_converter<VolumeType, ndarray_to_volume<VolumeType> >();
+        }
+
+        //! Check if the given object is an ndarray
+        static void* convertible(PyObject* obj_ptr)
+        {
+            if (!PyArray_Check(obj_ptr))
+            {
+                return 0;
+            }
+            // We could also check shape, dtype, etc. here, but it's more helpful to
+            // wait until construction time, and then throw a specific exception to
+            // tell the user what he did wrong.
+            return obj_ptr;
+        }
+
+        //! Converts the given numpy ndarray object into a DVIDVoxels object.
+        //! NOTE: The data from the ndarray is *copied* into the new DVIDVoxels object.
+        static void construct( PyObject* obj_ptr, converter::rvalue_from_python_stage1_data* data)
+        {
+            using namespace boost::python;
+            using namespace libdvid;
+
+            assert(PyArray_Check(obj_ptr));
+
+            typedef typename VolumeType::voxel_type voxel_type;
+
+            object ndarray = object(handle<>(borrowed(obj_ptr)));
+
+            // Verify ndarray.dtype
+            std::string dtype = extract<std::string>(str(ndarray.attr("dtype")));
+            const int numpy_typenum = numpy_typenums<voxel_type>::typenum;
+            if (dtype != dtype_names[numpy_typenum])
+            {
+                std::ostringstream ssMsg;
+                ssMsg << "Volume has wrong dtype.  Expected " << dtype_names[numpy_typenum] << ", got " << dtype;
+                throw ErrMsg(ssMsg.str());
+            }
+
+            // Verify ndarray dimensionality.
+            int ndarray_ndim = extract<int>(ndarray.attr("ndim"));
+            if (ndarray_ndim != VolumeType::num_dims)
+            {
+                std::string shape = extract<std::string>(str(ndarray.attr("shape")));
+                std::ostringstream ssMsg;
+                ssMsg << "Volume is not exactly " << VolumeType::num_dims << "D.  Shape is " << shape;
+                throw ErrMsg( ssMsg.str() );
+            }
+
+            // Verify ndarray memory order
+            if (!ndarray.attr("flags")["C_CONTIGUOUS"])
+            {
+                throw ErrMsg("Volume is not C_CONTIGUOUS");
+            }
+
+            // Extract dims from ndarray.shape
+            object shape = ndarray.attr("shape");
+            typedef stl_input_iterator<Dims_t::value_type> shape_iter_t;
+            Dims_t dims;
+            dims.assign( shape_iter_t(shape), shape_iter_t() );
+
+            // Extract the voxel count
+            int voxel_count = extract<int>(ndarray.attr("size"));
+
+            // Obtain a pointer to the array's data
+            PyArrayObject * array_object = reinterpret_cast<PyArrayObject *>( ndarray.ptr() );
+            voxel_type const * voxel_data = static_cast<voxel_type const *>( PyArray_DATA(array_object) );
+
+            // Grab pointer to memory into which to construct the DVIDVoxels
+            void* storage = ((converter::rvalue_from_python_storage<VolumeType>*) data)->storage.bytes;
+
+            // Create DVIDVoxels<> from ndarray data using "in-place" new().
+            // FIXME: The DVIDVoxels constructor copies the data. Is that really necessary?
+            VolumeType * volume = new (storage) VolumeType( voxel_data, voxel_count, dims );
+
+            // Stash the memory chunk pointer for later use by boost.python
+            data->convertible = storage;
+        }
+
+        //! Converts the given DVIDVoxels object into a numpy array.
+        //! NOTE:The ndarray will *steal* the data from the DVIDVoxels object.
+        static PyObject* convert( VolumeType volume )
+        {
+            using namespace boost::python;
+            using namespace libdvid;
+
+            typedef typename VolumeType::voxel_type voxel_type;
+
+            BinaryDataPtr volume_data = volume.get_binary();
+
+            // Wrap the BinaryData in a BinaryDataHolder object,
+            // which is managed via Python's reference counting scheme.
+            object py_managed_bd = PyBinaryDataHolder();
+            BinaryDataHolder & holder = extract<BinaryDataHolder&>(py_managed_bd);
+            holder.ptr = volume_data;
+
+            // Copy dims to type numpy expects.
+            std::vector<npy_intp> numpy_dims( volume.get_dims().begin(), volume.get_dims().end() );
+
+            // We will create a new array with the data from the existing PyBinaryDataHolder object (no copy).
+            // The basic idea is described in the following link, but can get away with a lot less code
+            // because we used boost-python to define the Python type (PyBinaryDataHolder).
+            // (Note: this post is old, so the particular API we're using here is slightly different.)
+            // http://blog.enthought.com/python/numpy-arrays-with-pre-allocated-memory
+            void const * raw_data = static_cast<void const*>(volume_data->get_raw());
+            PyObject * array_object = PyArray_SimpleNewFromData( numpy_dims.size(),
+                                                                 &numpy_dims[0],
+                                                                 numpy_typenums<voxel_type>::typenum,
+                                                                 const_cast<void*>(raw_data) );
+            if (!array_object)
+            {
+                throw ErrMsg("Failed to create array from BinaryData!");
+            }
+            PyArrayObject * ndarray = reinterpret_cast<PyArrayObject *>( array_object );
+
+            // As described in the link above, assigning the 'base' pointer here ensures
+            //  that the memory is deallocated when the user is done with the ndarray.
+            int status = PyArray_SetBaseObject(ndarray, py_managed_bd.ptr());
+            if (status != 0)
+            {
+                throw ErrMsg("Failed to set array base object!");
+            }
+            // PyArray_SetBaseObject *steals* the reference, so we need to INCREF here
+            //  to make sure the binary data object isn't destroyed when we return.
+            incref(py_managed_bd.ptr());
+
+            // Return the new array.
+            return array_object;
+        }
+    };
+    // Define a python version of BinaryDataHolder, and keep a global
+    //  reference to it so we can instantiate it ourselves.
+    template <class VolumeType>
+    boost::python::object ndarray_to_volume<VolumeType>::PyBinaryDataHolder =
+		class_<ndarray_to_volume<VolumeType>::BinaryDataHolder>("BinaryDataHolder");
+
 
     //!*********************************************************************************************
     //! Convert BlockXYZ in both directions:
@@ -551,93 +671,4 @@ namespace libdvid { namespace python {
     object substack_to_python_substack::PySubstackXYZ;
 
 
-    //!*********************************************************************************************
-    //! This converts BinaryDataPtr objects into Python strings.
-    //! NOTE: It copies the data.
-    //!*********************************************************************************************
-    struct binary_data_ptr_to_python_str
-    {
-        static PyObject* convert(BinaryDataPtr const& binary_data)
-        {
-            return PyString_FromStringAndSize( binary_data->get_data().c_str(), binary_data->get_data().size() );
-        }
-    };
-    
-    //!*********************************************************************************************
-    //! Converts the given DVIDVoxels object into a numpy array.
-    //! NOTE:The ndarray will *steal* the data from the DVIDVoxels object.
-    //!*********************************************************************************************
-    template <class VolumeType> // VolumeType must be some DVIDVoxels<T, N>
-    struct volume_to_ndarray
-    {
-        static PyObject* convert( VolumeType volume )
-        {
-            using namespace boost::python;
-            using namespace libdvid;
-    
-            typedef typename VolumeType::voxel_type voxel_type;
-    
-            BinaryDataPtr volume_data = volume.get_binary();
-    
-            // Wrap the BinaryData in a BinaryDataHolder object,
-            // which is managed via Python's reference counting scheme.
-            object py_managed_bd = PyBinaryDataHolder();
-            BinaryDataHolder & holder = extract<BinaryDataHolder&>(py_managed_bd);
-            holder.ptr = volume_data;
-    
-            // Copy dims to type numpy expects.
-            std::vector<npy_intp> numpy_dims( volume.get_dims().begin(), volume.get_dims().end() );
-    
-            // We will create a new array with the data from the existing PyBinaryDataHolder object (no copy).
-            // The basic idea is described in the following link, but can get away with a lot less code
-            // because we used boost-python to define the Python type (PyBinaryDataHolder).
-            // (Note: this post is old, so the particular API we're using here is slightly different.)
-            // http://blog.enthought.com/python/numpy-arrays-with-pre-allocated-memory
-            void const * raw_data = static_cast<void const*>(volume_data->get_raw());
-            PyObject * array_object = PyArray_SimpleNewFromData( numpy_dims.size(),
-                                                                 &numpy_dims[0],
-                                                                 numpy_typenums<voxel_type>::typenum,
-                                                                 const_cast<void*>(raw_data) );
-            if (!array_object)
-            {
-                throw ErrMsg("Failed to create array from BinaryData!");
-            }
-            PyArrayObject * ndarray = reinterpret_cast<PyArrayObject *>( array_object );
-    
-            // As described in the link above, assigning the 'base' pointer here ensures
-            //  that the memory is deallocated when the user is done with the ndarray.
-            int status = PyArray_SetBaseObject(ndarray, py_managed_bd.ptr());
-            if (status != 0)
-            {
-                throw ErrMsg("Failed to set array base object!");
-            }
-            // PyArray_SetBaseObject *steals* the reference, so we need to INCREF here
-            //  to make sure the binary data object isn't destroyed when we return.
-            incref(py_managed_bd.ptr());
-    
-            // Return the new array.
-            return array_object;
-        }
-    };
-
-    //!*********************************************************************************************
-    //! This converts Json::Value objects into python dict objects.
-    //! NOTE: This isn't an efficient conversion method.
-    //!*********************************************************************************************
-    struct json_value_to_dict
-    {
-        static PyObject* convert(Json::Value const & json_value)
-        {
-            using namespace boost::python;
-
-            // For now, easiest thing to do is just export as
-            //  string and re-parse via python's json module.
-            std::ostringstream ss;
-            ss << json_value;
-
-            object json = import("json");
-            return incref(json.attr("loads")( ss.str() ).ptr());
-        }
-    };
-    
 }} // namespace libdvid::python
