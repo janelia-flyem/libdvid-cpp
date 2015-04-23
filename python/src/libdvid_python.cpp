@@ -1,4 +1,3 @@
-#include <Python.h>
 #include <boost/python.hpp>
 #include <boost/foreach.hpp>
 
@@ -8,13 +7,10 @@
 #define PY_ARRAY_UNIQUE_SYMBOL libdvid_PYTHON_BINDINGS
 #include <numpy/arrayobject.h>
 
-#include <sstream>
-
 #include "BinaryData.h"
 #include "DVIDConnection.h"
 #include "DVIDServerService.h"
 #include "DVIDNodeService.h"
-#include "DVIDException.h"
 
 #include "converters.hpp"
 

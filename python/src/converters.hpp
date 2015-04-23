@@ -1,11 +1,11 @@
 #include <vector>
 #include <string>
-#include <algorithm>
 #include <sstream>
 
 #include <boost/unordered_map.hpp>
 #include <boost/assign/list_of.hpp>
 
+#include <Python.h>
 #include <boost/python.hpp>
 #include <boost/python/stl_iterator.hpp>
 
@@ -15,6 +15,7 @@
 // #include <numpy/arrayobject.h>
 
 #include "BinaryData.h"
+#include "DVIDException.h"
 #include "DVIDException.h"
 
 namespace libdvid { namespace python {
