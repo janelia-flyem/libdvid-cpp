@@ -13,7 +13,7 @@ Vertex::Vertex(Json::Value& data)
 
 void Vertex::export_json(Json::Value& data)
 {
-    data["Id"] = id;
+    data["Id"] = (Json::Value::UInt64)(id);
     data["Weight"] = weight;
 }
 
@@ -26,8 +26,8 @@ Edge::Edge(Json::Value& data)
 
 void Edge::export_json(Json::Value& data)
 {
-    data["Id1"] = id1;
-    data["Id2"] = id2;
+    data["Id1"] = (Json::Value::UInt64)(id1);
+    data["Id2"] = (Json::Value::UInt64)(id2);
     data["Weight"] = weight;
 }
 
@@ -73,8 +73,8 @@ void Graph::export_json(Json::Value& data)
 
 BinaryDataPtr write_transactions_to_binary(VertexTransactions& transactions)
 {
-    unsigned long long * trans_array =
-        new unsigned long long [(transactions.size()*2+1)];
+    uint64 * trans_array =
+        new uint64 [(transactions.size()*2+1)];
     
     //serialize the number of transactions
     int pos = 0;
@@ -103,7 +103,7 @@ size_t load_transactions_from_binary(string& data,
     size_t byte_pos = 0;
 
     // get number of transactions
-    unsigned long long* num_transactions = (unsigned long long *)(bytearray);
+    uint64* num_transactions = (uint64 *)(bytearray);
     byte_pos += 8;
 
     // get vertex / transaction list
@@ -116,7 +116,7 @@ size_t load_transactions_from_binary(string& data,
     }
 
     // find failed transactions
-    unsigned long long* num_failed_transactions = (unsigned long long *)(bytearray+byte_pos);
+    uint64* num_failed_transactions = (uint64*)(bytearray+byte_pos);
     byte_pos += 8;
 
     for (int i = 0; i < int(*num_failed_transactions); ++i) {

@@ -148,7 +148,7 @@ class BinaryData {
      * Read a file and load the data into binary format.
      * \param fin input file
     */
-    BinaryData(std::ifstream& fin)
+    explicit BinaryData(std::ifstream& fin)
     {
         data.assign( (std::istreambuf_iterator<char>(fin) ),
                 (std::istreambuf_iterator<char>()    ) ); 

@@ -28,7 +28,7 @@ class DVIDServerService {
      * Constructor takes http address of DVID server.
      * \param addr_ DVID address
     */
-    DVIDServerService(std::string addr_);
+    explicit DVIDServerService(std::string addr_);
     
     /*************** API for server services ***********************/
 

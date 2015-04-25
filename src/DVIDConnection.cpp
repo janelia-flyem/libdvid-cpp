@@ -34,7 +34,7 @@ namespace libdvid {
 const int DVIDConnection::DEFAULT_TIMEOUT;
 
 //! Defines DVID prefix -- this might have a version ID eventually 
-string DVIDConnection::DVID_PREFIX = "/api";
+const char* DVIDConnection::DVID_PREFIX = "/api";
 
 DVIDConnection::DVIDConnection(string addr_) : addr(addr_)
 {

@@ -22,7 +22,7 @@ class ErrMsg : public std::exception {
      * Construct takes a string message for the error.
      * \param msg_ string message
     */
-    ErrMsg(std::string msg_) : msg(msg_) {}
+    explicit ErrMsg(std::string msg_) : msg(msg_) {}
     
     /*!
      * Implement exception base class function.
@@ -59,10 +59,10 @@ class DVIDException : public ErrMsg {
      * \param msg_ error message
      * \param status_ http status code
     */
-    DVIDException(std::string msg_, int status_) : ErrMsg(msg_)
+    DVIDException(std::string msg_, int status_) : ErrMsg(msg_), status(status_)
     {
         std::stringstream sstr;
-        sstr << "DVID Error (" << status_ << "): " << msg_;
+        sstr << "DVID Error (" << status << "): " << msg_;
         msg = sstr.str();
     }
 

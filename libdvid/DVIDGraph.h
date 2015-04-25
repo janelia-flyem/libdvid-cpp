@@ -11,6 +11,7 @@
 #define DVIDGRAPH_H
 
 #include "BinaryData.h"
+#include "Globals.h"
 
 #include <vector>
 #include <json/json.h>
@@ -28,13 +29,13 @@
 namespace libdvid {
 
 //! Vertex ID represented as a 64-bit number
-typedef unsigned long long VertexID;
+typedef uint64 VertexID;
 
 //! Ensure that VertexID is 64 bit
 BOOST_STATIC_ASSERT(sizeof(VertexID) == 8);
 
 //! Transaction ID that enables concurrent DVID graph access
-typedef unsigned long long TransactionID;
+typedef uint64 TransactionID;
 
 /*!
  * Vertex is its unique ID and its weight (typically representing
@@ -52,13 +53,13 @@ struct Vertex {
      * Constructor that deserializes vertex JSON data returned from DVID.
      * \param data JSON data defining a vertex
     */
-    Vertex(Json::Value& data);
+    explicit Vertex(Json::Value& data);
     
     /*!
      * Constructor that creates a vertex with a default weight.
      * \param id_ vertex id
     */
-    Vertex(VertexID id_) : id(id_), weight(0) {}
+    explicit Vertex(VertexID id_) : id(id_), weight(0) {}
 
     /*!
      * Serializes the vertex to JSON.
@@ -97,7 +98,7 @@ struct Edge {
      * Constructor that deserializes edge JSON data returned from DVID.
      * \param data JSON data defining a vertex
     */
-    Edge(Json::Value& data);
+    explicit Edge(Json::Value& data);
     
     /*!
      * Serializes the edge to JSON.
@@ -205,7 +206,7 @@ struct Graph {
      * Deserialize JSON labelgraph defined by DVID.
      * \param data JSON data defining graph
     */
-    Graph(Json::Value& data);
+    explicit Graph(Json::Value& data);
 
     /*!
      * Deserialize labelgraph from JSON (format defined by DVID).

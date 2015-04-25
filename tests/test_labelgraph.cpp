@@ -60,7 +60,7 @@ int main(int argc, char** argv)
        
         // get vertex and edge weight 
         Graph graph_initial;
-        dvid_node.get_vertex_neighbors(graph_datatype_name, 1, graph_initial);
+        dvid_node.get_vertex_neighbors(graph_datatype_name, Vertex(1), graph_initial);
         double weight_initial = graph_initial.vertices[0].weight;
         double edge_weight_initial = graph_initial.edges[0].weight;
         if (graph_initial.vertices[1].id == 1) {
@@ -81,7 +81,7 @@ int main(int argc, char** argv)
 
         // get vertex and edge updated weight 
         Graph graph_final;
-        dvid_node.get_vertex_neighbors(graph_datatype_name, 1, graph_final);
+        dvid_node.get_vertex_neighbors(graph_datatype_name, Vertex(1), graph_final);
         double weight_final = graph_final.vertices[0].weight;
         double edge_weight_final = graph_final.edges[0].weight;
         if (graph_final.vertices[1].id == 1) {

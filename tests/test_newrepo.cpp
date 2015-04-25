@@ -22,8 +22,8 @@ int main(int argc, char** argv)
     }
     try {
         DVIDServerService server(argv[1]);
-        // unique ID for each repo created
-        std::string uuid = server.create_new_repo("newrepo",
+        // unique ID for each repo created (returns the uuid)
+        server.create_new_repo("newrepo",
                 "This is my new repo");
     } catch (std::exception& e) {
         cerr << e.what() << endl;

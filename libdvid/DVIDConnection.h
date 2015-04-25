@@ -38,7 +38,7 @@ class DVIDConnection {
     /*!
      * Starts curl connection.
     */
-    DVIDConnection(std::string addr_);
+    explicit DVIDConnection(std::string addr_);
   
     /*!
      * Copy constructor to ensure that creation of curl connection
@@ -103,7 +103,7 @@ class DVIDConnection {
     std::string addr;
 
     //! prefix for all DVID calls (versioning may be added here in the future) 
-    static std::string DVID_PREFIX;
+    static const char* DVID_PREFIX;
 };
 
 }

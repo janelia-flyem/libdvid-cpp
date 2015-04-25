@@ -433,8 +433,8 @@ void DVIDNodeService::get_properties(string graph_name,
             write_transactions_to_binary(current_transactions);
         
         // add vertex list to get properties
-        unsigned long long * vertex_array =
-            new unsigned long long [(current_transactions.size()+1)];
+        uint64 * vertex_array =
+            new uint64 [(current_transactions.size()+1)];
         int pos = 0;
         vertex_array[pos] = current_transactions.size();
         ++pos;
@@ -468,14 +468,14 @@ void DVIDNodeService::get_properties(string graph_name,
         const unsigned char* bytearray = binary->get_raw();
        
         // get number of properties
-        unsigned long long* num_transactions = (unsigned long long *)(bytearray+byte_pos);
+        uint64* num_transactions = (uint64 *)(bytearray+byte_pos);
         byte_pos += 8;
 
         // iterate through all properties
         for (int i = 0; i < int(*num_transactions); ++i) {
             VertexID* vertex_id = (VertexID *)(bytearray+byte_pos);
             byte_pos += 8;
-            unsigned long long* data_size = (unsigned long long*)(bytearray+byte_pos);
+            uint64* data_size = (uint64*)(bytearray+byte_pos);
             byte_pos += 8;
             properties_map[*vertex_id] = BinaryData::create_binary_data(
                     (const char *)(bytearray+byte_pos), *data_size);      
@@ -529,8 +529,8 @@ void DVIDNodeService::get_properties(string graph_name, std::vector<Edge> edges,
         BinaryDataPtr transaction_binary = write_transactions_to_binary(current_transactions);
        
         // add edge list to get properties
-        unsigned long long * edge_array =
-            new unsigned long long [(num_current_edges*2+1)*8];
+        uint64* edge_array =
+            new uint64 [(num_current_edges*2+1)*8];
         unsigned int pos = 0;
         edge_array[pos] = num_current_edges;
         ++pos;
@@ -565,8 +565,8 @@ void DVIDNodeService::get_properties(string graph_name, std::vector<Edge> edges,
         const unsigned char* bytearray = binary->get_raw();
         
         // get number of properties
-        unsigned long long* num_transactions = 
-            (unsigned long long *)(bytearray+byte_pos);
+        uint64* num_transactions = 
+            (uint64*)(bytearray+byte_pos);
         byte_pos += 8;
 
         // iterate through all properties
@@ -575,7 +575,7 @@ void DVIDNodeService::get_properties(string graph_name, std::vector<Edge> edges,
             byte_pos += 8;
             VertexID* vertex_id2 = (VertexID *)(bytearray+byte_pos);
             byte_pos += 8;
-            unsigned long long* data_size = (unsigned long long*)(bytearray+byte_pos);
+            uint64* data_size = (uint64*)(bytearray+byte_pos);
             byte_pos += 8;
             properties_map[Edge(*vertex_id1, *vertex_id2, 0)] =
                 BinaryData::create_binary_data((const char*)
@@ -611,14 +611,14 @@ void DVIDNodeService::set_properties(string graph_name, std::vector<Vertex>& ver
 
         // write out number of trans
         string& str_append = binary->get_data();
-        unsigned long long num_trans = temp_transactions.size();
+        uint64 num_trans = temp_transactions.size();
         str_append += string((char*)&num_trans, 8);
 
         for (; num_examined < max_size; ++num_examined) {
-            unsigned long long id = vertices[num_examined].id;
+            uint64 id = vertices[num_examined].id;
             BinaryDataPtr databin = properties[num_examined];
             string& data = databin->get_data();
-            unsigned long long data_size = data.size();
+            uint64 data_size = data.size();
 
             str_append += string((char*)&id, 8);
             str_append += string((char*)&data_size, 8);
@@ -682,15 +682,15 @@ void DVIDNodeService::set_properties(string graph_name, std::vector<Edge>& edges
         // add vertex list and properties
         string& str_append = binary->get_data();
         
-        unsigned long long num_trans = num_current_edges;
+        uint64 num_trans = num_current_edges;
         str_append += string((char*)&num_trans, 8);
 
         for (unsigned int iter = starting_num; iter < num_examined; ++iter) {
-            unsigned long long id1 = edges[iter].id1;
-            unsigned long long id2 = edges[iter].id2;
+            uint64 id1 = edges[iter].id1;
+            uint64 id2 = edges[iter].id2;
             BinaryDataPtr databin = properties[iter];
             string& data = databin->get_data();
-            unsigned long long data_size = data.size();
+            uint64 data_size = data.size();
 
             str_append += string((char*)&id1, 8);
             str_append += string((char*)&id2, 8);
