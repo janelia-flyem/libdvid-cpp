@@ -108,6 +108,7 @@ int main(int argc, char** argv)
                 return -1;
             }
         }
+        delete []img_gray;
     } catch (std::exception& e) {
         cerr << e.what() << endl;
         return -1;
