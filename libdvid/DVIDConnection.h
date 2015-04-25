@@ -93,7 +93,7 @@ class DVIDConnection {
     /*!
      * Assignment doesn't really make much sense -- just disable.
     */
-    DVIDConnection& operator=(const DVIDConnection& connection) {}
+    DVIDConnection& operator=(const DVIDConnection& connection);
 
     //! reuse curl connection -- eventually make this thread static and
     //! initialize once (CURL typedef is actually a void*)

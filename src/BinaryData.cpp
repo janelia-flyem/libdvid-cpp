@@ -213,8 +213,8 @@ BinaryDataPtr BinaryData::decompress_png8(const BinaryDataPtr pngbinary,
     binary->data.resize(image.get_width()*image.get_height());
     char* ptr = &binary->data[0];
 
-    for (int y = 0; y < image.get_height(); ++y) {
-        for (int x = 0; x < image.get_width(); ++x) {
+    for (unsigned int y = 0; y < image.get_height(); ++y) {
+        for (unsigned int x = 0; x < image.get_width(); ++x) {
             *ptr = image[y][x];
             ++ptr;
         }

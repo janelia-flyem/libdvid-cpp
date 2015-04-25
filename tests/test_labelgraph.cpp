@@ -119,7 +119,7 @@ int main(int argc, char** argv)
                 dvid_node.get_properties(graph_datatype_name, prop_vertices,
                         "features", properties, transactions); 
 
-                for (int i = 0; i < prop_vertices.size(); ++i) {
+                for (unsigned int i = 0; i < prop_vertices.size(); ++i) {
                     // increment properties
                     if (properties[i]->get_data().length() > 0) {
                         double* val_array = (double*) properties[i]->get_raw();
@@ -160,7 +160,7 @@ int main(int argc, char** argv)
                 dvid_node.get_properties(graph_datatype_name, prop_edges,
                         "efeatures", properties, transactions); 
 
-                for (int i = 0; i < prop_edges.size(); ++i) {
+                for (unsigned int i = 0; i < prop_edges.size(); ++i) {
                     // increment properties
                     if (properties[i]->get_data().length() > 0) {
                         double* val_array = (double*) properties[i]->get_raw();

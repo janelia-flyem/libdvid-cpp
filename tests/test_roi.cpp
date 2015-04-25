@@ -64,7 +64,7 @@ int main(int argc, char** argv)
             cerr << "ROI blocks retrieved different than posted" << endl;
             return -1;
         }
-        for (int i = 0; i < blocks2.size(); ++i) {
+        for (unsigned int i = 0; i < blocks2.size(); ++i) {
             if ((blocks2[i].x != blocks_comp[i].x) ||
                 (blocks2[i].y != blocks_comp[i].y) ||
                 (blocks2[i].z != blocks_comp[i].z)) {
@@ -86,7 +86,7 @@ int main(int argc, char** argv)
             cerr << "ROI blocks retrieved different than posted" << endl;
             return -1;
         } 
-        for (int i = 0; i < blocks.size(); ++i) {
+        for (unsigned int i = 0; i < blocks.size(); ++i) {
             if ((blocks[i].x != blocks_comp[i].x) ||
                 (blocks[i].y != blocks_comp[i].y) ||
                 (blocks[i].z != blocks_comp[i].z)) {
@@ -102,12 +102,14 @@ int main(int argc, char** argv)
         double packing2 = dvid_node.get_roi_partition(roi_datatype_name, substacks2, 16);
 
         if (substacks.size() != 42) {
-            cerr << "Partition gives incorrect number of substacks" << endl;
+            cerr << "Partition gives incorrect number of substacks and packing of" 
+                << packing << endl;
             return -1;
         }
 
         if (substacks2.size() != 21) {
-            cerr << "Partition gives incorrect number of substacks" << endl;
+            cerr << "Partition gives incorrect number of substacks and packing of" 
+                << packing2 << endl;
             return -1;
         }
 

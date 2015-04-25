@@ -553,11 +553,11 @@ class DVIDNodeService {
             std::vector<bool>& inroi);
 
   private:
-    //! uuid for instance
-    const UUID uuid;
-    
     //! HTTP connection with DVID
     DVIDConnection connection;
+    
+    //! uuid for instance
+    const UUID uuid;
 
     /*!
      * Helper function to put a 3D volume to DVID with the specified

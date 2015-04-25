@@ -10,7 +10,7 @@ using std::ifstream; using std::set; using std::stringstream;
 //Json::Reader json_reader;
 
 //! Gives the limit for how many vertice can be operated on in one call
-static const int TransactionLimit = 1000;
+static const unsigned int TransactionLimit = 1000;
 
 
 namespace libdvid {
@@ -128,7 +128,7 @@ BinaryDataPtr DVIDNodeService::get_tile_slice_binary(string datatype_instance,
     stringstream sstr;
     sstr << uri;
     sstr << scaling << "/" << tile_loc[0];
-    for (int i = 1; i < tile_loc.size(); ++i) {
+    for (unsigned int i = 1; i < tile_loc.size(); ++i) {
         sstr << "_" << tile_loc[i];
     }
 
@@ -299,7 +299,7 @@ void DVIDNodeService::get_subgraph(string graph_name,
 {
     // make temporary graph for query
     Graph temp_graph;
-    for (int i = 0; i < vertices.size(); ++i) {
+    for (unsigned int i = 0; i < vertices.size(); ++i) {
         temp_graph.vertices.push_back(vertices[i]);
     }   
     Json::Value data;
@@ -343,13 +343,13 @@ void DVIDNodeService::get_vertex_neighbors(string graph_name, Vertex vertex,
 void DVIDNodeService::update_vertices(string graph_name,
         const std::vector<Vertex>& vertices)
 {
-    int num_examined = 0;
+    unsigned int num_examined = 0;
 
     while (num_examined < vertices.size()) {
         Graph graph;
         
         // grab 1000 vertices at a time
-        int max_size = ((num_examined + TransactionLimit) > 
+        unsigned int max_size = ((num_examined + TransactionLimit) > 
                 vertices.size()) ? vertices.size() : (num_examined + TransactionLimit); 
         for (; num_examined < max_size; ++num_examined) {
             graph.vertices.push_back(vertices[num_examined]);
@@ -370,7 +370,7 @@ void DVIDNodeService::update_edges(string graph_name,
         const std::vector<Edge>& edges)
 {
 
-    int num_examined = 0;
+    unsigned int num_examined = 0;
     while (num_examined < edges.size()) {
         VertexSet examined_vertices; 
         Graph graph;
@@ -408,7 +408,7 @@ void DVIDNodeService::get_properties(string graph_name,
         std::vector<BinaryDataPtr>& properties,
         VertexTransactions& transactions)
 {
-    int num_examined = 0;
+    unsigned int num_examined = 0;
         
     #ifdef __clang__
     std::unordered_map<VertexID, BinaryDataPtr> properties_map;
@@ -421,7 +421,7 @@ void DVIDNodeService::get_properties(string graph_name,
     // keep extending vertices with failed ones
     while (num_examined < vertices.size()) {
         // grab 1000 vertices at a time
-        int max_size = ((num_examined + TransactionLimit) > 
+        unsigned int max_size = ((num_examined + TransactionLimit) > 
                 vertices.size()) ? vertices.size() : (num_examined + TransactionLimit); 
 
         VertexTransactions current_transactions;
@@ -492,7 +492,7 @@ void DVIDNodeService::get_properties(string graph_name,
 void DVIDNodeService::get_properties(string graph_name, std::vector<Edge> edges, string key,
             std::vector<BinaryDataPtr>& properties, VertexTransactions& transactions)
 {
-    int num_examined = 0;
+    unsigned int num_examined = 0;
     
     #ifdef __clang__
     std::unordered_map<Edge, BinaryDataPtr, Edge> properties_map;
@@ -505,11 +505,12 @@ void DVIDNodeService::get_properties(string graph_name, std::vector<Edge> edges,
     while (num_examined < edges.size()) {
         VertexSet examined_vertices; 
 
-        int num_current_edges = 0;
-        int starting_num = num_examined;
+        unsigned int num_current_edges = 0;
+        unsigned int starting_num = num_examined;
         for (; num_examined < edges.size(); ++num_current_edges, ++num_examined) {
             // break if it is not possible to add another edge transaction
             // (assuming that both vertices of that edge will be new vertices)
+            assert(TransactionLimit > 0);
             if (examined_vertices.size() >= (TransactionLimit - 1)) {
                 break;
             }
@@ -530,10 +531,10 @@ void DVIDNodeService::get_properties(string graph_name, std::vector<Edge> edges,
         // add edge list to get properties
         unsigned long long * edge_array =
             new unsigned long long [(num_current_edges*2+1)*8];
-        int pos = 0;
+        unsigned int pos = 0;
         edge_array[pos] = num_current_edges;
         ++pos;
-        for (int iter = starting_num; iter < num_examined; ++iter) {
+        for (unsigned int iter = starting_num; iter < num_examined; ++iter) {
             edge_array[pos] = edges[iter].id1;
             ++pos;
             edge_array[pos] = edges[iter].id2;
@@ -552,7 +553,7 @@ void DVIDNodeService::get_properties(string graph_name, std::vector<Edge> edges,
                 binary->get_data(), transactions, bad_vertices);
        
         // failed vertices should cause corresponding edges to be re-examined 
-        for (int iter = starting_num; iter < num_examined; ++iter) {
+        for (unsigned int iter = starting_num; iter < num_examined; ++iter) {
             if (bad_vertices.find(edges[iter].id1) != bad_vertices.end()) {
                 edges.push_back(edges[iter]);
             } else if (bad_vertices.find(edges[iter].id2) != bad_vertices.end()) {
@@ -592,18 +593,18 @@ void DVIDNodeService::set_properties(string graph_name, std::vector<Vertex>& ver
         string key, std::vector<BinaryDataPtr>& properties,
         VertexTransactions& transactions, std::vector<Vertex>& leftover_vertices)
 {
-    int num_examined = 0;
+    unsigned int num_examined = 0;
 
     // only post 1000 properties at a time
     while (num_examined < vertices.size()) {
         // add vertex list and properties
         
         // grab 1000 vertices at a time
-        int max_size = ((num_examined + TransactionLimit) > 
+        unsigned int max_size = ((num_examined + TransactionLimit) > 
                 vertices.size()) ? vertices.size() : (num_examined + TransactionLimit); 
    
         VertexTransactions temp_transactions;
-        for (int i = num_examined; i < max_size; ++i) {
+        for (unsigned int i = num_examined; i < max_size; ++i) {
             temp_transactions[vertices[i].id] = transactions[vertices[i].id];
         }
         BinaryDataPtr binary = write_transactions_to_binary(temp_transactions);
@@ -629,7 +630,7 @@ void DVIDNodeService::set_properties(string graph_name, std::vector<Vertex>& ver
         VertexTransactions succ_trans;
         BinaryDataPtr result_binary = custom_request("/" + graph_name +
                 "/propertytransaction/vertices/" + key, binary, POST);
-        size_t byte_pos = load_transactions_from_binary(result_binary->get_data(),
+        load_transactions_from_binary(result_binary->get_data(),
             succ_trans, failed_trans);
 
         // update transaction ids for successful trans
@@ -650,17 +651,18 @@ void DVIDNodeService::set_properties(string graph_name, std::vector<Edge>& edges
         string key, std::vector<BinaryDataPtr>& properties,
         VertexTransactions& transactions, std::vector<Edge>& leftover_edges)
 {
-    int num_examined = 0;
+    unsigned int num_examined = 0;
 
     // only post 1000 properties at a time
     while (num_examined < edges.size()) {
         VertexSet examined_vertices; 
         
-        int num_current_edges = 0;
-        int starting_num = num_examined;
+        unsigned int num_current_edges = 0;
+        unsigned int starting_num = num_examined;
         for (; num_examined < edges.size(); ++num_current_edges, ++num_examined) {
             // break if it is not possible to add another edge transaction
             // (assuming that both vertices of that edge will be new vertices)
+            assert(TransactionLimit > 0);
             if (examined_vertices.size() >= (TransactionLimit - 1)) {
                 break;
             }
@@ -683,7 +685,7 @@ void DVIDNodeService::set_properties(string graph_name, std::vector<Edge>& edges
         unsigned long long num_trans = num_current_edges;
         str_append += string((char*)&num_trans, 8);
 
-        for (int iter = starting_num; iter < num_examined; ++iter) {
+        for (unsigned int iter = starting_num; iter < num_examined; ++iter) {
             unsigned long long id1 = edges[iter].id1;
             unsigned long long id2 = edges[iter].id2;
             BinaryDataPtr databin = properties[iter];
@@ -701,7 +703,7 @@ void DVIDNodeService::set_properties(string graph_name, std::vector<Edge>& edges
         VertexTransactions succ_trans;
         BinaryDataPtr result_binary = custom_request("/" + graph_name +
                 "/propertytransaction/edges/" + key, binary, POST);
-        size_t byte_pos = load_transactions_from_binary(result_binary->get_data(),
+        load_transactions_from_binary(result_binary->get_data(),
             succ_trans, failed_trans);
 
         // update transaction ids for successful trans
@@ -711,7 +713,7 @@ void DVIDNodeService::set_properties(string graph_name, std::vector<Edge>& edges
         }
 
         // add leftover edges from failed vertices
-        for (int iter = starting_num; iter < num_examined; ++iter) {
+        for (unsigned int iter = starting_num; iter < num_examined; ++iter) {
             if (failed_trans.find(edges[iter].id1) != failed_trans.end()) {
                 leftover_edges.push_back(edges[iter]);
             } else if (failed_trans.find(edges[iter].id2) != failed_trans.end()) {
@@ -728,14 +730,14 @@ void DVIDNodeService::post_roi(std::string roi_name,
     // sort and then encode as runlengths in X.
     // This will also eliminate duplicate blocks
     set<BlockXYZ> sorted_blocks;
-    for (int i = 0; i < blockcoords.size(); ++i) {
+    for (unsigned int i = 0; i < blockcoords.size(); ++i) {
         sorted_blocks.insert(blockcoords[i]);    
     }
 
     // encode JSON as z,y,x0,x1 (inclusive)
     int z = INT_MAX;
     int y = INT_MAX;
-    int xmin, xmax;
+    int xmin = 0; int xmax = 0;
     Json::Value blocks_data(Json::arrayValue);
     unsigned int blockrle_count = 0;
     for (set<BlockXYZ>::iterator iter = sorted_blocks.begin();
@@ -1108,31 +1110,32 @@ string DVIDNodeService::construct_volume_uri(string datatype_inst, Dims_t sizes,
 
     // retrieve at least a 3D volume
     set<int> used_channels;
-    for (int i = 0; i < channels.size(); ++i) {
+    for (unsigned int i = 0; i < channels.size(); ++i) {
         used_channels.insert(channels[i]);   
     }
     int channel_id = 0;
-    for (int i = channels.size(); i < 3; ++i) {
+    // should never call since there should be 3 channels
+    for (unsigned int i = channels.size(); i < 3; ++i) {
         while (used_channels.find(channel_id) != used_channels.end()) {
             ++channel_id;
         }
         channels.push_back(channel_id);
     }
 
-    for (int i = 1; i < channels.size(); ++i) {
+    for (unsigned int i = 1; i < channels.size(); ++i) {
         sstr << "_" << channels[i];
     }
     
-    // retrieve at least a 3D volume
+    // retrieve at least a 3D volume -- should never be called
     for (int i = sizes.size(); i < 3; ++i) {
         sizes.push_back(1);
     }
     sstr << "/" << sizes[0];
-    for (int i = 1; i < sizes.size(); ++i) {
+    for (unsigned int i = 1; i < sizes.size(); ++i) {
         sstr << "_" << sizes[i];
     }
     sstr << "/" << offset[0];
-    for (int i = 1; i < offset.size(); ++i) {
+    for (unsigned int i = 1; i < offset.size(); ++i) {
         sstr << "_" << offset[i];
     }
 

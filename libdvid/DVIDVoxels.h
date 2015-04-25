@@ -60,14 +60,14 @@ class DVIDVoxels {
         }
 
         unsigned long long total = 0;
-        for (int i = 0; i < dims.size(); ++i) {
+        for (unsigned int i = 0; i < dims.size(); ++i) {
             if (i == 0) {
                 total = dims[0];
             } else {
                 total *= dims[i];
             }
         }
-        if (total*sizeof(T) != data->length()) {
+        if (total*sizeof(T) != (unsigned long long)(data->length())) {
             std::stringstream ssMsg;
             ssMsg << "Dimensions ( ";
             BOOST_FOREACH( Dims_t::value_type d, dims )
@@ -92,14 +92,14 @@ class DVIDVoxels {
             throw ErrMsg("Incorrect dimensions provided");
         }
         unsigned long long total = 0;
-        for (int i = 0; i < dims.size(); ++i) {
+        for (unsigned int i = 0; i < dims.size(); ++i) {
             if (i == 0) {
                 total = dims[0];
             } else {
                 total *= dims[i];
             }
         }
-        if (total*sizeof(T) != data->length()) {
+        if (total*sizeof(T) != (unsigned long long)(data->length())) {
             throw ErrMsg("Dimension mismatch with buffer size");
         }
     }

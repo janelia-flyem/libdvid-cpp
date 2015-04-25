@@ -82,7 +82,7 @@ int main(int argc, char** argv)
         // ** Write and read grayscale data **
         // create grayscale image volume
         uint8 * img_gray = new uint8 [BLK_SIZE*BLK_SIZE*BLK_SIZE];
-        for (int i = 0; i < sizeof(img1_mask); ++i) {
+        for (unsigned int i = 0; i < sizeof(img1_mask); ++i) {
             img_gray[i] = img1_mask[i] * 255;
             img_gray[i+BLK_SIZE*BLK_SIZE] = img2_mask[i] * 255;
         }
