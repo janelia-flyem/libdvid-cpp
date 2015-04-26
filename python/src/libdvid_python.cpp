@@ -168,6 +168,7 @@ namespace libdvid { namespace python {
         Labels3D (DVIDNodeService::*get_labels3D)(std::string, Dims_t, std::vector<unsigned int>, bool, bool, std::string) = &DVIDNodeService::get_labels3D;
         void (DVIDNodeService::*put_gray3D)(std::string, Grayscale3D const&, std::vector<unsigned int>, bool, bool) = &DVIDNodeService::put_gray3D;
         void (DVIDNodeService::*put_labels3D)(std::string, Labels3D const&, std::vector<unsigned int>, bool, bool, std::string) = &DVIDNodeService::put_labels3D;
+        bool (DVIDNodeService::*create_labelblk)(std::string, std::string) = &DVIDNodeService::create_labelblk;
 
         // DVIDNodeService python class definition
         class_<DVIDNodeService>("DVIDNodeService", init<std::string, UUID>())
@@ -189,7 +190,7 @@ namespace libdvid { namespace python {
                 ( arg("service"), arg("instance"), arg("ndarray"), arg("offset"), arg("throttle")=true, arg("compress")=false))
 
             // labels
-           .def("create_labelblk", &DVIDNodeService::create_labelblk)
+           .def("create_labelblk", create_labelblk, (arg("service"), arg("instance"), arg("instance2")=object() ))
            .def("get_labels3D", get_labels3D,
                 ( arg("service"), arg("instance"), arg("dims"), arg("offset"), arg("throttle")=true, arg("compress")=false, arg("roi")=object() ))
            .def("put_labels3D", put_labels3D,

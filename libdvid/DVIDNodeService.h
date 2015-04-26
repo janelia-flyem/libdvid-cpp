@@ -68,7 +68,8 @@ class DVIDNodeService {
     Json::Value get_typeinfo(std::string datatype_name);
 
     /************* API to create datatype instances **************/
-    // TODO: pass configuration data
+    // TODO: pass configuration data.
+    // WARNING: DO NOT USE '-' IN NAMES FOR NOW
     
     /*!
      * Create an instance of uint8 grayscale datatype.

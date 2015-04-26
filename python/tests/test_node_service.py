@@ -48,6 +48,14 @@ class Test_DVIDNodeService(unittest.TestCase):
         retrieved_data = node_service.get_labels3D( "test_labels_3d", (30,30,30), (20,20,20) )
         self.assertTrue( (retrieved_data == data[20:50, 20:50, 20:50]).all() )
 
+    def test_labels_3d_volsync(self):
+        node_service = DVIDNodeService(TEST_DVID_SERVER, self.uuid)
+        node_service.create_labelblk("test_labels_3d2", "test_labels_3d2_vol")
+        data = numpy.random.randint(0, 2**63-1, (128,128,128)).astype(numpy.uint64)
+        node_service.put_labels3D( "test_labels_3d2", data, (0,0,0) )
+        retrieved_data = node_service.get_labels3D( "test_labels_3d2", (30,30,30), (20,20,20) )
+        self.assertTrue( (retrieved_data == data[20:50, 20:50, 20:50]).all() )
+
     @unittest.skip("FIXME: No way to create tile data via the DVID http API.")
     def test_grayscale_2d_tile(self):
         # Create tile data here...
