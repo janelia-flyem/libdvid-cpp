@@ -78,11 +78,17 @@ class DVIDNodeService {
     bool create_grayscale8(std::string datatype_name);
     
     /*!
-     * Create an instance of uint64 labelblk datatype.
+     * Create an instance of uint64 labelblk datatype and optionally
+     * create a label volume datatype.  WARNING: If the function returns false
+     * and a label volume is requested it is possible that the two
+     * datatypes created will not be synced together.  Currently,
+     * the syncing configuration needs to be set on creation.
      * \param datatype_name name of new datatype instance
-     * \return true if create, false if already exists
+     * \param labelvol_name name of labelvolume to associate with labelblks
+     * \return true if both created, false if one already exists
     */
-    bool create_labelblk(std::string datatype_name);
+    bool create_labelblk(std::string datatype_name,
+            std::string labelvol_name = "");
     
     /*!
      * Create an instance of keyvalue datatype.
@@ -552,6 +558,44 @@ class DVIDNodeService {
             const std::vector<PointXYZ>& points,
             std::vector<bool>& inroi);
 
+    /************** API to access sparse body interface **************/
+    // The current functionality is working over the coarse volume
+    // endpoint available in DVID.  The coarse volume is just a list of
+    // blocks that intersect the body.  Some of the functions are
+    // workarounds or approximations that use the coarse volume.
+
+    /*!
+     * Determine whether body exists in labelvolume.
+     * \param labelvol_name name of label volume type
+     * \param bodyid body id being queried
+     * \return true if in label volume, false otherwise
+    */
+    bool body_exists(std::string labelvol_name, uint64 bodyid);
+
+    /*!
+     * Find a point in the center of the  body (currently an
+     * approximate location is chosen).  If a third dimension coordinate
+     * is provided, a point is provided within that 'Z' plane if it
+     * exists, otherwise the center point is chosen.
+     * \param labelvol_name name of label volume type
+     * \param bodyid body id being queried
+     * \param zplane restrict body location to this plane
+     * \return point representing body location
+    */  
+    PointXYZ get_body_location(std::string labelvol_name, uint64 bodyid,
+           int zplane=INT_MAX);
+
+    /*!
+     * Retrieve coarse volume for given body ID as a vector
+     * of blocks in block coordinates.
+     * \param labelvol_name name of label volume type
+     * \param bodyid body id being queried
+     * \param blockcoords vector of block coordinates retrieved for body
+     * \return false if body does not exist
+    */
+    bool get_coarse_body(std::string labelvol_name, uint64 bodyid,
+            std::vector<BlockXYZ>& blockcoords);
+
   private:
     //! HTTP connection with DVID
     DVIDConnection connection;
@@ -598,9 +642,11 @@ class DVIDNodeService {
      * Helper function to create an instance of the specified type.
      * \param datatype name of the datatype to create
      * \param datatype_name name of new datatype instance
+     * \param syn_name dataname to sync with if provided
      * \return true if create, false if already exists
     */
-    bool create_datatype(std::string datatype, std::string datatype_name);
+    bool create_datatype(std::string datatype, std::string datatype_name,
+            std::string sync_name = "");
 
     /*!
      * Checks if data exists for the given datatype name.

@@ -1,9 +1,6 @@
--fix c++ warnings
--support sparse volume
--add python bindings for ROI
+-support sparse volume; add python api
 
 -API versioning and checking
--look for any other memory leaks -- appears to be some, not sure if important
 -add more correct-by-compilation
 -improve test coverage
 

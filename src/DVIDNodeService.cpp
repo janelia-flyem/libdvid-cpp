@@ -65,9 +65,15 @@ bool DVIDNodeService::create_grayscale8(string datatype_name)
     return create_datatype("uint8blk", datatype_name);
 }
 
-bool DVIDNodeService::create_labelblk(string datatype_name)
+bool DVIDNodeService::create_labelblk(string datatype_name,
+        string labelvol_name)
 {
-    return create_datatype("labelblk", datatype_name);
+    bool is_created = create_datatype("labelblk", datatype_name, labelvol_name);
+    bool is_created2 = true;
+    if (labelvol_name != "") {
+        is_created2 = create_datatype("labelvol", labelvol_name, datatype_name);
+    }
+    return is_created && is_created2;
 }
 
 bool DVIDNodeService::create_keyvalue(string keyvalue)
@@ -903,8 +909,117 @@ void DVIDNodeService::roi_ptquery(std::string roi_name,
         inroi.push_back(ptinroi);
     }
 }
+    
+bool DVIDNodeService::body_exists(string labelvol_name, uint64 bodyid) 
+{
+    vector<BlockXYZ> blockcoords;
+    return get_coarse_body(labelvol_name, bodyid, blockcoords);
+}
+    
+PointXYZ DVIDNodeService::get_body_location(string labelvol_name,
+        uint64 bodyid, int zplane)
+{
+    vector<BlockXYZ> blockcoords;
+    if (!get_coarse_body(labelvol_name, bodyid, blockcoords)) {
+        throw ErrMsg("Requested body does not exist");
+    }
+   
+    // just choose some arbitrary block point somewhere in the middle
+    unsigned int num_blocks = blockcoords.size();
+    unsigned int index = num_blocks / 2;
+    int x = blockcoords[index].x * DEFBLOCKSIZE + DEFBLOCKSIZE/2;
+    int y = blockcoords[index].y * DEFBLOCKSIZE + DEFBLOCKSIZE/2;
+    int z = blockcoords[index].z * DEFBLOCKSIZE + DEFBLOCKSIZE/2; 
+    PointXYZ point(x,y,z); 
+   
 
+    // try to get a point in the middle of the Z plane chose
+    // if not found just default to somewhere in the middle of the body 
+    if (zplane != INT_MAX) {
+        int zplaneblk = zplane / DEFBLOCKSIZE;
+        int start_pos = -1;
+        int last_pos = -1;
+        // blocks are ordered z,y,x
+        for (unsigned int i = 0; i < blockcoords.size(); ++i) {
+            if (blockcoords[i].z == zplaneblk) {
+                if (start_pos == -1) {
+                    start_pos = int(i);
+                }
+                last_pos = i;
+            }
+        }
+        if (start_pos != -1) {
+            unsigned int index =
+                (unsigned int)(start_pos + ((last_pos - start_pos) / 2));
+            point.x = blockcoords[index].x * DEFBLOCKSIZE + DEFBLOCKSIZE/2;
+            point.y = blockcoords[index].y * DEFBLOCKSIZE + DEFBLOCKSIZE/2;
+            point.z = zplane;
+        }
+    }
 
+    return point;
+}
+
+bool DVIDNodeService::get_coarse_body(string labelvol_name, uint64 bodyid,
+            vector<BlockXYZ>& blockcoords) 
+{
+    // clear blockcoords
+    blockcoords.clear();
+    stringstream sstr;
+    sstr << "/" << labelvol_name << "/sparsevol-coarse/";
+    sstr << bodyid;
+
+    BinaryDataPtr binary;
+    try {
+        binary = custom_request(sstr.str(), BinaryDataPtr(), GET);
+    } catch (DVIDException& error) {
+        // body does not exist (or something else is wrong)
+        // either way body doesn't exist at this moment at this endpoint
+        return false;
+    }
+
+    // order the blocks (might be redundant depending on DVID output order)
+    set<BlockXYZ> sorted_blocks;
+    
+    // retrieve data: ignore first 8 bytes
+    // next 4 bytes encodes the number of spans
+    // patterns of x,y,z,xspan (int32 little endian)
+
+    // assume little endian machine for now
+    const uint8* bytearray = binary->get_raw();
+    unsigned int spot = 8;
+    unsigned int* num_spans = (unsigned int*)(bytearray+spot);
+    spot += 4;
+
+    // decode spans
+    for (unsigned int i = 0; i < *num_spans; ++i) {
+        int* xblock = (int*)(bytearray+spot);
+        spot += 4;
+        int* yblock = (int*)(bytearray+spot);
+        spot += 4;
+        int* zblock = (int*)(bytearray+spot);
+        spot += 4;
+        int* spans = (int*)(bytearray+spot);
+        spot += 4;
+        
+        int xsize = *xblock + int(*spans);
+        for (int xiter = *xblock; xiter < xsize; ++xiter) {
+            sorted_blocks.insert(BlockXYZ(xiter, *yblock, *zblock));
+        }
+    }
+
+    // returned sorted blocks back to caller
+    for (set<BlockXYZ>::iterator iter = sorted_blocks.begin();
+            iter != sorted_blocks.end(); ++iter) {
+        blockcoords.push_back(*iter);  
+    }
+
+    if (blockcoords.empty()) {
+        return false;
+    }
+
+    return true;
+}
 
 
 
@@ -1002,7 +1117,8 @@ void DVIDNodeService::put_blocks(string datatype_instance,
     custom_request(endpoint, binary, POST);
 }
 
-bool DVIDNodeService::create_datatype(string datatype, string datatype_name)
+bool DVIDNodeService::create_datatype(string datatype, string datatype_name,
+        std::string sync_name)
 {
     if (exists("/node/" + uuid + "/" + datatype_name + "/info")) {
         return false;
@@ -1012,7 +1128,12 @@ bool DVIDNodeService::create_datatype(string datatype, string datatype_name)
 
     // serialize as a JSON string
     string data = "{\"typename\": \"" + datatype + "\", \"dataname\": \"" + 
-        datatype_name + "\"}";
+        datatype_name;
+    if (sync_name != "") {
+        data += "\", \"Sync\": \"" + sync_name + "\"}";
+    } else {
+        data += "\"}";
+    }
     BinaryDataPtr payload = 
         BinaryData::create_binary_data(data.c_str(), data.length());
     BinaryDataPtr binary = BinaryData::create_binary_data();
