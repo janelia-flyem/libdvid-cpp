@@ -1,11 +1,13 @@
-# edges are slower to write because vertices get modified too
-# read rates seem similar to what I get off a bigger server
+# big performance increases in general with new deserialization/serialization of graph
+# slightly slower vertex reads
+# faster edge writes
+# much faster reads
 Total vertices: 75002
 Total edges: 496383
-Time to write vertices: 7.75302
-Vertices written per second: 9673.91
-Time to write edges: 258.427
-Edges written per second: 1920.79
-Time to read graph: 55.6595
-Vertices and edges read per second: 10265.7
-Time Elapsed: 319.034 seconds
+Time to write vertices: 8.00077
+Vertices written per second: 9374.34
+Time to write edges: 192.044
+Edges written per second: 2584.73
+Time to read graph: 9.62582
+Vertices and edges read per second: 59359.6
+Time Elapsed: 203.791 seconds

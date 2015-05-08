@@ -104,13 +104,13 @@ int main(int argc, char** argv)
 
        
         // offset in voxels coordinates
-        vector<unsigned int> offset_voxels;
+        vector<int> offset_voxels;
         offset_voxels.push_back(128);
         offset_voxels.push_back(32);
         offset_voxels.push_back(128);
         
         // offset in block coordinates
-        vector<unsigned int> offset_blocks;
+        vector<int> offset_blocks;
         offset_blocks.push_back(3);
         offset_blocks.push_back(1);
         offset_blocks.push_back(3);

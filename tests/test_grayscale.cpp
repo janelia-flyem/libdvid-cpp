@@ -88,7 +88,7 @@ int main(int argc, char** argv)
         }
 
         // create binary data string wrapper (no meta-data for now -- must explicitly create)
-        vector<unsigned int> start;
+        vector<int> start;
         start.push_back(0); start.push_back(0); start.push_back(0);
         Dims_t sizes; sizes.push_back(BLK_SIZE); sizes.push_back(BLK_SIZE); sizes.push_back(BLK_SIZE);
         Grayscale3D graybin(img_gray, BLK_SIZE*BLK_SIZE*BLK_SIZE, sizes);

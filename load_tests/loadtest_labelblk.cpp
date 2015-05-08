@@ -72,7 +72,7 @@ int main(int argc, char** argv)
             binary = BinaryData::decompress_lz4(binary, VOLDIM*VOLDIM*VOLDIM*sizeof(uint64));
             Labels3D labelbin = Labels3D(binary, dims);
 
-            vector<unsigned int> start;
+            vector<int> start;
             start.push_back(0); start.push_back(0); start.push_back(0);
 
             ScopeTime post_timer(false);
@@ -86,7 +86,7 @@ int main(int argc, char** argv)
         // retrieve the image volume
         // this might be artifically fast as it might be completely in DVID's cache
         {
-            vector<unsigned int> start;
+            vector<int> start;
             start.push_back(0); start.push_back(0); start.push_back(0);
             Dims_t lsizes;
             lsizes.push_back(VOLDIM); lsizes.push_back(VOLDIM); lsizes.push_back(VOLDIM);
@@ -106,7 +106,7 @@ int main(int argc, char** argv)
             int max_val = VOLDIM - SMALLFETCH + 1;
             
             // grab random small cube
-            vector<unsigned int> start;
+            vector<int> start;
             start.push_back(rand()%max_val);
             start.push_back(rand()%max_val);
             start.push_back(rand()%max_val);

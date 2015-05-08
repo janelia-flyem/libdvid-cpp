@@ -92,7 +92,7 @@ bool DVIDNodeService::create_roi(string name)
 }
 
 Grayscale2D DVIDNodeService::get_tile_slice(string datatype_instance,
-        Slice2D slice, unsigned int scaling, vector<unsigned int> tile_loc)
+        Slice2D slice, unsigned int scaling, vector<int> tile_loc)
 {
     BinaryDataPtr binary_response = get_tile_slice_binary(datatype_instance,
             slice, scaling, tile_loc);
@@ -117,7 +117,7 @@ Grayscale2D DVIDNodeService::get_tile_slice(string datatype_instance,
 }
 
 BinaryDataPtr DVIDNodeService::get_tile_slice_binary(string datatype_instance,
-        Slice2D slice, unsigned int scaling, vector<unsigned int> tile_loc)
+        Slice2D slice, unsigned int scaling, vector<int> tile_loc)
 {
     if (tile_loc.size() != 3) {
         throw ErrMsg("Tile identification requires 3 numbers");
@@ -143,7 +143,7 @@ BinaryDataPtr DVIDNodeService::get_tile_slice_binary(string datatype_instance,
 }
 
 Grayscale3D DVIDNodeService::get_gray3D(string datatype_instance, Dims_t sizes,
-        vector<unsigned int> offset, vector<unsigned int> channels,
+        vector<int> offset, vector<unsigned int> channels,
         bool throttle, bool compress, string roi)
 {
     BinaryDataPtr data = get_volume3D(datatype_instance,
@@ -161,7 +161,7 @@ Grayscale3D DVIDNodeService::get_gray3D(string datatype_instance, Dims_t sizes,
 }
 
 Grayscale3D DVIDNodeService::get_gray3D(string datatype_instance, Dims_t sizes,
-        vector<unsigned int> offset, bool throttle, bool compress, string roi)
+        vector<int> offset, bool throttle, bool compress, string roi)
 {
     vector<unsigned int> channels;
     channels.push_back(0); channels.push_back(1); channels.push_back(2);
@@ -170,7 +170,7 @@ Grayscale3D DVIDNodeService::get_gray3D(string datatype_instance, Dims_t sizes,
 }
 
 Labels3D DVIDNodeService::get_labels3D(string datatype_instance, Dims_t sizes,
-        vector<unsigned int> offset, vector<unsigned int> channels,
+        vector<int> offset, vector<unsigned int> channels,
         bool throttle, bool compress, string roi)
 {
     BinaryDataPtr data = get_volume3D(datatype_instance,
@@ -189,7 +189,7 @@ Labels3D DVIDNodeService::get_labels3D(string datatype_instance, Dims_t sizes,
 }
 
 Labels3D DVIDNodeService::get_labels3D(string datatype_instance, Dims_t sizes,
-        vector<unsigned int> offset, bool throttle, bool compress, string roi)
+        vector<int> offset, bool throttle, bool compress, string roi)
 {
     vector<unsigned int> channels;
     channels.push_back(0); channels.push_back(1); channels.push_back(2);
@@ -198,7 +198,7 @@ Labels3D DVIDNodeService::get_labels3D(string datatype_instance, Dims_t sizes,
 }
 
 void DVIDNodeService::put_labels3D(string datatype_instance, Labels3D const & volume,
-            vector<unsigned int> offset, bool throttle, bool compress, string roi)
+            vector<int> offset, bool throttle, bool compress, string roi)
 {
     Dims_t sizes = volume.get_dims();
     put_volume(datatype_instance, volume.get_binary(), sizes,
@@ -206,7 +206,7 @@ void DVIDNodeService::put_labels3D(string datatype_instance, Labels3D const & vo
 }
 
 void DVIDNodeService::put_gray3D(string datatype_instance, Grayscale3D const & volume,
-            vector<unsigned int> offset, bool throttle, bool compress)
+            vector<int> offset, bool throttle, bool compress)
 {
     Dims_t sizes = volume.get_dims();
     put_volume(datatype_instance, volume.get_binary(), sizes,
@@ -215,7 +215,7 @@ void DVIDNodeService::put_gray3D(string datatype_instance, Grayscale3D const & v
 
 
 GrayscaleBlocks DVIDNodeService::get_grayblocks(string datatype_instance,
-        vector<unsigned int> block_coords, unsigned int span)
+        vector<int> block_coords, unsigned int span)
 {
     int ret_span = span;
     BinaryDataPtr data = get_blocks(datatype_instance, block_coords, span);
@@ -230,7 +230,7 @@ GrayscaleBlocks DVIDNodeService::get_grayblocks(string datatype_instance,
 } 
 
 LabelBlocks DVIDNodeService::get_labelblocks(string datatype_instance,
-           vector<unsigned int> block_coords, unsigned int span)
+           vector<int> block_coords, unsigned int span)
 {
     int ret_span = span;
     BinaryDataPtr data = get_blocks(datatype_instance, block_coords, span);
@@ -245,7 +245,7 @@ LabelBlocks DVIDNodeService::get_labelblocks(string datatype_instance,
 }
     
 void DVIDNodeService::put_grayblocks(string datatype_instance,
-            GrayscaleBlocks blocks, vector<unsigned int> block_coords)
+            GrayscaleBlocks blocks, vector<int> block_coords)
 {
     put_blocks(datatype_instance, blocks.get_binary(),
             blocks.get_num_blocks(), block_coords);
@@ -253,7 +253,7 @@ void DVIDNodeService::put_grayblocks(string datatype_instance,
 
 
 void DVIDNodeService::put_labelblocks(string datatype_instance,
-            LabelBlocks blocks, vector<unsigned int> block_coords)
+            LabelBlocks blocks, vector<int> block_coords)
 {
     put_blocks(datatype_instance, blocks.get_binary(),
             blocks.get_num_blocks(), block_coords);
@@ -1026,7 +1026,7 @@ bool DVIDNodeService::get_coarse_body(string labelvol_name, uint64 bodyid,
 // ******************** PRIVATE HELPER FUNCTIONS *******************************
 
 void DVIDNodeService::put_volume(string datatype_instance, BinaryDataPtr volume,
-            vector<unsigned int> sizes, vector<unsigned int> offset,
+            vector<unsigned int> sizes, vector<int> offset,
             bool throttle, bool compress, string roi)
 {
     // make sure volume specified is legal and block aligned
@@ -1089,7 +1089,7 @@ void DVIDNodeService::put_volume(string datatype_instance, BinaryDataPtr volume,
 }
 
 BinaryDataPtr DVIDNodeService::get_blocks(string datatype_instance,
-        vector<unsigned int> block_coords, int span)
+        vector<int> block_coords, int span)
 {
     string prefix = "/" + datatype_instance + "/blocks/";
     stringstream sstr;
@@ -1105,7 +1105,7 @@ BinaryDataPtr DVIDNodeService::get_blocks(string datatype_instance,
 }
 
 void DVIDNodeService::put_blocks(string datatype_instance,
-        BinaryDataPtr binary, int span, vector<unsigned int> block_coords)
+        BinaryDataPtr binary, int span, vector<int> block_coords)
 {
     string prefix = "/" + datatype_instance + "/blocks/";
     stringstream sstr;
@@ -1167,7 +1167,7 @@ bool DVIDNodeService::exists(string datatype_endpoint)
 }
 
 BinaryDataPtr DVIDNodeService::get_volume3D(string datatype_inst, Dims_t sizes,
-        vector<unsigned int> offset, vector<unsigned int> channels,
+        vector<int> offset, vector<unsigned int> channels,
         bool throttle, bool compress, string roi)
 {
     bool waiting = true;
@@ -1215,7 +1215,7 @@ BinaryDataPtr DVIDNodeService::get_volume3D(string datatype_inst, Dims_t sizes,
 }
 
 string DVIDNodeService::construct_volume_uri(string datatype_inst, Dims_t sizes,
-        vector<unsigned int> offset, vector<unsigned int> channels,
+        vector<int> offset, vector<unsigned int> channels,
         bool throttle, bool compress, string roi)
 {
     string uri = "/node/" + uuid + "/"

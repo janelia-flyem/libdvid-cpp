@@ -74,7 +74,7 @@ int main(int argc, char** argv)
 
 
         // create binary data string wrapper (64 bits per pixel)
-        vector<unsigned int> start;
+        vector<int> start;
         start.push_back(0);
         start.push_back(0); start.push_back(0);
 

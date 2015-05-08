@@ -111,6 +111,7 @@ namespace libdvid { namespace python {
         import_array();
 
         // Register custom Python -> C++ converters.
+        std_vector_from_python_iterable<int>();
         std_vector_from_python_iterable<unsigned int>();
         std_vector_from_python_iterable<BlockXYZ>();
         std_vector_from_python_iterable<SubstackXYZ>();
@@ -164,10 +165,10 @@ namespace libdvid { namespace python {
         // For overloaded functions, boost::python needs help figuring out which one we're aiming for.
         // These function pointers specify the ones we want.
         void (DVIDNodeService::*put_binary)(std::string, std::string, BinaryDataPtr) = &DVIDNodeService::put;
-        Grayscale3D (DVIDNodeService::*get_gray3D)(std::string, Dims_t, std::vector<unsigned int>, bool, bool, std::string) = &DVIDNodeService::get_gray3D;
-        Labels3D (DVIDNodeService::*get_labels3D)(std::string, Dims_t, std::vector<unsigned int>, bool, bool, std::string) = &DVIDNodeService::get_labels3D;
-        void (DVIDNodeService::*put_gray3D)(std::string, Grayscale3D const&, std::vector<unsigned int>, bool, bool) = &DVIDNodeService::put_gray3D;
-        void (DVIDNodeService::*put_labels3D)(std::string, Labels3D const&, std::vector<unsigned int>, bool, bool, std::string) = &DVIDNodeService::put_labels3D;
+        Grayscale3D (DVIDNodeService::*get_gray3D)(std::string, Dims_t, std::vector<int>, bool, bool, std::string) = &DVIDNodeService::get_gray3D;
+        Labels3D (DVIDNodeService::*get_labels3D)(std::string, Dims_t, std::vector<int>, bool, bool, std::string) = &DVIDNodeService::get_labels3D;
+        void (DVIDNodeService::*put_gray3D)(std::string, Grayscale3D const&, std::vector<int>, bool, bool) = &DVIDNodeService::put_gray3D;
+        void (DVIDNodeService::*put_labels3D)(std::string, Labels3D const&, std::vector<int>, bool, bool, std::string) = &DVIDNodeService::put_labels3D;
         bool (DVIDNodeService::*create_labelblk)(std::string, std::string) = &DVIDNodeService::create_labelblk;
 
         // DVIDNodeService python class definition

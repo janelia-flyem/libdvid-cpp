@@ -83,7 +83,7 @@ int main(int argc, char** argv)
 
         // assuming a 1024x1024 window, 9 tiles could be needed if the window
         // is not completely aligned to tile space
-        vector<unsigned int> tilepos;
+        vector<int> tilepos;
         tilepos.push_back(0);
         tilepos.push_back(0);
         tilepos.push_back(zstart);
@@ -145,7 +145,7 @@ int main(int argc, char** argv)
         cout << "Frame rate: " << total_read_time / NUM_FETCHES * 1000 << " milliseconds" << endl;
 
         // size for gray and label fetch
-        vector<unsigned int> start;
+        vector<int> start;
         start.push_back(xstartm); start.push_back(ystartm); start.push_back(zstart);
         Dims_t lsizes;
         lsizes.push_back(FETCHSIZE); lsizes.push_back(FETCHSIZE); lsizes.push_back(1);

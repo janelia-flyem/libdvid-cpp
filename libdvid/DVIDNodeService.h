@@ -125,7 +125,7 @@ class DVIDNodeService {
      * \return 2D grayscale object that wraps a byte buffer
     */ 
     Grayscale2D get_tile_slice(std::string datatype_instance, Slice2D slice,
-            unsigned int scaling, std::vector<unsigned int> tile_loc);
+            unsigned int scaling, std::vector<int> tile_loc);
 
     /*!
      * Retrive the raw pre-computed tile (no decompression) from
@@ -139,7 +139,7 @@ class DVIDNodeService {
      * \return byte buffer for the raw compressed data stored (e.g, JPEG or PNG) 
     */ 
     BinaryDataPtr get_tile_slice_binary(std::string datatype_instance, Slice2D slice,
-            unsigned int scaling, std::vector<unsigned int> tile_loc);
+            unsigned int scaling, std::vector<int> tile_loc);
 
     /*!
      * Retrive a 3D 1-byte grayscale volume with the specified
@@ -161,7 +161,7 @@ class DVIDNodeService {
      * \return 3D grayscale object that wraps a byte buffer
     */
     Grayscale3D get_gray3D(std::string datatype_instance, Dims_t dims,
-            std::vector<unsigned int> offset, bool throttle=true,
+            std::vector<int> offset, bool throttle=true,
             bool compress=false, std::string roi="");
 
     /*!
@@ -186,7 +186,7 @@ class DVIDNodeService {
      * \return 3D grayscale object that wraps a byte buffer
     */
     Grayscale3D get_gray3D(std::string datatype_instance, Dims_t dims,
-            std::vector<unsigned int> offset,
+            std::vector<int> offset,
             std::vector<unsigned int> channels, bool throttle=true,
             bool compress=false, std::string roi="");
     
@@ -210,7 +210,7 @@ class DVIDNodeService {
      * \return 3D label object that wraps a byte buffer
     */
     Labels3D get_labels3D(std::string datatype_instance, Dims_t dims,
-            std::vector<unsigned int> offset, bool throttle=true,
+            std::vector<int> offset, bool throttle=true,
             bool compress=true, std::string roi="");
    
     /*!
@@ -235,7 +235,7 @@ class DVIDNodeService {
      * \return 3D label object that wraps a byte buffer
     */
     Labels3D get_labels3D(std::string datatype_instance, Dims_t dims,
-            std::vector<unsigned int> offset,
+            std::vector<int> offset,
             std::vector<unsigned int> channels, bool throttle=true,
             bool compress=true, std::string roi="");
 
@@ -258,7 +258,7 @@ class DVIDNodeService {
      * \param compress enable lz4 compression
     */
     void put_gray3D(std::string datatype_instance, Grayscale3D const & volume,
-            std::vector<unsigned int> offset, bool throttle=true,
+            std::vector<int> offset, bool throttle=true,
             bool compress=false);
 
     /*!
@@ -281,7 +281,7 @@ class DVIDNodeService {
      * \param compress enable lz4 compression
     */
     void put_labels3D(std::string datatype_instance, Labels3D const & volume,
-            std::vector<unsigned int> offset, bool throttle=true,
+            std::vector<int> offset, bool throttle=true,
             bool compress=true, std::string roi="");
 
     /************** API to access DVID blocks directly **************/
@@ -300,7 +300,7 @@ class DVIDNodeService {
      * \return grayscale blocks
     */
     GrayscaleBlocks get_grayblocks(std::string datatype_instance,
-           std::vector<unsigned int> block_coords, unsigned int span); 
+           std::vector<int> block_coords, unsigned int span); 
 
     /*!
      * Fetch label blocks from DVID.  The call will fetch
@@ -314,7 +314,7 @@ class DVIDNodeService {
      * \return grayscale blocks
     */
     LabelBlocks get_labelblocks(std::string datatype_instance,
-           std::vector<unsigned int> block_coords, unsigned int span);
+           std::vector<int> block_coords, unsigned int span);
 
     /*!
      * Put grayscale blocks to DVID.   The call will put
@@ -326,7 +326,7 @@ class DVIDNodeService {
      * \param block_coords location of first block in span (block coordinates)
     */
     void put_grayblocks(std::string datatype_instance,
-            GrayscaleBlocks blocks, std::vector<unsigned int> block_coords);
+            GrayscaleBlocks blocks, std::vector<int> block_coords);
     
     /*!
      * Put label blocks to DVID.   The call will put
@@ -339,7 +339,7 @@ class DVIDNodeService {
      * \param block_coords location of first block in span (block coordinates)
     */
     void put_labelblocks(std::string datatype_instance,
-            LabelBlocks blocks, std::vector<unsigned int> block_coords);
+            LabelBlocks blocks, std::vector<int> block_coords);
 
     /*************** API to access keyvalue interface ***************/
     
@@ -616,7 +616,7 @@ class DVIDNodeService {
      * \param roi specify DVID roi to mask PUT operation (default: empty)
     */
     void put_volume(std::string datatype_instance, BinaryDataPtr volume,
-            std::vector<unsigned int> sizes, std::vector<unsigned int> offset,
+            std::vector<unsigned int> sizes, std::vector<int> offset,
             bool throttle, bool compress, std::string roi);
 
     /*!
@@ -627,7 +627,7 @@ class DVIDNodeService {
      * \return binary data corresponding to an array of blocks
     */
     BinaryDataPtr get_blocks(std::string datatype_instance,
-        std::vector<unsigned int> block_coords, int span);
+        std::vector<int> block_coords, int span);
 
     /*!
      * Helper to put blocks from DVID for labels and grayscale.
@@ -637,7 +637,7 @@ class DVIDNodeService {
      * \param block_coord starting block in DVID block coordinates
     */
     void put_blocks(std::string datatype_instance, BinaryDataPtr binary,
-            int span, std::vector<unsigned int> block_coords);
+            int span, std::vector<int> block_coords);
 
     /*!
      * Helper function to create an instance of the specified type.
@@ -668,7 +668,7 @@ class DVIDNodeService {
      * \return byte buffer corresponding to volume
     */
     BinaryDataPtr get_volume3D(std::string datatype_inst, Dims_t sizes,
-        std::vector<unsigned int> offset, std::vector<unsigned int> channels,
+        std::vector<int> offset, std::vector<unsigned int> channels,
         bool throttle, bool compress, std::string roi);
 
     /*!
@@ -683,7 +683,7 @@ class DVIDNodeService {
      * \param roi specify DVID roi to mask operation (default: empty)
     */
     std::string construct_volume_uri(std::string datatype_inst, Dims_t sizes,
-            std::vector<unsigned int> offset,
+            std::vector<int> offset,
             std::vector<unsigned int> channels, bool throttle, bool compress,
             std::string roi);
 };

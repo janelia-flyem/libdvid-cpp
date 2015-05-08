@@ -76,7 +76,7 @@ int main(int argc, char** argv)
         }
 
         // create binary data string wrapper (64 bits per pixel)
-        vector<unsigned int> start; start.push_back(0); start.push_back(0); start.push_back(0);
+        vector<int> start; start.push_back(0); start.push_back(0); start.push_back(0);
 
         // post labels volume
         Dims_t lsizes; lsizes.push_back(BLK_SIZE); lsizes.push_back(BLK_SIZE); lsizes.push_back(BLK_SIZE);
