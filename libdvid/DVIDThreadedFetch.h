@@ -23,14 +23,14 @@ namespace libdvid {
  * \param service name of dvid node service
  * \param labelvol_name name of label volume with body id
  * \param grayscale_name name of grayscale data instance
- * \param use_blocks if true uses block interface instead of raw ND
  * \param num_threads number of threads used in the fetch.
+ * \param use_blocks if true uses block interface instead of raw ND
  * \param request_efficiency how requests are packaged (0: 1 at a time, 1: X contig)
- * \return grayscale blocks in X,Y,Z order of the body blocks
+ * \return array of blocks matrix order (X = column, Y = row, Z=slice)
 */
-GrayscaleBlocks get_body_blocks(DVIDNodeService& service,
+std::vector<BinaryDataPtr> get_body_blocks(DVIDNodeService& service,
         std::string labelvol_name, std::string grayscale_name, uint64 bodyid,
-        bool use_blocks = false, int num_threads = 1,
+        int num_threads = 1, bool use_blocks = false,
         int request_efficiency = 1);
 
 

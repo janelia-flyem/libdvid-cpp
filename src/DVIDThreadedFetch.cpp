@@ -12,9 +12,9 @@ static const int MAX_BLOCKS = 4096;
 
 namespace libdvid {
 
-GrayscaleBlocks get_body_blocks(DVIDNodeService& service, string labelvol_name,
-        string grayscale_name, uint64 bodyid, bool use_blocks, int num_threads,
-        int request_efficiency)
+vector<BinaryDataPtr> get_body_blocks(DVIDNodeService& service, string labelvol_name,
+        string grayscale_name, uint64 bodyid, int num_threads,
+        bool use_blocks, int request_efficiency)
 {
     vector<BlockXYZ> blockcoords;
 
@@ -24,7 +24,7 @@ GrayscaleBlocks get_body_blocks(DVIDNodeService& service, string labelvol_name,
 
     int num_requests = 0;
 
-    GrayscaleBlocks blocks;
+    vector<BinaryDataPtr> blocks;
 
     uint8* blockdata = 0;
     if ((request_efficiency == 1) && !use_blocks) {
@@ -73,7 +73,8 @@ GrayscaleBlocks get_body_blocks(DVIDNodeService& service, string labelvol_name,
                 block_coords.push_back(z);
                 GrayscaleBlocks blocks2 = service.get_grayblocks(grayscale_name, block_coords, curr_runlength);
                 for (int j = 0; j < curr_runlength; ++j) {
-                    blocks.push_back(blocks2[j]);
+                    BinaryDataPtr ptr = BinaryData::create_binary_data((const char*)blocks2[j], DEFBLOCKSIZE*DEFBLOCKSIZE*DEFBLOCKSIZE);
+                    blocks.push_back(ptr);
                 }
             } else {
                 Dims_t dims;
@@ -90,7 +91,7 @@ GrayscaleBlocks get_body_blocks(DVIDNodeService& service, string labelvol_name,
                 
                 if (curr_runlength == 1) {
                     // do a simple copy for just one block
-                    blocks.push_back(grayvol.get_raw());
+                    blocks.push_back(grayvol.get_binary());
                 } else {
                     const uint8* raw_data = grayvol.get_raw();
                     
@@ -113,7 +114,8 @@ GrayscaleBlocks get_body_blocks(DVIDNodeService& service, string labelvol_name,
                                 data_iter += ((offsety) - DEFBLOCKSIZE);
                             }
                         }
-                        blocks.push_back(blockdata);
+                        BinaryDataPtr ptr = BinaryData::create_binary_data((const char*) blockdata, DEFBLOCKSIZE*DEFBLOCKSIZE*DEFBLOCKSIZE);
+                        blocks.push_back(ptr);
                     }
                 }
             }
