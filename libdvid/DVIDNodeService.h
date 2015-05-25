@@ -295,7 +295,7 @@ class DVIDNodeService {
      * returned structure. 
      * TODO: support compression and throttling.
      * \param datatype instance name of grayscale type instance
-     * \param block_coords location of first block in span (block coordinates)
+     * \param block_coords location of first block in span (block coordinates) (X,Y,Z)
      * \param span number of blocks to attemp to read
      * \return grayscale blocks
     */
@@ -309,7 +309,7 @@ class DVIDNodeService {
      * returned structure.
      * TODO: support compression and throttling.
      * \param datatype instance name of labelblk type instance
-     * \param block_coords location of first block in span (block coordinates)
+     * \param block_coords location of first block in span (block coordinates) (X,Y,Z)
      * \param span number of blocks to attemp to read
      * \return grayscale blocks
     */
@@ -323,7 +323,7 @@ class DVIDNodeService {
      * TODO: support compression and throttling.
      * \param datatype instance name of grayscale type instance
      * \param blocks stores buffer for array of blocks
-     * \param block_coords location of first block in span (block coordinates)
+     * \param block_coords location of first block in span (block coordinates) (X,Y,Z)
     */
     void put_grayblocks(std::string datatype_instance,
             GrayscaleBlocks blocks, std::vector<int> block_coords);
@@ -336,7 +336,7 @@ class DVIDNodeService {
      * NOTE: UNTESTED (DVID DOES NOT YET SUPPORT)
      * \param datatype instance name of labelblk type instance
      * \param blocks stores buffer for array of blocks
-     * \param block_coords location of first block in span (block coordinates)
+     * \param block_coords location of first block in span (block coordinates) (X,Y,Z)
     */
     void put_labelblocks(std::string datatype_instance,
             LabelBlocks blocks, std::vector<int> block_coords);

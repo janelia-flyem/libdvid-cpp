@@ -1,6 +1,4 @@
--support sparse volume; add python api
 
--API versioning and checking
 -add more correct-by-compilation
 -improve test coverage
 
