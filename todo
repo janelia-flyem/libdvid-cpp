@@ -1,3 +1,10 @@
+-parallelize body fetch (see if there is speedup in memory, out of memory) --
+verify
+-parallelize tile fetch (see if there is speedup in memory, out of memory) --
+have option in current tile loadtest -- verify
+
+
+
 
 
 -add more correct-by-compilation

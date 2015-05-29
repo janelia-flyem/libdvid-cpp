@@ -29,7 +29,7 @@ int main(int argc, char** argv)
     {
         // call using the ND raw
         ScopeTime overall_time;
-        blocks = libdvid::get_body_blocks(dvid_node, argv[3], argv[4], atoi(argv[5]), 1, false, 1);
+        blocks = libdvid::get_body_blocks(dvid_node, argv[3], argv[4], atoi(argv[5]), 2, false, 1);
     }
 
     {

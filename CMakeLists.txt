@@ -75,7 +75,7 @@ if (NOT ${BUILDEM_DIR} STREQUAL "None")
     
     set (LIBDVID_DEPS ${jsoncpp_NAME} ${libpng_NAME} ${libcurl_NAME}
         ${libjpeg_NAME} ${lz4_NAME} ${boost_NAME} ${numpy_NAME})
-    set (boost_LIBS ${BUILDEM_LIB_DIR}/libboost_system.${BUILDEM_PLATFORM_DYLIB_EXTENSION})
+    set (boost_LIBS ${BUILDEM_LIB_DIR}/libboost_thread.${BUILDEM_PLATFORM_DYLIB_EXTENSION} ${BUILDEM_LIB_DIR}/libboost_system.${BUILDEM_PLATFORM_DYLIB_EXTENSION})
     if (LIBDVID_WRAP_PYTHON)
         include (python)
         # CMake's built-in PythonInterp module for the FIND_PACKAGE() macro uses  
@@ -95,7 +95,7 @@ else ()
     include_directories(${Boost_INCLUDE_DIR})
 
     set (json_LIB jsoncpp)
-    set (boost_LIBS boost_system)
+    set (boost_LIBS boost_thread boost_system)
     if (LIBDVID_WRAP_PYTHON)
         set(boostpython_LIB boost_python)
     endif()

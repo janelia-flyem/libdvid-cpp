@@ -66,7 +66,8 @@ int DVIDConnection::make_request(string endpoint, ConnectionMethod method,
         headers = curl_slist_append(headers, "Content-Type: application/octet-stream");
     } 
     curl_easy_setopt(curl_connection, CURLOPT_HTTPHEADER, headers);
-    
+    curl_easy_setopt(curl_connection, CURLOPT_NOSIGNAL, 1);
+
     // load url
     string url = get_uri_root() + endpoint;
     curl_easy_setopt(curl_connection, CURLOPT_URL, url.c_str());
