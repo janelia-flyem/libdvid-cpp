@@ -43,6 +43,7 @@ in this environment.
     % mkdir build; cd build;
     % cmake .. -DBUILDEM_DIR=/user-defined/path/to/build/directory
     % make -j num_processors
+    % make install
 
 
 ## Building an application
