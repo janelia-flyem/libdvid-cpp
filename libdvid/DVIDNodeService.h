@@ -239,6 +239,17 @@ class DVIDNodeService {
             std::vector<unsigned int> channels, bool throttle=true,
             bool compress=true, std::string roi="");
 
+    /*
+     * Retrieve label id at the specified point.  If no ID is found, return 0.
+     * \param datatype_instance name of the labelblk type instance
+     * \param x x location
+     * \param y y location
+     * \param z z location
+     * \return body id for given location (0 if none found)
+    */
+    uint64 get_label_by_location(std::string datatype_instance, unsigned int x,
+            unsigned int y, unsigned int z);
+
     /*!
      * Put a 3D 1-byte grayscale volume to DVID with the specified
      * dimension and spatial offset.  THE DIMENSION AND OFFSET ARE

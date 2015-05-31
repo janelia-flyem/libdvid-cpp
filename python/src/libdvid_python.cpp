@@ -194,6 +194,7 @@ namespace libdvid { namespace python {
            .def("create_labelblk", create_labelblk, (arg("service"), arg("instance"), arg("instance2")=object() ))
            .def("get_labels3D", get_labels3D,
                 ( arg("service"), arg("instance"), arg("dims"), arg("offset"), arg("throttle")=true, arg("compress")=false, arg("roi")=object() ))
+           .def("get_label_by_location",  &DVIDNodeService::get_label_by_location)
            .def("put_labels3D", put_labels3D,
                 ( arg("service"), arg("instance"), arg("ndarray"), arg("offset"), arg("throttle")=true, arg("compress")=false, arg("roi")=object() ))
 

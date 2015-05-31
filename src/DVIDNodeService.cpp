@@ -197,6 +197,17 @@ Labels3D DVIDNodeService::get_labels3D(string datatype_instance, Dims_t sizes,
             throttle, compress, roi);
 }
 
+uint64 DVIDNodeService::get_label_by_location(std::string datatype_instance, unsigned int x,
+            unsigned int y, unsigned int z)
+{
+    Dims_t sizes; sizes.push_back(1);
+    sizes.push_back(1); sizes.push_back(1);
+    vector<int> start; start.push_back(x); start.push_back(y); start.push_back(z);
+    Labels3D labels = get_labels3D(datatype_instance, sizes, start, false);
+    const uint64* ptr = (const uint64*) labels.get_raw();
+    return *ptr;
+}
+
 void DVIDNodeService::put_labels3D(string datatype_instance, Labels3D const & volume,
             vector<int> offset, bool throttle, bool compress, string roi)
 {
