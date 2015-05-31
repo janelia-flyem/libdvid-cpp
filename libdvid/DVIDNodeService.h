@@ -135,7 +135,7 @@ class DVIDNodeService {
      * \param datatype_instance name of tile type instance
      * \param slice specify XY, YZ, or XZ
      * \param scaling specify zoom level (1=max res)
-     * \param tile_loc X,Y,Z location of tile (X and Y are in block coordinates
+     * \param tile_loc e.g., X,Y,Z location of tile (X and Y are in block coordinates
      * \return byte buffer for the raw compressed data stored (e.g, JPEG or PNG) 
     */ 
     BinaryDataPtr get_tile_slice_binary(std::string datatype_instance, Slice2D slice,

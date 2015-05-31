@@ -33,6 +33,18 @@ std::vector<BinaryDataPtr> get_body_blocks(DVIDNodeService& service,
         int num_threads = 1, bool use_blocks = false,
         int request_efficiency = 1);
 
+/*
+ * Fetches all tile slices requested in parallel.
+ * \param service name of dvid node service
+ * \param orientation specify XY, YZ, or XZ
+ * \param scaling specify zoom level (1=max res)
+ * \param tile_locs_array e.g., X,Y,Z location of tile (X and Y are in block coordinates)
+ * \param num_threads num_threads to use (0 means use as many as tiles)
+ * \return byte buffer array with order the same as tiles requested
+*/
+std::vector<BinaryDataPtr> get_tile_array_binary(DVIDNodeService& service,
+        std::string datatype_instance, Slice2D orientation, unsigned int scaling,
+        const std::vector<std::vector<int> >& tile_locs_array, int num_threads=0);
 
 }
 

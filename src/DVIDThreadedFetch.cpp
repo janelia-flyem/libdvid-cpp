@@ -110,7 +110,33 @@ struct FetchGrayBlocks {
     vector<BinaryDataPtr>* blocks;
 };
 
+struct FetchTiles {
+    FetchTiles(DVIDNodeService& service_, Slice2D orientation_,
+            string instance_,
+            unsigned int scaling_, int start_, int count_,
+            const vector<vector<int> >& tile_locs_array_,
+            vector<BinaryDataPtr>& results_) :
+            service(service_), orientation(orientation_), instance(instance_),
+            scaling(scaling_),
+            start(start_), count(count_), tile_locs_array(tile_locs_array_),
+            results(results_) {}
 
+    void operator()()
+    {
+        for (int i = start; i < (start+count); ++i) {
+            results[i] = 
+                service.get_tile_slice_binary(instance, orientation, scaling, tile_locs_array[i]);
+        }     
+    }
+
+    DVIDNodeService service;
+    Slice2D orientation;
+    string instance;
+    unsigned int scaling;
+    int start; int count;
+    const vector<vector<int> >& tile_locs_array;
+    vector<BinaryDataPtr>& results;
+};
 
 
 vector<BinaryDataPtr> get_body_blocks(DVIDNodeService& service, string labelvol_name,
@@ -207,5 +233,35 @@ vector<BinaryDataPtr> get_body_blocks(DVIDNodeService& service, string labelvol_
     return blocks;
 }
 
+vector<BinaryDataPtr> get_tile_array_binary(DVIDNodeService& service,
+        string datatype_instance, Slice2D orientation, unsigned int scaling,
+        const vector<vector<int> >& tile_locs_array, int num_threads)
+{
+    if (!num_threads) {
+        num_threads = tile_locs_array.size();
+    }
+    vector<BinaryDataPtr> results(tile_locs_array.size());
+    
+    // launch threads
+    boost::thread_group threads;
+
+    // not an optimal partitioning
+    int incr = tile_locs_array.size() / num_threads;
+    int start = 0;
+
+    for (int i = 0; i < num_threads; ++i) {
+        int count = incr;
+        if (i == (num_threads-1)) {
+            count = tile_locs_array.size() - start;
+        }
+        threads.create_thread(FetchTiles(service, orientation,
+                    datatype_instance, scaling, start, count,
+                    tile_locs_array, results));
+        start += incr;
+    }
+    threads.join_all();
+
+    return results;
+}
 
 }
