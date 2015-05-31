@@ -10,6 +10,7 @@
 
 #include <libdvid/DVIDServerService.h>
 #include <libdvid/DVIDNodeService.h>
+#include <libdvid/DVIDThreadedFetch.h>
 
 #include <iostream>
 #include <vector>
@@ -135,6 +136,51 @@ int main(int argc, char** argv)
             throw ErrMsg("Returned center for body 5, plane 42 is incorrect");
         }
 
+        // ******* test parallel sparse vol fetch ***********
+        string gray_datatype_name = "gray1";
+        
+        // create new gray instance
+        if(!dvid_node.create_grayscale8(gray_datatype_name)) {
+            throw ErrMsg(gray_datatype_name + " already exists");
+        }
+        uint8* img_gray = new uint8 [XDIM*YDIM*ZDIM];
+        for (unsigned int i = 0; i < (XDIM*YDIM*ZDIM); ++i) {
+            img_gray[i] = rand()%255;
+        }
+        Grayscale3D graybin(img_gray, XDIM*YDIM*ZDIM, lsizes);
+        dvid_node.put_gray3D(gray_datatype_name, graybin, start);
+
+        vector<BinaryDataPtr> grayarray = get_body_blocks(dvid_node, labelvol_datatype_name, gray_datatype_name, uint64(5), 2, false, 1);
+        vector<BinaryDataPtr> grayarray2 = get_body_blocks(dvid_node, labelvol_datatype_name, gray_datatype_name, uint64(5), 1, false, 0);
+        vector<BinaryDataPtr> grayarray3 = get_body_blocks(dvid_node, labelvol_datatype_name, gray_datatype_name, uint64(5), 4, true, 1);
+
+        // 4 gray blocks should be returned
+        if ((grayarray.size() != 4) || (grayarray2.size() != 4) ||
+            (grayarray3.size() != 4)) {
+            throw ErrMsg("Returned gray array is not 4");
+        }
+
+        // all gray fetch calls should return the same value
+        for (int i = 0; i < grayarray.size(); ++i) {
+            for (int j = 0; j < (BLK_SIZE*BLK_SIZE*BLK_SIZE); ++j) {
+                if ((grayarray[i]->get_raw()[j] !=
+                    grayarray3[i]->get_raw()[j]) ||
+                    (grayarray[i]->get_raw()[j] != 
+                    grayarray2[i]->get_raw()[j])) {
+                    throw ErrMsg("Equivalent sparse gray volume fetches do not return same values");
+                }
+            }
+        }
+        
+        // should be equal to original gray -- check first row of graybin
+        for (int i = 0; i < 3; ++i) {
+            for (int j = 0; j < BLK_SIZE; ++j) {
+                if (grayarray[i]->get_raw()[j] != img_gray[i*BLK_SIZE+j]) {
+                    throw ErrMsg("First 3 retrieved blocks do not match saved gray");
+                }
+            }
+
+        }
     } catch (std::exception& e) {
         cerr << e.what() << endl;
         return -1;

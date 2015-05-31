@@ -73,7 +73,7 @@ int main(int argc, char** argv)
         }
 
         // should not recreate grayscale if it already exists
-         if(dvid_node.create_grayscale8(gray_datatype_name)) {
+        if(dvid_node.create_grayscale8(gray_datatype_name)) {
             cerr << gray_datatype_name << " should exist" << endl;
             return -1;
         }
