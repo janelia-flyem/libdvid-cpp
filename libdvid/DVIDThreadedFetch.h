@@ -33,6 +33,35 @@ std::vector<BinaryDataPtr> get_body_blocks(DVIDNodeService& service,
         int num_threads = 1, bool use_blocks = false,
         int request_efficiency = 1);
 
+/*!
+ * Fetches all the label blocks that intersect the body id in the specified
+ * label volume.  If threading is enabled, multiple requests will be done
+ * simultaneously.  This call tries to minimize the number of http requests
+ * by asking for contiguous chunks that include the necessary blocks.
+ * \param service name of dvid node service
+ * \param labelvol_name name of label volume with body id
+ * \param labelsname name of labels data instance
+ * \param spans X runs that make up the volume
+ * \param num_threads number of threads used in the fetch.
+ * \return array of blocks matrix order (X = column, Y = row, Z=slice)
+*/
+std::vector<BinaryDataPtr> get_body_labelblocks(DVIDNodeService& service,
+        std::string labelvol_name, uint64 bodyid, std::string labelsname,
+        std::vector<std::vector<int> >& spans, int num_threads = 2);
+
+/*!
+ * Write label blocks back to DVID at the specified spans.
+ * \param service name of dvid node service
+ * \param labelsname name of labels data instance
+ * \param blocks list of label blocks to be written into DVID
+ * \param spans X runs that make up the volume
+ * \param num_threads number of threads used in the fetch.
+*/
+void put_labelblocks(DVIDNodeService& service, std::string labelsname,
+        const std::vector<BinaryDataPtr>& blocks,
+        std::vector<std::vector<int> >& spans, int num_threads = 2);
+
+
 /*
  * Fetches all tile slices requested in parallel.
  * \param service name of dvid node service

@@ -110,6 +110,154 @@ struct FetchGrayBlocks {
     vector<BinaryDataPtr>* blocks;
 };
 
+struct FetchLabelBlocks {
+    FetchLabelBlocks(DVIDNodeService& service_, string labelsname_, int start_, int count_,
+            vector<vector<int> >* spans_, vector<BinaryDataPtr>* blocks_) :
+            service(service_), labelsname(labelsname_), start(start_), count(count_),
+            spans(spans_), blocks(blocks_) {}
+
+    void operator()()
+    {
+        uint64* blockdata = 0;
+        blockdata = new uint64[DEFBLOCKSIZE*DEFBLOCKSIZE*DEFBLOCKSIZE];
+        // iterate only for the threads parts 
+        for (int index = start; index < (start+count); ++index) {
+            // load span info
+            vector<int> span = (*spans)[index];
+            int xmin = span[0];
+            int y = span[1];
+            int z = span[2];
+            int curr_runlength = span[3];
+            int block_index = span[4];
+
+            Dims_t dims;
+            dims.push_back(DEFBLOCKSIZE*curr_runlength);
+            dims.push_back(DEFBLOCKSIZE);
+            dims.push_back(DEFBLOCKSIZE);
+            vector<int> offset;
+            offset.push_back(xmin*DEFBLOCKSIZE);
+            offset.push_back(y*DEFBLOCKSIZE);
+            offset.push_back(z*DEFBLOCKSIZE);
+
+            Labels3D labelvol = service.get_labels3D(labelsname,
+                    dims, offset, false); 
+
+            if (curr_runlength == 1) {
+                // do a simple copy for just one block
+                (*blocks)[block_index] = labelvol.get_binary();
+                ++block_index;
+            } else {
+                const uint64* raw_data = labelvol.get_raw();
+
+                // otherwise create a buffer and do something more complicated 
+                for (int j = 0; j < curr_runlength; ++j) {
+                    int offsetx = j * DEFBLOCKSIZE;
+                    int offsety = curr_runlength*DEFBLOCKSIZE;
+                    int offsetz = curr_runlength*DEFBLOCKSIZE*DEFBLOCKSIZE;
+                    uint64* mod_data_iter = blockdata; 
+
+                    for (int ziter = 0; ziter < DEFBLOCKSIZE; ++ziter) {
+                        const uint64* data_iter = raw_data + ziter * offsetz;    
+                        data_iter += (offsetx);
+                        for (int yiter = 0; yiter < DEFBLOCKSIZE; ++yiter) {
+                            for (int xiter = 0; xiter < DEFBLOCKSIZE; ++xiter) {
+                                *mod_data_iter = *data_iter;
+                                ++mod_data_iter;
+                                ++data_iter;
+                            }
+                            data_iter += ((offsety) - DEFBLOCKSIZE);
+                        }
+                    }
+                    BinaryDataPtr ptr = BinaryData::create_binary_data((const char*) blockdata,
+                            sizeof(uint64)*DEFBLOCKSIZE*DEFBLOCKSIZE*DEFBLOCKSIZE);
+                    (*blocks)[block_index] = ptr;
+                    ++block_index;
+                }
+            }
+        }
+
+        if (blockdata) {
+            delete []blockdata;
+        }
+    }
+
+
+    DVIDNodeService service;
+    string labelsname;
+    int start; int count;
+    vector<vector<int> >* spans;
+    vector<BinaryDataPtr>* blocks;
+};
+
+struct WriteLabelBlocks {
+    WriteLabelBlocks(DVIDNodeService& service_, string labelsname_, int start_, int count_,
+            vector<vector<int> >* spans_, const vector<BinaryDataPtr>* blocks_) :
+            service(service_), labelsname(labelsname_), start(start_), count(count_),
+            spans(spans_), blocks(blocks_) {}
+
+    void operator()()
+    {
+        // iterate only for the threads parts 
+        for (int index = start; index < (start+count); ++index) {
+            // load span info
+            vector<int> span = (*spans)[index];
+            int xmin = span[0];
+            int y = span[1];
+            int z = span[2];
+            int curr_runlength = span[3];
+            int block_index = span[4];
+
+            Dims_t dims;
+            dims.push_back(DEFBLOCKSIZE*curr_runlength);
+            dims.push_back(DEFBLOCKSIZE);
+            dims.push_back(DEFBLOCKSIZE);
+            vector<int> offset;
+            offset.push_back(xmin*DEFBLOCKSIZE);
+            offset.push_back(y*DEFBLOCKSIZE);
+            offset.push_back(z*DEFBLOCKSIZE);
+
+            uint64* blockdata = new uint64[DEFBLOCKSIZE*DEFBLOCKSIZE*DEFBLOCKSIZE*curr_runlength];
+
+            // otherwise create a buffer and do something more complicated 
+            for (int j = 0; j < curr_runlength; ++j) {
+                int offsetx = j * DEFBLOCKSIZE;
+                int offsety = curr_runlength*DEFBLOCKSIZE;
+                int offsetz = curr_runlength*DEFBLOCKSIZE*DEFBLOCKSIZE;
+                const uint64* copy_data_iter = (uint64*) (*blocks)[block_index]->get_raw();
+
+                for (int ziter = 0; ziter < DEFBLOCKSIZE; ++ziter) {
+                    uint64* data_iter = blockdata + ziter * offsetz;    
+                    data_iter += (offsetx);
+                    for (int yiter = 0; yiter < DEFBLOCKSIZE; ++yiter) {
+                        for (int xiter = 0; xiter < DEFBLOCKSIZE; ++xiter) {
+                            *data_iter = *copy_data_iter;
+                            ++copy_data_iter;
+                            ++data_iter;
+                        }
+                        data_iter += ((offsety) - DEFBLOCKSIZE);
+                    }
+                }
+                ++block_index;
+            }
+
+            // actually put label volume
+            Labels3D volume(blockdata, DEFBLOCKSIZE*DEFBLOCKSIZE*DEFBLOCKSIZE*curr_runlength, dims);
+            service.put_labels3D(labelsname, volume, offset, false); 
+            delete []blockdata;
+        }
+    }
+
+
+    DVIDNodeService service;
+    string labelsname;
+    int start; int count;
+    vector<vector<int> >* spans;
+    const vector<BinaryDataPtr>* blocks;
+};
+
+
+
+
 struct FetchTiles {
     FetchTiles(DVIDNodeService& service_, Slice2D orientation_,
             string instance_,
@@ -138,24 +286,20 @@ struct FetchTiles {
     vector<BinaryDataPtr>& results;
 };
 
-
-vector<BinaryDataPtr> get_body_blocks(DVIDNodeService& service, string labelvol_name,
-        string grayscale_name, uint64 bodyid, int num_threads,
-        bool use_blocks, int request_efficiency)
+/*!
+ * Given a body ID, determines all the X contiguous spans
+ * and packs into an array.
+*/
+int get_block_spans(DVIDNodeService& service, string labelvol_name,
+        uint64 bodyid, vector<vector<int> >& spans, int request_efficiency = 1)
 {
     vector<BlockXYZ> blockcoords;
-    vector<vector<int> > spans;
-
     if (!service.get_coarse_body(labelvol_name, bodyid, blockcoords)) {
         throw ErrMsg("Body not found, no grayscale blocks could be retrieved");
     }
 
     int num_requests = 0;
-
-    vector<BinaryDataPtr> blocks;
-
-    
-
+   
     // !! probably unnecessary copying going on
     // iterate through block coords and call ND or blocks one by one or contig
     int xmin; 
@@ -205,13 +349,31 @@ vector<BinaryDataPtr> get_body_blocks(DVIDNodeService& service, string labelvol_
         }
     }
 
+    return num_requests;
+}
+
+
+vector<BinaryDataPtr> get_body_blocks(DVIDNodeService& service, string labelvol_name,
+        string grayscale_name, uint64 bodyid, int num_threads,
+        bool use_blocks, int request_efficiency)
+{
+    vector<vector<int> > spans;
+    vector<BinaryDataPtr> blocks;
+
+    int num_requests = get_block_spans(service, labelvol_name, bodyid, spans, request_efficiency);
+
     // launch threads
     boost::thread_group threads;
 
     if (num_requests < num_threads) {
         num_threads = num_requests;
     }
-    blocks.resize(start_index);
+    
+    int num_blocks = 0;
+    for (int i = 0; i < spans.size(); ++i) {
+        num_blocks += spans[i][3];
+    }
+    blocks.resize(num_blocks);
 
     int incr = num_requests / num_threads;
     int start = 0;
@@ -232,6 +394,79 @@ vector<BinaryDataPtr> get_body_blocks(DVIDNodeService& service, string labelvol_
     std::cout << "Performed " << num_requests << " requests" << std::endl;
     return blocks;
 }
+
+vector<BinaryDataPtr> get_body_labelblocks(DVIDNodeService& service, string labelvol_name,
+        uint64 bodyid, string labelsname, vector<vector<int> >& spans, int num_threads)
+{
+    vector<BinaryDataPtr> blocks;
+    int num_requests = spans.size();
+    
+    if (spans.empty()) {
+        num_requests = get_block_spans(service, labelvol_name, bodyid, spans);
+    }
+
+    // launch threads
+    boost::thread_group threads;
+
+    if (num_requests < num_threads) {
+        num_threads = num_requests;
+    }
+    int num_blocks = 0;
+    for (int i = 0; i < spans.size(); ++i) {
+        num_blocks += spans[i][3];
+    }
+    blocks.resize(num_blocks);
+
+    int incr = num_requests / num_threads;
+    int start = 0;
+    int count_check = 0;
+
+    for (int i = 0; i < num_threads; ++i) {
+        int count = incr;
+        if (i == (num_threads-1)) {
+            count = num_requests - start;
+        }
+        count_check += count;
+        threads.create_thread(FetchLabelBlocks(service, labelsname, start, count, &spans, &blocks));
+        start += incr;
+    }
+    threads.join_all();
+    assert(count_check == num_requests);
+    std::cout << "Performed " << num_requests << " requests" << std::endl;
+    return blocks;
+}
+
+
+void put_labelblocks(DVIDNodeService& service, std::string labelsname,
+        const vector<BinaryDataPtr>& blocks,
+        vector<vector<int> >& spans, int num_threads)
+{
+    // launch threads
+    boost::thread_group threads;
+    int num_requests = spans.size();
+
+    if (num_requests < num_threads) {
+        num_threads = num_requests;
+    }
+
+    int incr = num_requests / num_threads;
+    int start = 0;
+    int count_check = 0;
+
+    for (int i = 0; i < num_threads; ++i) {
+        int count = incr;
+        if (i == (num_threads-1)) {
+            count = num_requests - start;
+        }
+        count_check += count;
+        threads.create_thread(WriteLabelBlocks(service, labelsname, start, count, &spans, &blocks));
+        start += incr;
+    }
+    threads.join_all();
+    assert(count_check == num_requests);
+    std::cout << "Performed " << num_requests << " requests" << std::endl;
+}
+
 
 vector<BinaryDataPtr> get_tile_array_binary(DVIDNodeService& service,
         string datatype_instance, Slice2D orientation, unsigned int scaling,

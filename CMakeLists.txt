@@ -121,7 +121,7 @@ endif()
 # Compile libdvidcpp library components
 add_library (dvidcpp src/DVIDNodeService.cpp src/DVIDServerService.cpp
     src/DVIDConnection.cpp src/DVIDException.cpp src/DVIDGraph.cpp
-    src/BinaryData.cpp src/DVIDThreadedFetch.cpp)
+    src/BinaryData.cpp src/DVIDThreadedFetch.cpp src/Algorithms.cpp)
 target_link_libraries (dvidcpp ${LIBDVID_EXT_LIBS})
 if (NOT ${BUILDEM_DIR} STREQUAL "None")
     add_dependencies (dvidcpp ${LIBDVID_DEPS})
@@ -204,6 +204,9 @@ target_link_libraries(dvidloadtest_tile dvidcpp ${support_LIBS})
 
 add_executable(dvidloadtest_sparsegray "load_tests/loadtest_sparsegray.cpp")
 target_link_libraries(dvidloadtest_sparsegray dvidcpp ${support_LIBS})
+
+add_executable(dvidcopypaste_bodies "load_tests/copypaste_bodies.cpp")
+target_link_libraries(dvidcopypaste_bodies dvidcpp ${support_LIBS})
 
 add_test(
     newrepo
