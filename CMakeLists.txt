@@ -79,10 +79,6 @@ if (NOT ${BUILDEM_DIR} STREQUAL "None")
         include (python)
         include (numpy)
         set (LIBDVID_DEPS ${LIBDVID_DEPS} ${python_NAME} ${numpy_NAME})
-        # CMake's built-in PythonInterp module for the FIND_PACKAGE() macro uses  
-        # the PYTHON_EXECUTABLE cache variable as the authority on where python is.
-        # Set it to the BuildEM Python location.
-        set(PYTHON_EXECUTABLE ${PYTHON_EXE})
         set(boostpython_LIB ${BUILDEM_LIB_DIR}/libboost_python.${BUILDEM_PLATFORM_DYLIB_EXTENSION})
     endif()
     set (support_LIBS ${json_LIB} 
