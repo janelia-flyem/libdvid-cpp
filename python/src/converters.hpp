@@ -347,14 +347,13 @@ namespace libdvid { namespace python {
             }
 
             // Verify ndarray memory order
-            if (!ndarray.attr("flags")["C_CONTIGUOUS"])
+            if (!ndarray.attr("flags")["F_CONTIGUOUS"])
             {
-                throw ErrMsg("Volume is not C_CONTIGUOUS");
+                throw ErrMsg("Volume is not F_CONTIGUOUS");
             }
 
-            // Extract dims from ndarray.shape, and
-            // REVERSE from C-order (ZYX) to Fortran-order (XYZ)
-            object shape = ndarray.attr("shape")[slice(_,_,-1)];
+            // Extract dims from ndarray.shape (which is already in fortran-order)
+            object shape = ndarray.attr("shape");
             typedef stl_input_iterator<Dims_t::value_type> shape_iter_t;
             Dims_t dims;
             dims.assign( shape_iter_t(shape), shape_iter_t() );
@@ -394,6 +393,7 @@ namespace libdvid { namespace python {
             holder.ptr = volume_data;
 
             // REVERSE from Fortran order (XYZ) to C-order (ZYX)
+            // (PyArray_SimpleNewFromData will create in C-order.)
             // Also, copy to type numpy expects
             std::vector<npy_intp> numpy_dims( volume.get_dims().rbegin(),
                                               volume.get_dims().rend() );
@@ -425,8 +425,12 @@ namespace libdvid { namespace python {
             //  to make sure the binary data object isn't destroyed when we return.
             incref(py_managed_bd.ptr());
 
+            // Finally, return a transposed *view* of the array, since the user is expecting fortran order.
+            object c_array = object(handle<>(borrowed(array_object)));
+            object f_array = c_array.attr("T");
+
             // Return the new array.
-            return array_object;
+            return incref(f_array.ptr());
         }
     };
     template <class VolumeType>
