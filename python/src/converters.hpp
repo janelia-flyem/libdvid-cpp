@@ -9,6 +9,7 @@
 #include <Python.h>
 #include <boost/python.hpp>
 #include <boost/python/stl_iterator.hpp>
+#include <boost/python/slice.hpp>
 
 // We intentionally omit numpy/arrayobject.h here because cpp files need to be careful with exactly when this is imported.
 // http://docs.scipy.org/doc/numpy/reference/c-api.array.html#importing-the-api
@@ -351,8 +352,9 @@ namespace libdvid { namespace python {
                 throw ErrMsg("Volume is not C_CONTIGUOUS");
             }
 
-            // Extract dims from ndarray.shape
-            object shape = ndarray.attr("shape");
+            // Extract dims from ndarray.shape, and
+            // REVERSE from C-order (ZYX) to Fortran-order (XYZ)
+            object shape = ndarray.attr("shape")[slice(_,_,-1)];
             typedef stl_input_iterator<Dims_t::value_type> shape_iter_t;
             Dims_t dims;
             dims.assign( shape_iter_t(shape), shape_iter_t() );
@@ -391,8 +393,10 @@ namespace libdvid { namespace python {
             BinaryDataHolder & holder = extract<BinaryDataHolder&>(py_managed_bd);
             holder.ptr = volume_data;
 
-            // Copy dims to type numpy expects.
-            std::vector<npy_intp> numpy_dims( volume.get_dims().begin(), volume.get_dims().end() );
+            // REVERSE from Fortran order (XYZ) to C-order (ZYX)
+            // Also, copy to type numpy expects
+            std::vector<npy_intp> numpy_dims( volume.get_dims().rbegin(),
+                                              volume.get_dims().rend() );
 
             // We will create a new array with the data from the existing PyBinaryDataHolder object (no copy).
             // The basic idea is described in the following link, but can get away with a lot less code
