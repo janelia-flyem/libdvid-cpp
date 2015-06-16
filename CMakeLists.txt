@@ -78,7 +78,7 @@ if (NOT ${BUILDEM_DIR} STREQUAL "None")
     if (LIBDVID_WRAP_PYTHON)
         include (python)
         include (numpy)
-        set (LIBDVID_DEPS ${LIBDVID_DEPS} ${numpy_NAME})
+        set (LIBDVID_DEPS ${LIBDVID_DEPS} ${python_NAME} ${numpy_NAME})
         # CMake's built-in PythonInterp module for the FIND_PACKAGE() macro uses  
         # the PYTHON_EXECUTABLE cache variable as the authority on where python is.
         # Set it to the BuildEM Python location.
