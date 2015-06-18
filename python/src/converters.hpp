@@ -438,7 +438,7 @@ namespace libdvid { namespace python {
 		boost::python::class_<ndarray_to_volume<VolumeType>::BinaryDataHolder>("BinaryDataHolder");
 
     //!*********************************************************************************************
-    //! Convert tuple-like types (e.g. BlockXYZ, PointXYZ, SubstackXYZ)
+    //! Convert tuple-like types (e.g. BlockXYZ, PointXYZ, SubstackXYZ, Vertex, Edge)
     //! tuple (Python) --> BlockXYZ (C++)
     //! BlockXYZ (C++) --> namedtuple("BlockXYZ", "x y z") (Python)
     //!*********************************************************************************************
