@@ -23,8 +23,8 @@ const char * HELP = "Program takes a list of bodies from one UUID and copies to 
 
 int main(int argc, char** argv)
 {
+    /*
     // ?! temp
-    
     DVIDNodeService dvid_node3(argv[1], argv[2]);
     int found = 0;
     int i = 1;
@@ -41,7 +41,7 @@ int main(int argc, char** argv)
             found++;
         }
         ++i;
-    }
+    }*/
 
 
     ScopeTime overall_time;
