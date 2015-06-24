@@ -71,18 +71,15 @@ if (NOT ${BUILDEM_DIR} STREQUAL "None")
     include (libcurl)
     include (lz4)
     include (boost)
-    include (numpy)
     
     set (LIBDVID_DEPS ${jsoncpp_NAME} ${libpng_NAME} ${libcurl_NAME}
-        ${libjpeg_NAME} ${lz4_NAME} ${boost_NAME} ${numpy_NAME})
+        ${libjpeg_NAME} ${lz4_NAME} ${boost_NAME})
     set (boost_LIBS ${BUILDEM_LIB_DIR}/libboost_thread.${BUILDEM_PLATFORM_DYLIB_EXTENSION} ${BUILDEM_LIB_DIR}/libboost_system.${BUILDEM_PLATFORM_DYLIB_EXTENSION})
     if (LIBDVID_WRAP_PYTHON)
         include (python)
-        # CMake's built-in PythonInterp module for the FIND_PACKAGE() macro uses  
-        # the PYTHON_EXECUTABLE cache variable as the authority on where python is.
-        # Set it to the BuildEM Python location.
-        set(PYTHON_EXECUTABLE ${PYTHON_EXE})
-        set(boostpython_LIB ${BUILDEM_LIB_DIR}/libboost_python.${BUILDEM_PLATFORM_DYLIB_EXTENSION})        
+        include (numpy)
+        set (LIBDVID_DEPS ${LIBDVID_DEPS} ${python_NAME} ${numpy_NAME})
+        set(boostpython_LIB ${BUILDEM_LIB_DIR}/libboost_python.${BUILDEM_PLATFORM_DYLIB_EXTENSION})
     endif()
     set (support_LIBS ${json_LIB} 
                       ${boost_LIBS} 

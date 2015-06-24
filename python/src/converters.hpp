@@ -9,6 +9,7 @@
 #include <Python.h>
 #include <boost/python.hpp>
 #include <boost/python/stl_iterator.hpp>
+#include <boost/python/slice.hpp>
 
 // We intentionally omit numpy/arrayobject.h here because cpp files need to be careful with exactly when this is imported.
 // http://docs.scipy.org/doc/numpy/reference/c-api.array.html#importing-the-api
@@ -346,12 +347,12 @@ namespace libdvid { namespace python {
             }
 
             // Verify ndarray memory order
-            if (!ndarray.attr("flags")["C_CONTIGUOUS"])
+            if (!ndarray.attr("flags")["F_CONTIGUOUS"])
             {
-                throw ErrMsg("Volume is not C_CONTIGUOUS");
+                throw ErrMsg("Volume is not F_CONTIGUOUS");
             }
 
-            // Extract dims from ndarray.shape
+            // Extract dims from ndarray.shape (which is already in fortran-order)
             object shape = ndarray.attr("shape");
             typedef stl_input_iterator<Dims_t::value_type> shape_iter_t;
             Dims_t dims;
@@ -391,8 +392,11 @@ namespace libdvid { namespace python {
             BinaryDataHolder & holder = extract<BinaryDataHolder&>(py_managed_bd);
             holder.ptr = volume_data;
 
-            // Copy dims to type numpy expects.
-            std::vector<npy_intp> numpy_dims( volume.get_dims().begin(), volume.get_dims().end() );
+            // REVERSE from Fortran order (XYZ) to C-order (ZYX)
+            // (PyArray_SimpleNewFromData will create in C-order.)
+            // Also, copy to type numpy expects
+            std::vector<npy_intp> numpy_dims( volume.get_dims().rbegin(),
+                                              volume.get_dims().rend() );
 
             // We will create a new array with the data from the existing PyBinaryDataHolder object (no copy).
             // The basic idea is described in the following link, but can get away with a lot less code
@@ -421,8 +425,12 @@ namespace libdvid { namespace python {
             //  to make sure the binary data object isn't destroyed when we return.
             incref(py_managed_bd.ptr());
 
+            // Finally, return a transposed *view* of the array, since the user is expecting fortran order.
+            object c_array = object(handle<>(borrowed(array_object)));
+            object f_array = c_array.attr("T");
+
             // Return the new array.
-            return array_object;
+            return incref(f_array.ptr());
         }
     };
     template <class VolumeType>
@@ -430,7 +438,7 @@ namespace libdvid { namespace python {
 		boost::python::class_<ndarray_to_volume<VolumeType>::BinaryDataHolder>("BinaryDataHolder");
 
     //!*********************************************************************************************
-    //! Convert tuple-like types (e.g. BlockXYZ, PointXYZ, SubstackXYZ)
+    //! Convert tuple-like types (e.g. BlockXYZ, PointXYZ, SubstackXYZ, Vertex, Edge)
     //! tuple (Python) --> BlockXYZ (C++)
     //! BlockXYZ (C++) --> namedtuple("BlockXYZ", "x y z") (Python)
     //!*********************************************************************************************

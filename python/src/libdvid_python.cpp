@@ -116,6 +116,8 @@ namespace libdvid { namespace python {
         std_vector_from_python_iterable<BlockXYZ>();
         std_vector_from_python_iterable<SubstackXYZ>();
         std_vector_from_python_iterable<PointXYZ>();
+        std_vector_from_python_iterable<Vertex>();
+        std_vector_from_python_iterable<Edge>();
 
         ndarray_to_volume<Grayscale3D>();
         ndarray_to_volume<Labels3D>();
@@ -126,6 +128,20 @@ namespace libdvid { namespace python {
         namedtuple_converter<BlockXYZ, int, 3>::class_member_ptr_vec block_members =
 			boost::assign::list_of(&BlockXYZ::x)(&BlockXYZ::y)(&BlockXYZ::z);
         namedtuple_converter<BlockXYZ, int, 3>("BlockXYZ", "x y z", block_members);
+
+
+        /*
+        // Vertex 
+        namedtuple_converter<Vertex, int, 2>::class_member_ptr_vec vertex_members =
+			boost::assign::list_of(&Vertex::id)(&Vertex::weight);
+        namedtuple_converter<Vertex, int, 2>("Vertex", "id weight", vertex_members);
+
+
+        // Edge 
+        namedtuple_converter<Edge, int, 3>::class_member_ptr_vec edge_members =
+			boost::assign::list_of(&Edge::id1)(&Edge::id2)(&Edge::weight);
+        namedtuple_converter<Edge, int, 3>("Edge", "x y z", edge_members);
+        */
 
         // PointXYZ
         namedtuple_converter<PointXYZ, int, 3>::class_member_ptr_vec point_members =
@@ -202,6 +218,11 @@ namespace libdvid { namespace python {
             .def("get_tile_slice", &DVIDNodeService::get_tile_slice)
             .def("get_tile_slice_binary", &DVIDNodeService::get_tile_slice_binary)
 
+
+            // graph
+            .def("update_vertices", &DVIDNodeService::update_vertices)
+            .def("update_edges", &DVIDNodeService::update_edges)
+
             // ROI
             .def("create_roi", &DVIDNodeService::create_roi)
             .def("get_roi", &get_roi)
@@ -209,6 +230,10 @@ namespace libdvid { namespace python {
             .def("get_roi_partition", &get_roi_partition)
             .def("roi_ptquery", &roi_ptquery)
         ;
+
+
+        class_<Vertex>("Vertex", init<VertexID, double>());
+        class_<Edge>("Edge", init<VertexID, VertexID, double>());
 
         enum_<Slice2D>("Slice2D")
             .value("XY", XY)
