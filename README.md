@@ -4,7 +4,7 @@ libdvid-cpp provides a c++ wrapper to HTTP calls to
 [DVID](https://github.com/janelia-flyem/dvid).
 It exposes only part of the DVID REST API.  Extra functionality
 will be added as needed.  Some of this functionality has been exposed
-through a Python API.
+through a Python API.  For examples of how to use the C++ and python API, please consult the unit tests.
 
 ## Installation
 
