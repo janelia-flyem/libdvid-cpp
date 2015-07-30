@@ -32,19 +32,36 @@ To install libdvid:
 
 This will install the library libdvidcpp.a.
 
-### buildem installation
+### buildem (no longer supported)
 
-We also enable installation using [buildem](https://github.com/janelia-flyem/buildem).
-Buildem automatically builds all of libdvid dependencies and installs
-the library to ${BUILDEM_DIR}/lib and cmake modules to ${BUILDEM_DIR}/lib/libdvid. 
-The downside are that programs that use the library must be built
-in this environment.
+### conda installation
 
-    % mkdir build; cd build;
-    % cmake .. -DBUILDEM_DIR=/user-defined/path/to/build/directory
-    % make -j num_processors
-    % make install
+The conda build system allows easy 1-step installation of libdvid libraries.
 
+The [Miniconda](http://conda.pydata.org/miniconda.html) tool first needs to installed:
+
+```
+# Install miniconda to the prefix of your choice, e.g. /my/miniconda
+
+# LINUX:
+wget https://repo.continuum.io/miniconda/Miniconda-latest-Linux-x86_64.sh
+bash Miniconda-latest-Linux-x86_64.sh
+
+# MAC:
+wget https://repo.continuum.io/miniconda/Miniconda-latest-MacOSX-x86_64.sh
+bash Miniconda-latest-MacOSX-x86_64.sh
+
+# Activate conda
+CONDA_ROOT=`conda info --root`
+source ${CONDA_ROOT}/bin/activate root
+```
+Once conda is in your system path, call the following to install libdvid-cpp:
+
+    % conda create -n <NAME> -c flyem libdvid-cpp
+
+Conda allows builder to create multiple environments.  To use the python
+library, set your PATH to the location of PREFIX/< NAME >/bin.  The libdvidcpp.a
+can be found in PREFIX/< NAME >/lib.
 
 ## Building an application
 
@@ -56,12 +73,6 @@ that need to be linked:
 libdvid works well with cmake.  To find the package, add the following to the cmake file:
     
     % find_package ( libdvidcpp )
-
-libdvid also has Buildem bindings.  When building a Buildem application,
-add the following to the cmake file:
-    
-    % include (libdvidcpp)
-
 
 ## Overview of Library
 DVID provides an HTTP REST interface.  There is a concept of DVID server
