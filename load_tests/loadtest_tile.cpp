@@ -148,7 +148,7 @@ int main(int argc, char** argv)
         cout << "Frame rate: " << total_read_time / NUM_FETCHES * 1000 << " milliseconds" << endl;
 
 
-        exit(0);
+        //exit(0);
 
         // size for gray and label fetch
         vector<int> start;
