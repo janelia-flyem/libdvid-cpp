@@ -60,8 +60,8 @@ Once conda is in your system path, call the following to install libdvid-cpp:
     % conda create -n <NAME> -c flyem libdvid-cpp
 
 Conda allows builder to create multiple environments.  To use the python
-library, set your PATH to the location of PREFIX/< NAME >/bin.  The libdvidcpp.a
-can be found in PREFIX/< NAME >/lib.
+library, set your PATH to the location of PREFIX/envs/< NAME >/bin.  The libdvidcpp.a
+can be found in PREFIX/envs/< NAME >/lib.
 
 ### Developers' Builder Guide
 Developing has never been easier using conda.  If you plan to actively modify
