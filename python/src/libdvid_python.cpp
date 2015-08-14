@@ -17,6 +17,19 @@
 
 namespace libdvid { namespace python {
 
+    //! Python wrapper function for DVIDConnection::make_head_request().
+    //! (Since "return-by-reference" is not an option in Python, boost::python can't provide an automatic wrapper.)
+    //! Returns a tuple: (status, error_msg)
+    boost::python::tuple make_head_request( DVIDConnection & connection,
+                                            std::string endpoint )
+    {
+        using namespace boost::python;
+
+        std::string err_msg; // TODO -- actually set errors if head request returns them.
+        int status_code = connection.make_head_request(endpoint);
+        return make_tuple(status_code, err_msg);
+    }
+
     //! Python wrapper function for DVIDConnection::make_request().
     //! (Since "return-by-reference" is not an option in Python, boost::python can't provide an automatic wrapper.)
     //! Returns a tuple: (status, result_body, error_msg)
@@ -160,6 +173,8 @@ namespace libdvid { namespace python {
 
         // DVIDConnection python class definition
         class_<DVIDConnection>("DVIDConnection", init<std::string>())
+            .def("make_head_request", &make_head_request,
+                                 ( arg("connection"), arg("endpoint") ))
             .def("make_request", &make_request,
                                  ( arg("connection"), arg("endpoint"), arg("method"), arg("payload")=object(), arg("timeout")=DVIDConnection::DEFAULT_TIMEOUT ))
             .def("get_addr", &DVIDConnection::get_addr)
@@ -167,6 +182,7 @@ namespace libdvid { namespace python {
         ;
 
         enum_<ConnectionMethod>("ConnectionMethod")
+            .value("HEAD", HEAD)
             .value("GET", GET)
             .value("POST", POST)
             .value("PUT", PUT)
@@ -207,12 +223,13 @@ namespace libdvid { namespace python {
                 ( arg("service"), arg("instance"), arg("ndarray"), arg("offset"), arg("throttle")=true, arg("compress")=false))
 
             // labels
-           .def("create_labelblk", create_labelblk, (arg("service"), arg("instance"), arg("instance2")=object() ))
-           .def("get_labels3D", get_labels3D,
+            .def("create_labelblk", create_labelblk, (arg("service"), arg("instance"), arg("instance2")=object() ))
+            .def("get_labels3D", get_labels3D,
                 ( arg("service"), arg("instance"), arg("dims"), arg("offset"), arg("throttle")=true, arg("compress")=false, arg("roi")=object() ))
-           .def("get_label_by_location",  &DVIDNodeService::get_label_by_location)
-           .def("put_labels3D", put_labels3D,
+            .def("get_label_by_location",  &DVIDNodeService::get_label_by_location)
+            .def("put_labels3D", put_labels3D,
                 ( arg("service"), arg("instance"), arg("ndarray"), arg("offset"), arg("throttle")=true, arg("compress")=false, arg("roi")=object() ))
+            .def("body_exists", &DVIDNodeService::body_exists)
 
             // 2D slices
             .def("get_tile_slice", &DVIDNodeService::get_tile_slice)

@@ -101,7 +101,7 @@ int main(int argc, char** argv)
         // check that the correct coarse volume is returned
         vector<BlockXYZ> blockcoords;
         dvid_node.get_coarse_body(labelvol_datatype_name, uint64(5), blockcoords);
-
+        
         if (blockcoords.size() != 4) {
             throw ErrMsg("4 blocks should exist for body 5");
         }
