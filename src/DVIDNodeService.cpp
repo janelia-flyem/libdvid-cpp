@@ -923,8 +923,19 @@ void DVIDNodeService::roi_ptquery(std::string roi_name,
     
 bool DVIDNodeService::body_exists(string labelvol_name, uint64 bodyid) 
 {
-    vector<BlockXYZ> blockcoords;
-    return get_coarse_body(labelvol_name, bodyid, blockcoords);
+    stringstream sstr;
+    sstr << "/" << labelvol_name << "/sparsevol/";
+    sstr << bodyid;
+    string node_endpoint = "/node/" + uuid + sstr.str();
+    int status_code = connection.make_head_request(node_endpoint);
+    if (status_code == 200) {
+        return true;
+    } else if (status_code == 204) {
+        return false;
+    } else {
+        throw ErrMsg("Returned bad status code from HEAD request on sparsevol");
+    }
+    return false;
 }
     
 PointXYZ DVIDNodeService::get_body_location(string labelvol_name,

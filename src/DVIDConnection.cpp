@@ -52,6 +52,32 @@ DVIDConnection::~DVIDConnection()
     curl_easy_cleanup(curl_connection);
 }
 
+int DVIDConnection::make_head_request(string endpoint) {
+    CURLcode result;
+
+    // load url
+    string url = get_uri_root() + endpoint;
+    curl_easy_setopt(curl_connection, CURLOPT_URL, url.c_str());
+
+    curl_easy_setopt(curl_connection, CURLOPT_CUSTOMREQUEST, "HEAD");
+    struct curl_slist *headers=0;
+    curl_easy_setopt(curl_connection, CURLOPT_NOBODY, 1);
+    curl_easy_setopt(curl_connection, CURLOPT_HTTPHEADER, headers);
+    result = curl_easy_perform(curl_connection);
+    
+    // get the error code
+    long http_code = 0;
+    curl_easy_getinfo (curl_connection, CURLINFO_RESPONSE_CODE, &http_code);
+    
+    curl_easy_setopt(curl_connection, CURLOPT_NOBODY, 0);
+
+    // throw exception if connection doesn't work
+    if (result != CURLE_OK) {
+        throw DVIDException("DVIDConnection error: " + string(url), http_code);
+    }
+    return int(http_code);
+}
+
 int DVIDConnection::make_request(string endpoint, ConnectionMethod method,
         BinaryDataPtr payload, BinaryDataPtr results, string& error_msg,
         ConnectionType type, int timeout)
