@@ -68,7 +68,7 @@ Developing has never been easier using conda.  If you plan to actively modify
 the code, first install libdvid-cpp as discussed above.  Then clone
 this repository into the directory of your choosing.  The package cmake
 can still be used but the environment variables must be set to point to
-the dependencies and libraries stored in PREFIX/CHOOSE_ENV_NAME.  libdvid-cpp
+the dependencies and libraries stored in PREFIX/envs/CHOOSE_ENV_NAME.  libdvid-cpp
 includes a simple wrapper script 'compile_against_conda.sh' that simply
 calls cmake with the correct environment variables.  To build libdvid-cpp:
 
@@ -139,9 +139,9 @@ and this library can then be checked against that.
  
 ## Testing the Package
 libdvid contains unit tests under *tests/* and load tests under *load_tests/*.
-The unit tests can be run by:
+The unit tests can be run in the build directory:
 
-    % cd make
+    % cd build
     % make test
 
 A DVID server needs to be running on 127.0.0.1:8000.  It is important
