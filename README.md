@@ -72,7 +72,7 @@ the dependencies and libraries stored in PREFIX/CHOOSE_ENV_NAME.  libdvid-cpp
 includes a simple wrapper script 'compile_against_conda.sh' that simply
 calls cmake with the correct environment variables.  To build libdvid-cpp:
 
-    % conda install -n CHOOOSE_ENV_NAME  gcc=4.8.2 -c flyem
+    % conda install -n CHOOOSE_ENV_NAME  gcc=4.8.2 -c flyem # 4.8.2.99 on linux
     % mkdir build; cd build
     % export CONDA_ENV_PATH=PREFIX/CHOOSE_ENV_NAME
     % ../compile_against_conda.sh
