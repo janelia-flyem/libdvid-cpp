@@ -52,6 +52,11 @@ DVIDConnection::~DVIDConnection()
     curl_easy_cleanup(curl_connection);
 }
 
+int DVIDConnection::make_head_request(string endpoint) {
+	std::string error_msg;
+	return make_request(endpoint, HEAD, BinaryDataPtr(), BinaryData::create_binary_data(), error_msg);
+}
+
 int DVIDConnection::make_request(string endpoint, ConnectionMethod method,
         BinaryDataPtr payload, BinaryDataPtr results, string& error_msg,
         ConnectionType type, int timeout)
@@ -73,6 +78,9 @@ int DVIDConnection::make_request(string endpoint, ConnectionMethod method,
     curl_easy_setopt(curl_connection, CURLOPT_URL, url.c_str());
         
     // set the method
+    if (method == HEAD) {
+        curl_easy_setopt(curl_connection, CURLOPT_CUSTOMREQUEST, "HEAD");
+    }
     if (method == GET) {
         curl_easy_setopt(curl_connection, CURLOPT_CUSTOMREQUEST, "GET");
     }
@@ -85,6 +93,9 @@ int DVIDConnection::make_request(string endpoint, ConnectionMethod method,
     if (method == DELETE) {
         curl_easy_setopt(curl_connection, CURLOPT_CUSTOMREQUEST, "DELETE");
     }
+
+    // HEAD request has no body.
+    curl_easy_setopt(curl_connection, CURLOPT_NOBODY, long(method == HEAD));
 
     // set to 0 for infinite
     curl_easy_setopt(curl_connection, CURLOPT_TIMEOUT, long(timeout));
