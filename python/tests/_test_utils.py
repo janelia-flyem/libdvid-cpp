@@ -11,7 +11,7 @@ def get_testrepo_root_uuid():
     assert status == httplib.OK, "Request for /repos/info returned status {}".format( status )
     assert error_message == ""
     repos_info = json.loads(body)
-    test_repos = filter( lambda (uuid, repo_info): repo_info['Alias'] == 'testrepo', 
+    test_repos = filter( lambda (uuid, repo_info): repo_info and repo_info['Alias'] == 'testrepo', 
                          repos_info.items() )
     if test_repos:
         uuid = test_repos[0][0]
