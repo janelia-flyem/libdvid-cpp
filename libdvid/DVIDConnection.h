@@ -14,7 +14,7 @@
 namespace libdvid {
 
 //! Define connection methods
-enum ConnectionMethod { GET, POST, PUT, DELETE};
+enum ConnectionMethod { HEAD, GET, POST, PUT, DELETE};
 
 //! Define connection types
 enum ConnectionType {DEFAULT, JSON, BINARY};
@@ -52,13 +52,22 @@ class DVIDConnection {
     */
     ~DVIDConnection();
 
-    /*!
+     /*!
+     * Simple HEAD requests to DVID.  An exception is generated
+     * if curl cannot properly connect to the URL.
+     *
+     * \param url endpoint where request is performed
+     * \return html status code
+    */ 
+    int make_head_request(std::string endpoint);
+
+   /*!
      * Main helper function retrieving data from DVID.  The function
      * performs the action specified in method.  An exception is generated
      * if curl cannot properly connect to the URL.
      *
      * \param url endpoint where request is performed
-     * \param method http verb (GET, POST, PUT, DELETE)
+     * \param method http verb (HEAD, GET, POST, PUT, DELETE)
      * \param payload binary data containing data to be posted
      * \param results binary data containing the result
      * \param error_msg error message if there is an error

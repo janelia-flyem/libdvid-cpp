@@ -160,6 +160,7 @@ namespace libdvid { namespace python {
 
         // DVIDConnection python class definition
         class_<DVIDConnection>("DVIDConnection", init<std::string>())
+            .def("make_head_request", &DVIDConnection::make_head_request)
             .def("make_request", &make_request,
                                  ( arg("connection"), arg("endpoint"), arg("method"), arg("payload")=object(), arg("timeout")=DVIDConnection::DEFAULT_TIMEOUT ))
             .def("get_addr", &DVIDConnection::get_addr)
@@ -167,6 +168,7 @@ namespace libdvid { namespace python {
         ;
 
         enum_<ConnectionMethod>("ConnectionMethod")
+            .value("HEAD", HEAD)
             .value("GET", GET)
             .value("POST", POST)
             .value("PUT", PUT)
