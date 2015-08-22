@@ -188,12 +188,14 @@ namespace libdvid { namespace python {
         void (DVIDNodeService::*put_gray3D)(std::string, Grayscale3D const&, std::vector<int>, bool, bool) = &DVIDNodeService::put_gray3D;
         void (DVIDNodeService::*put_labels3D)(std::string, Labels3D const&, std::vector<int>, bool, bool, std::string) = &DVIDNodeService::put_labels3D;
         bool (DVIDNodeService::*create_labelblk)(std::string, std::string) = &DVIDNodeService::create_labelblk;
+        BinaryDataPtr (DVIDNodeService::*custom_request)(std::string, BinaryDataPtr,
+            ConnectionMethod, bool) = &DVIDNodeService::custom_request;
 
         // DVIDNodeService python class definition
         class_<DVIDNodeService>("DVIDNodeService", init<std::string, UUID>())
             .def("get_typeinfo", &DVIDNodeService::get_typeinfo)
             .def("create_graph", &DVIDNodeService::create_graph)
-            .def("custom_request", &DVIDNodeService::custom_request)
+            .def("custom_request", custom_request, (arg("endpoint"), arg("payload"), arg("method"), arg("compress")=false))
 
             // keyvalue
             .def("create_keyvalue", &DVIDNodeService::create_keyvalue)

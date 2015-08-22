@@ -33,6 +33,32 @@ typedef std::string UUID;
 //! Used to define the relevant orthogonal cut-plane
 enum Slice2D { XY, XZ, YZ };
 
+//! create unique buffer for each object
+class NodeBuffer {
+  public:
+    NodeBuffer() : buffer(0) {}
+    char * get_buffer() 
+    {
+        if (!buffer) {
+            buffer = new char[INT_MAX];
+        }
+        return buffer;
+    }
+    NodeBuffer(const NodeBuffer& nbuf)
+    {
+        buffer = 0;
+    }
+    ~NodeBuffer()
+    {
+        if (buffer) {
+            delete[] buffer;
+        }
+    }
+
+  private:
+    void operator=(const NodeBuffer& nbuf) {}
+    char *buffer;
+};
 
 /*!
  * Class that helps access different DVID version node actions.
@@ -47,6 +73,7 @@ class DVIDNodeService {
     */
     DVIDNodeService(std::string web_addr_, UUID uuid_);
 
+
     /*!
      * Allow client to specify a custom http request with an
      * http endpoint for a given node and uuid.  A request
@@ -55,10 +82,11 @@ class DVIDNodeService {
      * \param endpoint REST endpoint given the node's uuid
      * \param payload binary data to be sent in the request
      * \param method http verb (GET, PUT, POST, DELETE)
+     * \param compress use lz4 compression if true
      * \return http response as binary data
     */
     BinaryDataPtr custom_request(std::string endpoint, BinaryDataPtr payload,
-            ConnectionMethod method);
+            ConnectionMethod method, bool compress = false);
 
     /*!
      * Retrieves meta data for a given datatype instance
@@ -598,6 +626,17 @@ class DVIDNodeService {
            int zplane=INT_MAX);
 
     /*!
+     * Find an XYZ point corresponding to the min or max for a given
+     * orientation.
+     * \param labelvol_name name of label volume type
+     * \param bodyid body id being queried
+     * \param dim 0=X plane, 1=Y plane, 2=Z plane
+     * \param minvalue true if min point, false for max point
+    */ 
+    PointXYZ get_body_extremum(std::string labelvol_name, uint64 bodyid,
+            int plane, bool minvalue);
+
+    /*!
      * Retrieve coarse volume for given body ID as a vector
      * of blocks in block coordinates.
      * \param labelvol_name name of label volume type
@@ -614,6 +653,9 @@ class DVIDNodeService {
     
     //! uuid for instance
     const UUID uuid;
+
+    //! buffer from decompression
+    NodeBuffer glb_buffer;
 
     /*!
      * Helper function to put a 3D volume to DVID with the specified

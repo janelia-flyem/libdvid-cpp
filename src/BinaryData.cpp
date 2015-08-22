@@ -149,25 +149,38 @@ void my_error_exit (j_common_ptr cinfo)
 namespace libdvid {
 
 BinaryDataPtr BinaryData::decompress_lz4(const BinaryDataPtr lz4binary,
-        int uncompressed_size)
+        int uncompressed_size, char* buffer, int bufsize)
 {
     const char* lz4_source = (char*) lz4binary->get_raw();
+
+    if (!buffer) {
+        BinaryDataPtr binary(new BinaryData());
+        // create a string buffer to fit the uncompressed result
+        binary->data.resize(uncompressed_size);
+
+        // dangerous write directly to string buffer
+        char* uncompressed_data = &(binary->data[0]);
+
+        int bytes_read = 
+            LZ4_decompress_fast(lz4_source, uncompressed_data, uncompressed_size);
+
+        if (bytes_read < 0) {
+            throw ErrMsg("Decompression of LZ4 failed");
+        }     
+
+        return binary;
+    } else {
+        int bytes_read = 
+            LZ4_decompress_safe(lz4_source, buffer, lz4binary->data.size(), bufsize);
+        if (bytes_read < 0) {
+            throw ErrMsg("Decompression of LZ4 failed");
+        }     
+         
+        BinaryDataPtr binary = BinaryData::create_binary_data(buffer, bytes_read);
     
-    BinaryDataPtr binary(new BinaryData());
-    // create a string buffer to fit the uncompressed result
-    binary->data.resize(uncompressed_size);
+        return binary;
+    }
 
-    // dangerous write directly to string buffer
-    char* uncompressed_data = &(binary->data[0]);
-
-    int bytes_read = 
-        LZ4_decompress_fast(lz4_source, uncompressed_data, uncompressed_size);
-
-    if (bytes_read < 0) {
-        throw ErrMsg("Decompression of LZ4 failed");
-    }     
-
-    return binary;
 }
 
 BinaryDataPtr BinaryData::compress_lz4(const BinaryDataPtr lz4binary)

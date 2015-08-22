@@ -150,5 +150,6 @@ that the libdvid installation matches the DVID installation.
 ## TODO
 
 * Add support for sparse volumes datatypes
+* Support caching for tiles
 * Better handling of DVID metadata and verification of interface versions
 

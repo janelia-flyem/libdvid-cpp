@@ -16,7 +16,7 @@ static const unsigned int TransactionLimit = 1000;
 namespace libdvid {
 
 DVIDNodeService::DVIDNodeService(string web_addr_, UUID uuid_) :
-    connection(web_addr_), uuid(uuid_)
+    connection(web_addr_), uuid(uuid_) 
 {
     string endpoint = "/repo/" + uuid + "/info";
     string respdata;
@@ -29,12 +29,26 @@ DVIDNodeService::DVIDNodeService(string web_addr_, UUID uuid_) :
 }
 
 BinaryDataPtr DVIDNodeService::custom_request(string endpoint,
-        BinaryDataPtr payload, ConnectionMethod method)
+        BinaryDataPtr payload, ConnectionMethod method, bool compress)
 {
-    // append '/' to the endpoint if it is not provided
+    // append '/' to the endpoint if it is not provided and there is no
+    // query string at the end
     if (!endpoint.empty() && (endpoint[0] != '/')) {
         endpoint = '/' + endpoint;
     }
+
+    if (compress) {
+        if (endpoint.find("?") != string::npos) {
+            endpoint += "&compression=lz4";
+        } else {
+            endpoint += "?compression=lz4";
+        }
+
+        if (method == POST || method == PUT) {
+            payload = BinaryData::compress_lz4(payload); 
+        }
+    } 
+
     string respdata;
     string node_endpoint = "/node/" + uuid + endpoint;
     BinaryDataPtr resp_binary = BinaryData::create_binary_data();
@@ -42,6 +56,13 @@ BinaryDataPtr DVIDNodeService::custom_request(string endpoint,
             resp_binary, respdata, BINARY);
     if (status_code != 200) {
         throw DVIDException(respdata + "\n" + resp_binary->get_data(), status_code);
+    }
+
+    if (compress) {
+        // call safe version of lz4
+        if (method == GET) {
+            resp_binary = BinaryData::decompress_lz4(resp_binary, 0, glb_buffer.get_buffer(), INT_MAX); 
+        }
     }
 
     return resp_binary; 
@@ -983,6 +1004,21 @@ PointXYZ DVIDNodeService::get_body_location(string labelvol_name,
 
     return point;
 }
+
+PointXYZ DVIDNodeService::get_body_extremum(string labelvol_name,
+        uint64 bodyid, int plane, bool minvalue)
+{
+    vector<BlockXYZ> blockcoords;
+    if (!get_coarse_body(labelvol_name, bodyid, blockcoords)) {
+        throw ErrMsg("Requested body does not exist");
+    }
+ 
+    // ?! find min/max for x,y,z
+
+    // ?! do ~16 slice queries for small block to find (use bbox) -- need custom request
+
+}
+
 
 bool DVIDNodeService::get_coarse_body(string labelvol_name, uint64 bodyid,
             vector<BlockXYZ>& blockcoords) 

@@ -118,6 +118,24 @@ int main(int argc, char** argv)
         // find point in middle of volume
         PointXYZ midpoint = dvid_node.get_body_location(labelvol_datatype_name, uint64(5));
 
+        // retrieve sparse vol with custom command (check compressed version)
+        BinaryDataPtr sparsevol = dvid_node.custom_request("/labels1_vol/sparsevol/5", BinaryDataPtr(), GET, false);
+ 
+        char* blah = new char[INT_MAX];
+ 
+        BinaryDataPtr sparsevol2 = dvid_node.custom_request("/labels1_vol/sparsevol/5", BinaryDataPtr(), GET, true);
+  
+        const byte* sraw1 = sparsevol->get_raw(); 
+        const byte* sraw2 = sparsevol2->get_raw();
+        if (sparsevol->length() != sparsevol2->length()) {
+            throw ErrMsg("Sparse vol compression mismatch");
+        }
+        for (int i = 0; i < sparsevol->length(); ++i) {
+            if (sraw1[i] != sraw2[i]) {
+                throw ErrMsg("Sparse vol compression value mismatch");
+            }
+        }
+
         // should be block (2,0,0) and coordinate 2*BLK_SIZE+BLK_SIZE/2,
         // BLK_SIZE/2, BLK_SIZE/2
         if ((midpoint.x != (2*BLK_SIZE+BLK_SIZE/2)) || (midpoint.y != BLK_SIZE/2)

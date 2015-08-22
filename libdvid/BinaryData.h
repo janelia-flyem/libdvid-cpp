@@ -63,10 +63,12 @@ class BinaryData {
      * TODO: decompress from lz4 streaming interface
      * \param lz4binary binary that contains lz4 data
      * \param the size of the resulting uncompresed buffer
+     * \param buffer if not 0 than unknown uncompressed size
+     * \param bufsize size of buffer
      * \return smart pointer to new binary data (uncompressed)
     */
     static BinaryDataPtr decompress_lz4(const BinaryDataPtr lz4binary,
-            int uncompressed_size);
+            int uncompressed_size, char* buffer = 0, int bufsize = 0);
 
     /*!
      * Load data and compress to lz4 format.
