@@ -117,6 +117,35 @@ int main(int argc, char** argv)
 
         // find point in middle of volume
         PointXYZ midpoint = dvid_node.get_body_location(labelvol_datatype_name, uint64(5));
+    
+        PointXYZ xminpt = dvid_node.get_body_extremum(labelvol_datatype_name, uint64(5), 0, true);
+        PointXYZ xmaxpt = dvid_node.get_body_extremum(labelvol_datatype_name, uint64(5), 0, false);
+
+        PointXYZ yminpt = dvid_node.get_body_extremum(labelvol_datatype_name, uint64(5), 1, true);
+        PointXYZ ymaxpt = dvid_node.get_body_extremum(labelvol_datatype_name, uint64(5), 1, false);
+
+        PointXYZ zminpt = dvid_node.get_body_extremum(labelvol_datatype_name, uint64(5), 2, true);
+        PointXYZ zmaxpt = dvid_node.get_body_extremum(labelvol_datatype_name, uint64(5), 2, false);
+            
+        if (xminpt.x != 0) {
+            throw ErrMsg("xmin not correct");
+        }
+        if (yminpt.y != 0) {
+            throw ErrMsg("ymin not correct");
+        }
+        if (zminpt.z != 0) {
+            throw ErrMsg("zmin not correct");
+        }
+
+        if (xmaxpt.x != 64) {
+            throw ErrMsg("xmax not correct");
+        }
+        if (ymaxpt.y != 0) {
+            throw ErrMsg("ymax not correct");
+        }
+        if (zmaxpt.z != 32) {
+            throw ErrMsg("zmax not correct");
+        }
 
         // retrieve sparse vol with custom command (check compressed version)
         BinaryDataPtr sparsevol = dvid_node.custom_request("/labels1_vol/sparsevol/5", BinaryDataPtr(), GET, false);

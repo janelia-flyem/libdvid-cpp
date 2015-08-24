@@ -1012,11 +1012,161 @@ PointXYZ DVIDNodeService::get_body_extremum(string labelvol_name,
     if (!get_coarse_body(labelvol_name, bodyid, blockcoords)) {
         throw ErrMsg("Requested body does not exist");
     }
- 
-    // ?! find min/max for x,y,z
 
-    // ?! do ~16 slice queries for small block to find (use bbox) -- need custom request
+    // get block id at boundary
+    int blockid = 0;
+    bool noblockid = false;
+    for (int i = 0; i < blockcoords.size(); ++i) {
+        if (plane == 0) {
+            if (!noblockid) {
+                noblockid = true;
+                blockid = blockcoords[i].x;
+            }
+            if (minvalue) {
+                if (blockcoords[i].x < blockid) {
+                    blockid = blockcoords[i].x;
+                }
+            } else {
+                if (blockcoords[i].x > blockid) {
+                    blockid = blockcoords[i].x;
+                } 
+            }
 
+        } else if (plane == 1) {
+            if (!noblockid) {
+                noblockid = true;
+                blockid = blockcoords[i].y;
+            }
+            if (minvalue) {
+                if (blockcoords[i].y < blockid) {
+                    blockid = blockcoords[i].y;
+                } 
+            } else {
+                if (blockcoords[i].y > blockid) {
+                    blockid = blockcoords[i].y;
+                } 
+            }
+
+        } else {
+            if (!noblockid) {
+                noblockid = true;
+                blockid = blockcoords[i].z;
+            }
+            if (minvalue) {
+                if (blockcoords[i].z < blockid) {
+                    blockid = blockcoords[i].z;
+                } 
+            } else {
+                if (blockcoords[i].z > blockid) {
+                    blockid = blockcoords[i].z;
+                } 
+            }
+        }
+    }
+    
+    // set body query filter
+    int planeloc = DEFBLOCKSIZE * blockid;
+    string filtername = "maxx";
+    if (minvalue) {
+        planeloc = DEFBLOCKSIZE * blockid + DEFBLOCKSIZE - 1;
+        if (plane == 1) {
+            filtername = "maxy";
+        } else if (plane == 2) {
+            filtername = "maxz";
+        }
+    } else {
+        filtername = "minx";
+        if (plane == 1) {
+            filtername = "miny";
+        } else if (plane == 2) {
+            filtername = "minz";
+        }
+    }
+
+    stringstream sstr;
+    sstr << "/" << labelvol_name << "/sparsevol/" << bodyid << "?" << filtername << "=" << planeloc; 
+
+    // request volume
+    BinaryDataPtr sparsevol = custom_request(sstr.str(), BinaryDataPtr(), GET, true);
+
+    const uint8* bytearray = sparsevol->get_raw();
+    unsigned int spot = 8;
+    unsigned int* num_spans = (unsigned int*)(bytearray+spot);
+    spot += 4;
+
+    PointXYZ extpoint(0,0,0);
+    bool nopoint = false;
+
+    // decode spans
+    for (unsigned int i = 0; i < *num_spans; ++i) {
+        int* xmin = (int*)(bytearray+spot);
+        spot += 4;
+        int* yloc = (int*)(bytearray+spot);
+        spot += 4;
+        int* zloc = (int*)(bytearray+spot);
+        spot += 4;
+        int* span = (int*)(bytearray+spot);
+        int xmax = *xmin + *span - 1;
+        spot += 4;
+
+        int xloc = *xmin;
+        if (!minvalue) {
+            xloc = xmax;
+        }
+
+        if (!nopoint) {
+            nopoint = true;
+            extpoint.x = xloc;
+            extpoint.y = *yloc;
+            extpoint.z = *zloc;
+        }
+
+        if (plane == 0) {
+            if (minvalue) {
+                if (xloc < extpoint.x) {
+                    extpoint.x = xloc;
+                    extpoint.y = *yloc;
+                    extpoint.z = *zloc;
+                } 
+            } else {
+                if (xloc > extpoint.x) {
+                    extpoint.x = xloc;
+                    extpoint.y = *yloc;
+                    extpoint.z = *zloc;
+                } 
+            }
+        } else if (plane == 1) {
+            if (minvalue) {
+                if (*yloc < extpoint.y) {
+                    extpoint.x = xloc;
+                    extpoint.y = *yloc;
+                    extpoint.z = *zloc;
+                } 
+            } else {
+                if (*yloc > extpoint.y) {
+                    extpoint.x = xloc;
+                    extpoint.y = *yloc;
+                    extpoint.z = *zloc;
+                } 
+            }        
+        } else {
+            if (minvalue) {
+                if (*zloc < extpoint.z) {
+                    extpoint.x = xloc;
+                    extpoint.y = *yloc;
+                    extpoint.z = *zloc;
+                } 
+            } else {
+                if (*zloc > extpoint.z) {
+                    extpoint.x = xloc;
+                    extpoint.y = *yloc;
+                    extpoint.z = *zloc;
+                } 
+            }           
+        }
+    }
+
+    return extpoint;
 }
 
 
