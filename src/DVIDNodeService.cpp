@@ -1,5 +1,6 @@
 #include "DVIDNodeService.h"
 #include "DVIDException.h"
+#include "DVIDCache.h"
 
 #include <json/json.h>
 #include <set>
@@ -160,7 +161,14 @@ BinaryDataPtr DVIDNodeService::get_tile_slice_binary(string datatype_instance,
     }
 
     string endpoint = sstr.str();
-    return custom_request(endpoint, BinaryDataPtr(), GET);
+    BinaryDataPtr cachedata = DVIDCache::get_cache()->get(uuid + "/" + endpoint);
+    if (cachedata) {
+        return cachedata;
+    }
+
+    cachedata = custom_request(endpoint, BinaryDataPtr(), GET);
+    DVIDCache::get_cache()->set(uuid + "/" + endpoint, cachedata);
+    return cachedata;
 }
 
 Grayscale3D DVIDNodeService::get_gray3D(string datatype_instance, Dims_t sizes,

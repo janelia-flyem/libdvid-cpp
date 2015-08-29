@@ -16,6 +16,8 @@
 #include <libdvid/DVIDNodeService.h>
 #include <libdvid/DVIDThreadedFetch.h>
 #include "ScopeTime.h"
+#include "DVIDCache.h"
+
 
 #include <iostream>
 
@@ -43,7 +45,6 @@ int FETCHSIZE = 1024;
 */
 int main(int argc, char** argv)
 {
-    cout << "Blah!!" << endl;
     // must point to a DVID instance with tiles (with name tile name) and
     // starting voxel coordinates
     if (argc != 7 && argc != 8) {
@@ -52,7 +53,8 @@ int main(int argc, char** argv)
     }
     try {
         ScopeTime overall_time;
-        
+        DVIDCache::get_cache()->set_cache_size(1000000000);
+
         DVIDNodeService dvid_node(argv[1], argv[2]);
 
         // some arithmetic to get tiles aligned to the tile space (indicated
@@ -146,6 +148,66 @@ int main(int argc, char** argv)
         double total_read_time = tiles_timer.getElapsed();
         cout << "Read " << total_bytes_read << " bytes (" << NUM_FETCHES << " tile planes) in " << total_read_time << " seconds" << endl;
         cout << "Frame rate: " << total_read_time / NUM_FETCHES * 1000 << " milliseconds" << endl;
+
+
+        // with cache
+        ScopeTime tiles_timer2(false);
+        for (int z = zstart; z < (zstart+NUM_FETCHES); ++z) {
+            // fetch 9 tiles
+            ScopeTime tile_timer(false);
+            tilepos[2] = z;
+            int bytes_read = 0;
+
+
+            vector<vector<int> > tilepos_array;
+
+
+            tilepos[0] = xstart / TILESIZE;
+            tilepos[1] = ystart / TILESIZE;
+            tilepos_array.push_back(tilepos);
+
+            tilepos[0] += 1;
+            tilepos_array.push_back(tilepos);
+
+            tilepos[0] += 1;
+            tilepos_array.push_back(tilepos);
+
+            tilepos[0] -= 2;
+            tilepos[1] += 1;
+            tilepos_array.push_back(tilepos);
+
+            tilepos[0] += 1;
+            tilepos_array.push_back(tilepos);
+
+            tilepos[0] += 1;
+            tilepos_array.push_back(tilepos);
+
+            tilepos[0] -= 2;
+            tilepos[1] += 1;
+            tilepos_array.push_back(tilepos);
+
+            tilepos[0] += 1;
+            tilepos_array.push_back(tilepos);
+
+            tilepos[0] += 1;
+            tilepos_array.push_back(tilepos);
+            
+
+            vector<BinaryDataPtr> tiles = get_tile_array_binary(dvid_node, tilename, XY, 0, tilepos_array, 0);
+            for (int i = 0; i < tiles.size(); ++i) {
+                bytes_read += tiles[i]->length();
+            }
+
+            total_bytes_read += bytes_read;
+            double read_time = tile_timer.getElapsed();
+            cout << "Read " << bytes_read << " bytes (9 tiles) in " << read_time << " seconds" << endl;
+        }
+        total_read_time = tiles_timer2.getElapsed();
+        cout << "Read " << total_bytes_read << " bytes (" << NUM_FETCHES << " tile planes) in " << total_read_time << " seconds" << endl;
+        cout << "Frame rate: " << total_read_time / NUM_FETCHES * 1000 << " milliseconds" << endl;
+
+
+
 
 
         //exit(0);
