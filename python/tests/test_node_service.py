@@ -2,7 +2,7 @@ import unittest
 import numpy
 import json
 
-from libdvid import DVIDNodeService, ConnectionMethod, Slice2D, BlockXYZ, SubstackXYZ
+from libdvid import DVIDNodeService, ConnectionMethod, Slice2D, BlockXYZ, SubstackXYZ, ErrMsg
 from _test_utils import TEST_DVID_SERVER, get_testrepo_root_uuid, delete_all_data_instances
 
 class Test_DVIDNodeService(unittest.TestCase):
@@ -29,7 +29,7 @@ class Test_DVIDNodeService(unittest.TestCase):
         readback_value = node_service.get("test_keyvalue", "kkkk")
         self.assertEqual(readback_value, "vvvv")
  
-        with self.assertRaises(RuntimeError):
+        with self.assertRaises(ErrMsg):
             node_service.put("test_keyvalue", "kkkk", 123) # 123 is not a buffer.
 
     def test_grayscale_3d(self):
