@@ -35,7 +35,7 @@ class ErrMsg : public std::exception {
     /*!
      * Empty destructor.
     */
-    ~ErrMsg() throw() {}
+    virtual ~ErrMsg() throw() {}
   protected:
     
     //! Error message
@@ -69,7 +69,7 @@ class DVIDException : public ErrMsg {
     /*!
      * Empty destructor.
     */
-    ~DVIDException() throw() {}
+    virtual ~DVIDException() throw() {}
 
   private:
     //! http status
