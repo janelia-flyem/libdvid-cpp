@@ -188,8 +188,11 @@ endif()
 install(TARGETS _dvid_python
         RUNTIME DESTINATION ${LIBDVID_PYTHON_INSTALL_DIR}/libdvid
         LIBRARY DESTINATION ${LIBDVID_PYTHON_INSTALL_DIR}/libdvid)
-install(FILES libdvid/__init__.py 
+install(FILES libdvid/__init__.py
         DESTINATION ${LIBDVID_PYTHON_INSTALL_DIR}/libdvid)
+install(FILES libdvid/gui/__init__.py
+              libdvid/gui/contents_browser.py
+        DESTINATION ${LIBDVID_PYTHON_INSTALL_DIR}/libdvid/gui)
 
 ######################################################################
 #
