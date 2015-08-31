@@ -12,6 +12,7 @@
 #include "DVIDConnection.h"
 #include "DVIDServerService.h"
 #include "DVIDNodeService.h"
+#include "DVIDException.h"
 
 #include "converters.hpp"
 
@@ -99,6 +100,46 @@ namespace libdvid { namespace python {
     	return result_list;
     }
 
+
+    //! Create a new python Exception type.
+    //! Copied from: http://stackoverflow.com/a/9690436/162094
+    //! \param name The exception name
+    //! \param baseTypeObj The base class of this new exception type (default: Exception)
+    PyObject* create_exception_class(const char* name, PyObject* baseTypeObj = PyExc_Exception)
+    {
+        using std::string;
+        namespace bp = boost::python;
+
+        string scopeName = bp::extract<string>(bp::scope().attr("__name__"));
+        string qualifiedName0 = scopeName + "." + name;
+        char* qualifiedName1 = const_cast<char*>(qualifiedName0.c_str());
+
+        PyObject* typeObj = PyErr_NewException(qualifiedName1, baseTypeObj, 0);
+        if(!typeObj) bp::throw_error_already_set();
+        bp::scope().attr(name) = bp::handle<>(bp::borrowed(typeObj));
+        return typeObj;
+    }
+
+    // These are the python objects representing Python exception types in libdvid.
+    // They are initialized in the module definition (below).
+    PyObject * PyErrMsg;
+    PyObject * PyDVIDException; // Initialized in module definition (below)
+
+	//! Translator function for libdvid::ErrMsg
+    //!
+    void translate_ErrMsg(ErrMsg const & e)
+    {
+        PyErr_SetString(PyErrMsg, e.what());
+    }
+
+	//! Translator function for libdvid::DVIDException
+    //!
+    void translate_DVIDException(DVIDException const & e)
+    {
+        using namespace boost::python;
+        PyErr_SetObject(PyDVIDException, make_tuple(e.getStatus(), e.what()).ptr());
+    }
+
     /*
      * Initialize the Python module (_dvid_python)
      * This cpp file should be built as _dvid_python.so
@@ -109,6 +150,14 @@ namespace libdvid { namespace python {
 
         // http://docs.scipy.org/doc/numpy/reference/c-api.array.html#importing-the-api
         import_array();
+
+        // Create custom Python exception types for the C++ exceptions defined in DVIDException.h,
+        // and register a translator for each
+        PyErrMsg = create_exception_class("ErrMsg");
+        register_exception_translator<ErrMsg>(&translate_ErrMsg);
+
+        PyDVIDException = create_exception_class("DVIDException", PyErrMsg);
+        register_exception_translator<DVIDException>(&translate_DVIDException);
 
         // Register custom Python -> C++ converters.
         std_vector_from_python_iterable<int>();

@@ -71,6 +71,10 @@ class DVIDException : public ErrMsg {
     */
     virtual ~DVIDException() throw() {}
 
+    int getStatus() const
+    {
+        return status;
+    }
   private:
     //! http status
     int status;
