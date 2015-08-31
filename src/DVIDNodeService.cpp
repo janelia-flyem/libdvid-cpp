@@ -172,11 +172,11 @@ BinaryDataPtr DVIDNodeService::get_tile_slice_binary(string datatype_instance,
 }
 
 Grayscale3D DVIDNodeService::get_gray3D(string datatype_instance, Dims_t sizes,
-        vector<int> offset, vector<unsigned int> channels,
+        vector<int> offset, vector<unsigned int> axes,
         bool throttle, bool compress, string roi)
 {
     BinaryDataPtr data = get_volume3D(datatype_instance,
-            sizes, offset, channels, throttle, compress, roi);
+            sizes, offset, axes, throttle, compress, roi);
    
     // decompress using lz4
     if (compress) {
@@ -192,18 +192,18 @@ Grayscale3D DVIDNodeService::get_gray3D(string datatype_instance, Dims_t sizes,
 Grayscale3D DVIDNodeService::get_gray3D(string datatype_instance, Dims_t sizes,
         vector<int> offset, bool throttle, bool compress, string roi)
 {
-    vector<unsigned int> channels;
-    channels.push_back(0); channels.push_back(1); channels.push_back(2);
-    return get_gray3D(datatype_instance, sizes, offset, channels,
+    vector<unsigned int> axes;
+    axes.push_back(0); axes.push_back(1); axes.push_back(2);
+    return get_gray3D(datatype_instance, sizes, offset, axes,
             throttle, compress, roi);
 }
 
 Labels3D DVIDNodeService::get_labels3D(string datatype_instance, Dims_t sizes,
-        vector<int> offset, vector<unsigned int> channels,
+        vector<int> offset, vector<unsigned int> axes,
         bool throttle, bool compress, string roi)
 {
     BinaryDataPtr data = get_volume3D(datatype_instance,
-            sizes, offset, channels, throttle, compress, roi);
+            sizes, offset, axes, throttle, compress, roi);
    
     // decompress using lz4
     if (compress) {
@@ -220,9 +220,9 @@ Labels3D DVIDNodeService::get_labels3D(string datatype_instance, Dims_t sizes,
 Labels3D DVIDNodeService::get_labels3D(string datatype_instance, Dims_t sizes,
         vector<int> offset, bool throttle, bool compress, string roi)
 {
-    vector<unsigned int> channels;
-    channels.push_back(0); channels.push_back(1); channels.push_back(2);
-    return get_labels3D(datatype_instance, sizes, offset, channels,
+    vector<unsigned int> axes;
+    axes.push_back(0); axes.push_back(1); axes.push_back(2);
+    return get_labels3D(datatype_instance, sizes, offset, axes,
             throttle, compress, roi);
 }
 
@@ -1272,14 +1272,14 @@ void DVIDNodeService::put_volume(string datatype_instance, BinaryDataPtr volume,
     bool waiting = true;
     int status_code;
     string respdata;
-    vector<unsigned int> channels;
-    channels.push_back(0); channels.push_back(1); channels.push_back(2); 
+    vector<unsigned int> axes;
+    axes.push_back(0); axes.push_back(1); axes.push_back(2);
     
     BinaryDataPtr binary_result;
     
     string endpoint =  construct_volume_uri(
             datatype_instance, sizes, offset,
-            channels, throttle, compress, roi);
+			axes, throttle, compress, roi);
 
     // compress using lz4
     if (compress) {
@@ -1385,7 +1385,7 @@ bool DVIDNodeService::exists(string datatype_endpoint)
 }
 
 BinaryDataPtr DVIDNodeService::get_volume3D(string datatype_inst, Dims_t sizes,
-        vector<int> offset, vector<unsigned int> channels,
+        vector<int> offset, vector<unsigned int> axes,
         bool throttle, bool compress, string roi)
 {
     bool waiting = true;
@@ -1395,7 +1395,7 @@ BinaryDataPtr DVIDNodeService::get_volume3D(string datatype_inst, Dims_t sizes,
 
     // ensure volume is 3D
     if ((sizes.size() != 3) || (offset.size() != 3) ||
-            (channels.size() != 3)) {
+            (axes.size() != 3)) {
         throw ErrMsg("Did not correctly specify 3D volume");
     }
 
@@ -1408,7 +1408,7 @@ BinaryDataPtr DVIDNodeService::get_volume3D(string datatype_inst, Dims_t sizes,
 
     string endpoint = 
         construct_volume_uri(datatype_inst, sizes, offset,
-                channels, throttle, compress, roi);
+                axes, throttle, compress, roi);
 
     // try get until DVID is available (no contention)
     while (waiting) {
@@ -1433,36 +1433,36 @@ BinaryDataPtr DVIDNodeService::get_volume3D(string datatype_inst, Dims_t sizes,
 }
 
 string DVIDNodeService::construct_volume_uri(string datatype_inst, Dims_t sizes,
-        vector<int> offset, vector<unsigned int> channels,
+        vector<int> offset, vector<unsigned int> axes,
         bool throttle, bool compress, string roi)
 {
     string uri = "/node/" + uuid + "/"
                     + datatype_inst + "/raw/";
    
     // verifies the legality of the call 
-    if (sizes.size() != channels.size()) {
-        throw ErrMsg("number of size dimensions does not match the number of channels");
+    if (sizes.size() != axes.size()) {
+        throw ErrMsg("number of size dimensions does not match the number of axes");
     }
     stringstream sstr;
     sstr << uri;
-    sstr << channels[0];
+    sstr << axes[0];
 
     // retrieve at least a 3D volume
-    set<int> used_channels;
-    for (unsigned int i = 0; i < channels.size(); ++i) {
-        used_channels.insert(channels[i]);   
+    set<int> used_axes;
+    for (unsigned int i = 0; i < axes.size(); ++i) {
+        used_axes.insert(axes[i]);
     }
-    int channel_id = 0;
-    // should never call since there should be 3 channels
-    for (unsigned int i = channels.size(); i < 3; ++i) {
-        while (used_channels.find(channel_id) != used_channels.end()) {
-            ++channel_id;
+    int axis_id = 0;
+    // should never call since there should be 3 axes
+    for (unsigned int i = axes.size(); i < 3; ++i) {
+        while (used_axes.find(axis_id) != used_axes.end()) {
+            ++axis_id;
         }
-        channels.push_back(channel_id);
+        axes.push_back(axis_id);
     }
 
-    for (unsigned int i = 1; i < channels.size(); ++i) {
-        sstr << "_" << channels[i];
+    for (unsigned int i = 1; i < axes.size(); ++i) {
+        sstr << "_" << axes[i];
     }
     
     // retrieve at least a 3D volume -- should never be called

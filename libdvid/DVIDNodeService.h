@@ -173,7 +173,7 @@ class DVIDNodeService {
      * Retrive a 3D 1-byte grayscale volume with the specified
      * dimension size and spatial offset.  The dimension
      * sizes and offset default to X,Y,Z (the
-     * DVID 0,1,2 channel).  The data is returned so X corresponds
+     * DVID 0,1,2 axis order).  The data is returned so X corresponds
      * to the matrix column.  Because it is easy to overload a single
      * server implementation of DVID with hundreds of volume requests,
      * we support a throttle command that prevents multiple volume
@@ -195,7 +195,7 @@ class DVIDNodeService {
     /*!
      * Retrive a 3D 1-byte grayscale volume with the specified
      * dimension size and spatial offset.  However, the user
-     * can also specify the channel order
+     * can also specify the axis order
      * of the retrieved volume.  The default is X, Y, Z (or 0, 1, 2).
      * Specfing (1,0,2) will allow the returned data where the column
      * dimension corresponds to Y instead of X. Because it is easy to
@@ -205,9 +205,9 @@ class DVIDNodeService {
      * A 2D slice should be requested as ch1 size x ch2 size x 1.  The requested
      * number of voxels cannot be larger than INT_MAX/8.
      * \param datatype_instance name of grayscale type instance
-     * \param dims size of dimensions (order given by channels)
-     * \param offset offset in voxel coordinates (order given by channels)
-     * \param channels channel order (default: 0,1,2)
+     * \param dims size of dimensions (order given by axes)
+     * \param offset offset in voxel coordinates (order given by axes)
+     * \param axis order (default: 0,1,2)
      * \param throttle allow only one request at time (default: true)
      * \param compress enable lz4 compression
      * \param roi specify DVID roi to mask GET operation (return 0s outside ROI)
@@ -215,14 +215,14 @@ class DVIDNodeService {
     */
     Grayscale3D get_gray3D(std::string datatype_instance, Dims_t dims,
             std::vector<int> offset,
-            std::vector<unsigned int> channels, bool throttle=true,
+            std::vector<unsigned int> axes, bool throttle=true,
             bool compress=false, std::string roi="");
     
      /*!
      * Retrive a 3D 8-byte label volume with the specified
      * dimension size and spatial offset.  The dimension
      * sizes and offset default to X,Y,Z (the
-     * DVID 0,1,2 channel).  The data is returned so X corresponds
+     * DVID 0,1,2 axis order).  The data is returned so X corresponds
      * to the matrix column.  Because it is easy to overload a single
      * server implementation of DVID with hundreds of volume requests,
      * we support a throttle command that prevents multiple volume
@@ -244,7 +244,7 @@ class DVIDNodeService {
     /*!
      * Retrive a 3D 8-byte label volume with the specified
      * dimension size and spatial offset.  However, the user
-     * can also specify the channel order
+     * can also specify the axis order
      * of the retrieved volume.  The default is X, Y, Z (or 0, 1, 2).
      * Specfing (1,0,2) will allow the returned data where the column
      * dimension corresponds to Y instead of X. Because it is easy to
@@ -254,9 +254,9 @@ class DVIDNodeService {
      * A 2D slice should be requested as ch1 size x ch2 size x 1.  The requested
      * number of voxels cannot be larger than INT_MAX/8.
      * \param datatype_instance name of the labelblk type instance
-     * \param dims size of dimensions (order given by channels)
-     * \param offset offset in voxel coordinates (order given by channels)
-     * \param channels channel order (default: 0,1,2)
+     * \param dims size of dimensions (order given by axes)
+     * \param offset offset in voxel coordinates (order given by axes)
+     * \param axis order (default: 0,1,2)
      * \param throttle allow only one request at time (default: true)
      * \param compress enable lz4 compression
      * \param roi specify DVID roi to mask GET operation (return 0s outside ROI)
@@ -264,7 +264,7 @@ class DVIDNodeService {
     */
     Labels3D get_labels3D(std::string datatype_instance, Dims_t dims,
             std::vector<int> offset,
-            std::vector<unsigned int> channels, bool throttle=true,
+            std::vector<unsigned int> axes, bool throttle=true,
             bool compress=true, std::string roi="");
 
     /*
@@ -283,7 +283,7 @@ class DVIDNodeService {
      * dimension and spatial offset.  THE DIMENSION AND OFFSET ARE
      * IN VOXEL COORDINATS BUT MUST BE BLOCK ALIGNED.  The size
      * of DVID blocks are determined at repo creation and is
-     * always 32x32x32 currently.  The channel order is always
+     * always 32x32x32 currently.  The axis order is always
      * X, Y, Z.  Because it is easy to overload a single server
      * implementation of DVID with hundreds
      * of volume PUTs, we support a throttle command that prevents
@@ -292,7 +292,7 @@ class DVIDNodeService {
      * TODO: expose block size parameter through interface.
      * \param datatype_instance name of the grayscale type instance
      * \param volume grayscale 3D volume encodes dimension sizes and binary buffer 
-     * \param offset offset in voxel coordinates (order given by channels)
+     * \param offset offset in voxel coordinates (order given by axes)
      * \param throttle allow only one request at time (default: true)
      * \param compress enable lz4 compression
     */
@@ -305,7 +305,7 @@ class DVIDNodeService {
      * dimension and spatial offset.  THE DIMENSION AND OFFSET ARE
      * IN VOXEL COORDINATS BUT MUST BE BLOCK ALIGNED.  The size
      * of DVID blocks are determined at repo creation and is
-     * always 32x32x32 currently.  The channel order is always
+     * always 32x32x32 currently.  The axis order is always
      * X, Y, Z.  Because it is easy to overload a single server
      * implementation of DVID with hundreds
      * of volume PUTs, we support a throttle command that prevents
@@ -314,7 +314,7 @@ class DVIDNodeService {
      * TODO: expose block size parameter through interface.
      * \param datatype_instance name of the grayscale type instance
      * \param volume label 3D volume encodes dimension sizes and binary buffer 
-     * \param offset offset in voxel coordinates (order given by channels)
+     * \param offset offset in voxel coordinates (order given by axes)
      * \param throttle allow only one request at time (default: true)
      * \param roi specify DVID roi to mask PUT operation (default: empty)
      * \param compress enable lz4 compression
@@ -663,7 +663,7 @@ class DVIDNodeService {
      * IN VOXEL COORDINATS BUT MUST BE BLOCK ALIGNED. 
      * \param datatype_instance name of tile type instance
      * \param volume binary buffer encodes volume 
-     * \param offset offset in voxel coordinates (order given by channels)
+     * \param offset offset in voxel coordinates (order given by axes)
      * \param throttle allow only one request at time
      * \param compress enable lz4 compression
      * \param roi specify DVID roi to mask PUT operation (default: empty)
@@ -710,34 +710,34 @@ class DVIDNodeService {
 
     /*!
      * Helper function to retrieve a 3D volume with the specified
-     * dimension size, spatial offset, and channel retrieval order.
+     * dimension size, spatial offset, and axis retrieval order.
      * \param datatype_instance name of tile type instance
-     * \param dims size of dimensions (order given by channels)
-     * \param offset offset in voxel coordinates (order given by channels)
-     * \param channels channel order (default: 0,1,2)
+     * \param dims size of dimensions (order given by axes)
+     * \param offset offset in voxel coordinates (order given by axes)
+     * \param axis order (default: 0,1,2)
      * \param throttle allow only one request at time
      * \param compress enable lz4 compression
      * \param roi specify DVID roi to mask GET operation (return 0s outside ROI)
      * \return byte buffer corresponding to volume
     */
     BinaryDataPtr get_volume3D(std::string datatype_inst, Dims_t sizes,
-        std::vector<int> offset, std::vector<unsigned int> channels,
+        std::vector<int> offset, std::vector<unsigned int> axes,
         bool throttle, bool compress, std::string roi);
 
     /*!
-     * Helper function to construct a REST endpoint strign for
+     * Helper function to construct a REST endpoint string for
      * volume GETs and PUTs given several parameters.
      * \param datatype_instance name of tile type instance
-     * \param dims size of dimensions (order given by channels)
-     * \param offset offset in voxel coordinates (order given by channels)
-     * \param channels channel order (default: 0,1,2)
+     * \param dims size of dimensions (order given by axes)
+     * \param offset offset in voxel coordinates (order given by axes)
+     * \param axes order (default: 0,1,2)
      * \param throttle allow only one request at time
      * \param compress enable lz4 compression
      * \param roi specify DVID roi to mask operation (default: empty)
     */
     std::string construct_volume_uri(std::string datatype_inst, Dims_t sizes,
             std::vector<int> offset,
-            std::vector<unsigned int> channels, bool throttle, bool compress,
+            std::vector<unsigned int> axes, bool throttle, bool compress,
             std::string roi);
 };
 
