@@ -8,13 +8,17 @@ import json
 import httplib
 import collections
 
+from PyQt4.QtCore import Qt, QStringList, QSize, QEvent
 from PyQt4.QtGui import QPushButton, QDialog, QVBoxLayout, QGroupBox, QTreeWidget, \
                         QTreeWidgetItem, QSizePolicy, QListWidget, QListWidgetItem, \
                         QDialogButtonBox, QLineEdit, QLabel, QComboBox, QMessageBox, \
-                        QHBoxLayout
-from PyQt4.QtCore import Qt, QStringList, QSize, QEvent
+                        QHBoxLayout, QTableWidget, QTableWidgetItem
 
 from libdvid import DVIDConnection, ConnectionMethod, ErrMsg, DVIDException
+
+# Must exactly match the fields from dvid: /api/server/info
+# Omitting "Server uptime" because it takes a lot of space.
+SERVER_INFO_FIELDS =  ["DVID Version", "Datastore Version", "Cores", "Maximum Cores", "Storage backend"]
 
 class ContentsBrowser(QDialog):
     """
@@ -80,9 +84,28 @@ class ContentsBrowser(QDialog):
         hostname_layout.addWidget( hostname_combobox )
         hostname_layout.addWidget( self._connect_button )
 
-        hostname_groupbox = QGroupBox("DVID Host", parent=self)
-        hostname_groupbox.setLayout( hostname_layout )
-        hostname_groupbox.setSizePolicy( QSizePolicy.Preferred, QSizePolicy.Maximum )
+        hostinfo_table = QTableWidget()
+        hostinfo_table.setColumnCount(len(SERVER_INFO_FIELDS))
+        hostinfo_table.setHorizontalHeaderLabels(SERVER_INFO_FIELDS)
+        hostinfo_table.horizontalHeader().setVisible(True)
+        hostinfo_table.verticalHeader().setVisible(False)
+        hostinfo_table.setRowCount(1)
+        hostinfo_table.setItem(0,0, QTableWidgetItem("Placeholder"))
+        hostinfo_table.setVisible(False)
+        hostinfo_table.resizeRowsToContents()
+        hostinfo_table.horizontalHeader().setStretchLastSection(True)
+        table_height = hostinfo_table.verticalHeader().sectionSize(0) + hostinfo_table.rowHeight(0)
+        hostinfo_table.resize( QSize( hostinfo_table.width(), table_height ) )
+        hostinfo_table.setMaximumSize( QSize( 1000, table_height ) )
+        hostinfo_table.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Fixed)
+
+        host_layout = QVBoxLayout()
+        host_layout.addLayout(hostname_layout)
+        host_layout.addWidget(hostinfo_table)
+
+        host_groupbox = QGroupBox("DVID Host", parent=self)
+        host_groupbox.setLayout( host_layout )
+        host_groupbox.setSizePolicy( QSizePolicy.Preferred, QSizePolicy.Preferred )
         
         data_treewidget = QTreeWidget(parent=self)
         data_treewidget.setHeaderLabels( ["Data"] ) # TODO: Add type, shape, axes, etc.
@@ -123,7 +146,7 @@ class ContentsBrowser(QDialog):
         buttonbox.button(QDialogButtonBox.Ok).setEnabled(False)
 
         layout = QVBoxLayout()
-        layout.addWidget( hostname_groupbox )
+        layout.addWidget( host_groupbox )
         layout.addWidget( data_groupbox )
         layout.addWidget( node_groupbox )
         if self._mode == "specify_new":
@@ -146,6 +169,7 @@ class ContentsBrowser(QDialog):
         new_data_groupbox.setEnabled(False)
 
         # Save instance members
+        self._hostinfo_table = hostinfo_table
         self._data_groupbox = data_groupbox
         self._node_groupbox = node_groupbox
         self._new_data_groupbox = new_data_groupbox
@@ -180,12 +204,15 @@ class ContentsBrowser(QDialog):
             new_hostname = new_hostname.split('://')[1] 
 
         error_msg = None
+        self._server_info = None
         self._repos_info = None
         self._current_dset = None
         self._hostname = None
+
         try:
             # Query the server
             connection = DVIDConnection(new_hostname)
+            self._server_info = ContentsBrowser._get_server_info(connection)
             self._repos_info = ContentsBrowser._get_repos_info(connection)
             self._hostname = new_hostname
             self._connection = connection
@@ -196,7 +223,6 @@ class ContentsBrowser(QDialog):
 
         if error_msg:
             QMessageBox.critical(self, "Connection Error", error_msg)
-            self._populate_datasets_tree()
             self._populate_node_list(-1)
         else:
             self._connect_button.setEnabled(False)
@@ -207,7 +233,16 @@ class ContentsBrowser(QDialog):
         self._node_groupbox.setEnabled(enable_contents)
         self._new_data_groupbox.setEnabled(enable_contents)
 
+        self._populate_hostinfo_table()
         self._populate_datasets_tree()
+
+    @classmethod
+    def _get_server_info(self, connection):
+        status, body, error_message = connection.make_request( "/server/info", ConnectionMethod.GET);
+        assert status == httplib.OK, "Request for /server/info returned status {}".format( status )
+        assert error_message == ""
+        server_info = json.loads(body)
+        return server_info
 
     @classmethod
     def _get_repos_info(self, connection):
@@ -220,6 +255,22 @@ class ContentsBrowser(QDialog):
         repos_info = filter( lambda (uuid, repo_info): repo_info, repos_info.items() )
         return collections.OrderedDict(sorted(repos_info))
     
+    def _populate_hostinfo_table(self):
+        self._hostinfo_table.setVisible( self._server_info is not None )
+
+        for column_index, fieldname in enumerate(SERVER_INFO_FIELDS):
+            try:
+                field = self._server_info[fieldname]
+            except KeyError:
+                field = "<UNDEFINED>"
+            item = QTableWidgetItem(field)
+            flags = item.flags()
+            flags &= ~Qt.ItemIsSelectable
+            flags &= ~Qt.ItemIsEditable
+            item.setFlags( flags )
+            self._hostinfo_table.setItem(0, column_index, item)
+        self._hostinfo_table.resizeColumnsToContents()
+
     def _populate_datasets_tree(self):
         """
         Initialize the tree widget of datasets and volumes.
