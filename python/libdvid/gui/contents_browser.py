@@ -19,6 +19,7 @@ from libdvid import DVIDConnection, ConnectionMethod, ErrMsg, DVIDException
 # Must exactly match the fields from dvid: /api/server/info
 # Omitting "Server uptime" because it takes a lot of space.
 SERVER_INFO_FIELDS =  ["DVID Version", "Datastore Version", "Cores", "Maximum Cores", "Storage backend"]
+TREEVIEW_COLUMNS = ["Alias", "TypeName", "UUID", "Created"]
 
 class ContentsBrowser(QDialog):
     """
@@ -108,7 +109,7 @@ class ContentsBrowser(QDialog):
         host_groupbox.setSizePolicy( QSizePolicy.Preferred, QSizePolicy.Preferred )
         
         data_treewidget = QTreeWidget(parent=self)
-        data_treewidget.setHeaderLabels( ["Data"] ) # TODO: Add type, shape, axes, etc.
+        data_treewidget.setHeaderLabels( TREEVIEW_COLUMNS ) # TODO: Add type, shape, axes, etc.
         data_treewidget.setSizePolicy( QSizePolicy.Preferred, QSizePolicy.Preferred )
         data_treewidget.itemSelectionChanged.connect( self._handle_data_selection )
 
@@ -270,6 +271,7 @@ class ContentsBrowser(QDialog):
             item.setFlags( flags )
             self._hostinfo_table.setItem(0, column_index, item)
         self._hostinfo_table.resizeColumnsToContents()
+        self._hostinfo_table.horizontalHeader().setStretchLastSection(True) # Force refresh of last column.
 
     def _populate_datasets_tree(self):
         """
@@ -280,14 +282,24 @@ class ContentsBrowser(QDialog):
         if self._repos_info is None:
             return
         
-        for dset_uuid, dset_info in sorted(self._repos_info.items()):
-            if dset_info is None:
+        for repo_uuid, repo_info in sorted(self._repos_info.items()):
+            if repo_info is None:
                 continue
-            dset_item = QTreeWidgetItem( self._data_treewidget, QStringList( dset_uuid ) )
-            dset_item.setData( 0, Qt.UserRole, (dset_uuid, "") )
-            for data_name in dset_info["DataInstances"].keys():
-                data_item = QTreeWidgetItem( dset_item, QStringList( data_name ) )
-                data_item.setData( 0, Qt.UserRole, (dset_uuid, data_name) )
+            repo_column_dict = collections.defaultdict(str)
+            repo_column_dict["Alias"] = repo_info["Alias"]
+            repo_column_dict["Created"] = repo_info["Created"]
+            repo_column_dict["UUID"] = repo_uuid
+            repo_column_values = [repo_column_dict[k] for k in TREEVIEW_COLUMNS]
+            dset_item = QTreeWidgetItem( self._data_treewidget, QStringList( repo_column_values ) )
+            dset_item.setData( 0, Qt.UserRole, (repo_uuid, "") )
+            for data_name, data_info in repo_info["DataInstances"].items():
+                
+                data_instance_dict = collections.defaultdict(str)
+                data_instance_dict["Alias"] = data_name
+                data_instance_dict["TypeName"] = data_info["Base"]["TypeName"]
+                data_column_values = [data_instance_dict[k] for k in TREEVIEW_COLUMNS]
+                data_item = QTreeWidgetItem( dset_item, data_column_values )
+                data_item.setData( 0, Qt.UserRole, (repo_uuid, data_name) )
                 if self._mode == 'specify_new':
                     # If we're in specify_new mode, only the dataset parent items are selectable.
                     flags = data_item.flags()
@@ -295,8 +307,8 @@ class ContentsBrowser(QDialog):
                     flags &= ~Qt.ItemIsEnabled
                     data_item.setFlags( flags )
         
-        # Expand everything
-        self._data_treewidget.expandAll()
+        self._data_treewidget.collapseAll()
+        self._data_treewidget.setSortingEnabled(True)
         
         # Select the first item by default.
         if self._mode == "select_existing":
