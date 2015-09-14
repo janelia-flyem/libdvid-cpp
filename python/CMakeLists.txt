@@ -193,6 +193,10 @@ install(FILES libdvid/__init__.py
 install(FILES libdvid/gui/__init__.py
               libdvid/gui/contents_browser.py
         DESTINATION ${LIBDVID_PYTHON_INSTALL_DIR}/libdvid/gui)
+install(FILES libdvid/voxels/__init__.py
+              libdvid/voxels/voxels_accessor.py
+              libdvid/voxels/voxels_metadata.py
+        DESTINATION ${LIBDVID_PYTHON_INSTALL_DIR}/libdvid/voxels)
 
 ######################################################################
 #
