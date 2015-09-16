@@ -19,7 +19,7 @@ from libdvid import DVIDConnection, ConnectionMethod, ErrMsg, DVIDException
 # Must exactly match the fields from dvid: /api/server/info
 # Omitting "Server uptime" because it takes a lot of space.
 SERVER_INFO_FIELDS =  ["DVID Version", "Datastore Version", "Cores", "Maximum Cores", "Storage backend"]
-TREEVIEW_COLUMNS = ["Alias", "TypeName", "UUID", "Created"]
+TREEVIEW_COLUMNS = ["Alias", "UUID", "TypeName", "Details"]
 
 class ContentsBrowser(QDialog):
     """
@@ -287,21 +287,33 @@ class ContentsBrowser(QDialog):
                 continue
             repo_column_dict = collections.defaultdict(str)
             repo_column_dict["Alias"] = repo_info["Alias"]
-            repo_column_dict["Created"] = repo_info["Created"]
+            repo_column_dict["Details"] = "Created: " + repo_info["Created"]
             repo_column_dict["UUID"] = repo_uuid
             repo_column_values = [repo_column_dict[k] for k in TREEVIEW_COLUMNS]
             dset_item = QTreeWidgetItem( self._data_treewidget, QStringList( repo_column_values ) )
             dset_item.setData( 0, Qt.UserRole, (repo_uuid, "") )
             for data_name, data_info in repo_info["DataInstances"].items():
-                
                 data_instance_dict = collections.defaultdict(str)
                 data_instance_dict["Alias"] = data_name
-                data_instance_dict["TypeName"] = data_info["Base"]["TypeName"]
+                typename = data_info["Base"]["TypeName"]
+                data_instance_dict["TypeName"] = typename
+
+                #FIXME: Is there a better way to identify voxel data?
+                is_volume = (typename in ['labelblk', 'uint8blk'])
+                if is_volume:
+                    start_coord = data_info["Extended"]["MinPoint"]
+                    stop_coord = data_info["Extended"]["MaxPoint"]
+                    shape = start_coord and stop_coord and tuple(b+1 - a for a,b in zip(start_coord, stop_coord))
+                    data_instance_dict["Details"] = "Size={} | Start={} | Stop={}".format( shape, start_coord, stop_coord )
+
                 data_column_values = [data_instance_dict[k] for k in TREEVIEW_COLUMNS]
                 data_item = QTreeWidgetItem( dset_item, data_column_values )
                 data_item.setData( 0, Qt.UserRole, (repo_uuid, data_name) )
-                if self._mode == 'specify_new':
-                    # If we're in specify_new mode, only the dataset parent items are selectable.
+
+                # If we're in specify_new mode, only the
+                # dataset parent items are selectable.
+                # Also, non-volume items aren't selectable.
+                if not is_volume or self._mode == 'specify_new':
                     flags = data_item.flags()
                     flags &= ~Qt.ItemIsSelectable
                     flags &= ~Qt.ItemIsEnabled
