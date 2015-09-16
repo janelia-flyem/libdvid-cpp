@@ -302,8 +302,15 @@ class ContentsBrowser(QDialog):
                 is_volume = (typename in ['labelblk', 'uint8blk'])
                 if is_volume:
                     start_coord = data_info["Extended"]["MinPoint"]
+                    if start_coord:
+                        start_coord = tuple(start_coord)
                     stop_coord = data_info["Extended"]["MaxPoint"]
-                    shape = start_coord and stop_coord and tuple(b+1 - a for a,b in zip(start_coord, stop_coord))
+                    if stop_coord:
+                        stop_coord = tuple(x+1 for x in stop_coord)
+                    if start_coord and stop_coord:
+                        shape = tuple(b - a for a,b in zip(start_coord, stop_coord))
+                    else:
+                        shape = None
                     data_instance_dict["Details"] = "Size={} | Start={} | Stop={}".format( shape, start_coord, stop_coord )
 
                 data_column_values = [data_instance_dict[k] for k in TREEVIEW_COLUMNS]
