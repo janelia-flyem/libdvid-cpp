@@ -30,6 +30,18 @@ class VoxelsAccessor(object):
     class ThrottleTimeoutException(Exception):
         pass
 
+    class BadRequestError(Exception):
+        def __init__(self, status, rest_query, error_message):
+            self.status = status
+            self.rest_query = rest_query
+            self.error_message = error_message
+            super(VoxelsAccessor.BadRequestError, self).__init__( str(self) )
+        
+        def __str__(self):
+            return ("Bad request (status: {})\n"
+                    "Query was: {}\n".format( self.status, self.rest_query ) + 
+                    "Error message: {}\n".format(self.error_message))
+
     @staticmethod
     def get_metadata( hostname, uuid, data_name ):
         """
@@ -38,10 +50,12 @@ class VoxelsAccessor(object):
         connection = DVIDConnection(hostname)
         rest_query = "/node/{uuid}/{data_name}/metadata".format( uuid=uuid, data_name=data_name )
         status, body, error_message = connection.make_request( rest_query, ConnectionMethod.GET )
-        if status != httplib.OK:
-            raise RuntimeError("Bad return status: {}\n"
-                               "Query was: {}\n".format( status, rest_query ) + 
-                               "Error message: {}\n".format(error_message))
+        if status == httplib.BAD_REQUEST:
+            raise VoxelsAccessor.BadRequestError(status, body, error_message)
+        elif status != httplib.OK:
+            return ("Bad return status: {}\n"
+                    "Query was: {}\n".format( status, rest_query ) + 
+                    "Error message: {}\n".format(error_message))
         try:
             json_data = json.loads(body)
         except ValueError:
