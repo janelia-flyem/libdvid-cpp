@@ -122,10 +122,19 @@ if (NOT MSVC)
 endif()
 
 # Compile libdvidcpp library components
-add_library (dvidcpp src/DVIDNodeService.cpp src/DVIDServerService.cpp
-    src/DVIDConnection.cpp src/DVIDException.cpp src/DVIDGraph.cpp
-    src/BinaryData.cpp src/DVIDThreadedFetch.cpp src/Algorithms.cpp src/DVIDCache.cpp)
-target_link_libraries (dvidcpp ${LIBDVID_EXT_LIBS})
+add_library (dvidcpp SHARED 
+             src/DVIDNodeService.cpp
+             src/DVIDServerService.cpp
+             src/DVIDConnection.cpp
+             src/DVIDException.cpp
+             src/DVIDGraph.cpp
+             src/BinaryData.cpp
+             src/DVIDThreadedFetch.cpp 
+             src/Algorithms.cpp 
+             src/DVIDCache.cpp)
+
+target_link_libraries (dvidcpp ${support_LIBS})
+
 if (NOT ${BUILDEM_DIR} STREQUAL "None")
     add_dependencies (dvidcpp ${LIBDVID_DEPS})
 endif()
