@@ -141,33 +141,48 @@ Grayscale2D DVIDNodeService::get_tile_slice(string datatype_instance,
 BinaryDataPtr DVIDNodeService::get_tile_slice_binary(string datatype_instance,
         Slice2D slice, unsigned int scaling, vector<int> tile_loc)
 {
+	std::cout << "get_tile_slice_binary(): Line: " << __LINE__ << std::endl;
     if (tile_loc.size() != 3) {
         throw ErrMsg("Tile identification requires 3 numbers");
     }
+	std::cout << "get_tile_slice_binary(): Line: " << __LINE__ << std::endl;
 
     string tileplane = "XY";
+	std::cout << "get_tile_slice_binary(): Line: " << __LINE__ << std::endl;
     if (slice == XZ) {
         tileplane = "XZ";
     } else if (slice == YZ) {
         tileplane = "YZ";
     }
+	std::cout << "get_tile_slice_binary(): Line: " << __LINE__ << std::endl;
 
     string uri =  "/" + datatype_instance + "/tile/" + tileplane + "/";
+	std::cout << "get_tile_slice_binary(): Line: " << __LINE__ << std::endl;
     stringstream sstr;
+	std::cout << "get_tile_slice_binary(): Line: " << __LINE__ << std::endl;
     sstr << uri;
+	std::cout << "get_tile_slice_binary(): Line: " << __LINE__ << std::endl;
     sstr << scaling << "/" << tile_loc[0];
+	std::cout << "get_tile_slice_binary(): Line: " << __LINE__ << std::endl;
     for (unsigned int i = 1; i < tile_loc.size(); ++i) {
         sstr << "_" << tile_loc[i];
     }
+	std::cout << "get_tile_slice_binary(): Line: " << __LINE__ << std::endl;
 
     string endpoint = sstr.str();
+	std::cout << "get_tile_slice_binary(): Line: " << __LINE__ << std::endl;
     BinaryDataPtr cachedata = DVIDCache::get_cache()->get(uuid + "/" + endpoint);
+	std::cout << "get_tile_slice_binary(): Line: " << __LINE__ << std::endl;
     if (cachedata) {
+    	std::cout << "get_tile_slice_binary(): Line: " << __LINE__ << std::endl;
         return cachedata;
     }
+	std::cout << "get_tile_slice_binary(): Line: " << __LINE__ << std::endl;
 
     cachedata = custom_request(endpoint, BinaryDataPtr(), GET);
+	std::cout << "get_tile_slice_binary(): Line: " << __LINE__ << std::endl;
     DVIDCache::get_cache()->set(uuid + "/" + endpoint, cachedata);
+	std::cout << "get_tile_slice_binary(): Line: " << __LINE__ << std::endl;
     return cachedata;
 }
 
