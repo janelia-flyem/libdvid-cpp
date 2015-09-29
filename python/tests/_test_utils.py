@@ -30,6 +30,6 @@ def delete_all_data_instances(uuid):
     assert error_message == ""
     repo_info = json.loads(body)
     for instance_name in repo_info["DataInstances"].keys():
-        status, body, error_message = connection.make_request( "/api/repo/{uuid}/{dataname}?imsure=true"
+        status, body, error_message = connection.make_request( "/repo/{uuid}/{dataname}?imsure=true"
                                                                .format( uuid=uuid, dataname=str(instance_name) ),
                                                                ConnectionMethod.DELETE )            
