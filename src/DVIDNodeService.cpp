@@ -2,8 +2,10 @@
 #include "DVIDException.h"
 #include "DVIDCache.h"
 
-#include <json/json.h>
 #include <set>
+#include <algorithm>
+#include <json/json.h>
+
 
 using std::string; using std::vector;
 
@@ -844,9 +846,6 @@ void DVIDNodeService::get_roi(std::string roi_name,
         throw ErrMsg("Could not decode JSON");
     }
 
-    // order the blocks (might be redundant depending on DVID output order)
-    set<BlockXYZ> sorted_blocks;
-
     // insert blocks from JSON (decode block run lengths)
     for (unsigned int i = 0; i < returned_data.size(); ++i) {
         int z = returned_data[i][0].asInt();
@@ -855,14 +854,12 @@ void DVIDNodeService::get_roi(std::string roi_name,
         int xmax = returned_data[i][3].asInt();
 
         for (int xiter = xmin; xiter <= xmax; ++xiter) {
-            sorted_blocks.insert(BlockXYZ(xiter, y, z));
+            blockcoords.push_back(BlockXYZ(xiter, y, z));
         }
     }
 
-    // returned sorted blocks back to caller
-    for (set<BlockXYZ>::iterator iter = sorted_blocks.begin();
-            iter != sorted_blocks.end(); ++iter) {
-        blockcoords.push_back(*iter);  
+    // return sorted blocks back to caller
+    std::sort(blockcoords.begin(), blockcoords.end());
     }
 }
 
