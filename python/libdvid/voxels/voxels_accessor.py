@@ -107,10 +107,8 @@ class VoxelsAccessor(object):
         else:
             self._throttle = throttle
 
-        # Request this volume's metadata from DVID
-        self.voxels_metadata = _metadata
-        if self.voxels_metadata is None:
-            self.voxels_metadata = VoxelsAccessor.get_metadata( hostname, uuid, data_name )
+        # Request this volume's metadata from DVID if necessary
+        self.voxels_metadata = _metadata or VoxelsAccessor.get_metadata( hostname, uuid, data_name )
 
     @property
     def shape(self):
@@ -241,15 +239,21 @@ class VoxelsAccessor(object):
 
         subvol_shape = numpy.array(stop) - start
 
-        typename = self.voxels_metadata.determine_dvid_typename()
-        if typename == "grayscale8":
-            volume = self._node_service.get_gray3D(self.data_name, subvol_shape[1:], start[1:], self._throttle)
+        if self._access_type == "mask":
+            volume = self._node_service.get_roi3D(self.data_name, subvol_shape[1:], start[1:], self._throttle)
             volume = volume[None]
-        elif typename == "labels64":
-            volume = self._node_service.get_labels3D(self.data_name, subvol_shape[1:], start[1:], self._throttle)
-            volume = volume[None]
+        elif self._access_type == "raw":
+            typename = self.voxels_metadata.determine_dvid_typename()
+            if typename == "grayscale8":
+                volume = self._node_service.get_gray3D(self.data_name, subvol_shape[1:], start[1:], self._throttle)
+                volume = volume[None]
+            elif typename == "labels64":
+                volume = self._node_service.get_labels3D(self.data_name, subvol_shape[1:], start[1:], self._throttle)
+                volume = volume[None]
+            else:
+                raise RuntimeError("Don't know how to get data of type '{}'".format(typename))
         else:
-            raise RuntimeError("Don't know how to post data of type '{}'".format(typename))
+            raise RuntimeError("Don't know how to get data via '{}' access.".format(self._access_type))
         return volume
 
     def post_ndarray( self, start, stop, new_data ):
@@ -549,7 +553,7 @@ class RoiMaskAccessor(VoxelsAccessor):
         mask_metadata["Axes"][0]["Label"] = "X"
         mask_metadata["Axes"][1]["Label"] = "Y"
         mask_metadata["Axes"][2]["Label"] = "Z"
-        
+
         assert '_metadata' not in kwargs or kwargs['_metadata'] is None
         kwargs['_metadata'] = VoxelsMetadata(mask_metadata)
         

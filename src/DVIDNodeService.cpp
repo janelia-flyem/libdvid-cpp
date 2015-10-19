@@ -5,6 +5,7 @@
 #include <set>
 #include <algorithm>
 #include <json/json.h>
+#include <boost/assign/list_of.hpp>
 
 
 using std::string; using std::vector;
@@ -860,7 +861,22 @@ void DVIDNodeService::get_roi(std::string roi_name,
 
     // return sorted blocks back to caller
     std::sort(blockcoords.begin(), blockcoords.end());
+}
+
+Roi3D DVIDNodeService::get_roi3D(string roi_name, Dims_t sizes,
+        vector<int> offset, bool throttle, bool compress)
+{
+    vector<unsigned int> axes = boost::assign::list_of(0)(1)(2);
+    BinaryDataPtr data = get_volume3D(roi_name,
+            sizes, offset, axes, throttle, compress, "", true);
+
+    // decompress using lz4
+    if (compress) {
+        // determined number of returned bytes
+        int decomp_size = sizes[0]*sizes[1]*sizes[2];
+        data = BinaryData::decompress_lz4(data, decomp_size);
     }
+    return Roi3D(data, sizes);
 }
 
 double DVIDNodeService::get_roi_partition(std::string roi_name,
@@ -1383,7 +1399,7 @@ bool DVIDNodeService::exists(string datatype_endpoint)
 
 BinaryDataPtr DVIDNodeService::get_volume3D(string datatype_inst, Dims_t sizes,
         vector<int> offset, vector<unsigned int> axes,
-        bool throttle, bool compress, string roi)
+        bool throttle, bool compress, string roi, bool is_mask)
 {
     bool waiting = true;
     int status_code;
@@ -1403,9 +1419,8 @@ BinaryDataPtr DVIDNodeService::get_volume3D(string datatype_inst, Dims_t sizes,
         throw ErrMsg("Requested too large of a volume");
     }
 
-    string endpoint = 
-        construct_volume_uri(datatype_inst, sizes, offset,
-                axes, throttle, compress, roi);
+    string endpoint = construct_volume_uri(datatype_inst, sizes, offset,
+                axes, throttle, compress, roi, is_mask);
 
     // try get until DVID is available (no contention)
     while (waiting) {
@@ -1431,10 +1446,15 @@ BinaryDataPtr DVIDNodeService::get_volume3D(string datatype_inst, Dims_t sizes,
 
 string DVIDNodeService::construct_volume_uri(string datatype_inst, Dims_t sizes,
         vector<int> offset, vector<unsigned int> axes,
-        bool throttle, bool compress, string roi)
+        bool throttle, bool compress, string roi, bool is_mask)
 {
+    string voxels_type = "raw";
+    if (is_mask)
+    {
+        voxels_type = "mask";
+    }
     string uri = "/node/" + uuid + "/"
-                    + datatype_inst + "/raw/";
+                    + datatype_inst + "/" + voxels_type + "/";
    
     // verifies the legality of the call 
     if (sizes.size() != axes.size()) {

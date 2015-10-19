@@ -575,6 +575,28 @@ class DVIDNodeService {
             std::vector<BlockXYZ>& blockcoords);
     
     /*!
+     * Retrieve a 3D 1-byte bool volume for a roi with the specified
+     * dimension size and spatial offset.  The dimension
+     * sizes and offset default to X,Y,Z (the
+     * DVID 0,1,2 axis order).  The data is returned so X corresponds
+     * to the matrix column.  Because it is easy to overload a single
+     * server implementation of DVID with hundreds of volume requests,
+     * we support a throttle command that prevents multiple volume
+     * GETs/PUTs from executing at the same time.
+     * A 2D slice should be requested as X x Y x 1.  The requested
+     * number of voxels cannot be larger than INT_MAX/8.
+     * \param roi_name name of roi mask instance
+     * \param dims size of X, Y, Z dimensions in voxel coordinates
+     * \param offset X, Y, Z offset in voxel coordinates
+     * \param throttle allow only one request at time (default: true)
+     * \param compress enable lz4 compression
+     * \return Roi3D object that wraps a byte buffer
+    */
+    Roi3D get_roi3D(std::string roi_name, Dims_t dims,
+    		std::vector<int> offset, bool throttle=true,
+            bool compress=false);
+
+    /*!
      * Retrieve a partition of the ROI covered by substacks
      * of the specified partition size.  The substacks will be ordered
      * by Z then Y then X.
@@ -711,18 +733,20 @@ class DVIDNodeService {
     /*!
      * Helper function to retrieve a 3D volume with the specified
      * dimension size, spatial offset, and axis retrieval order.
-     * \param datatype_instance name of tile type instance
+     * \param datatype_instance name of a voxels instance.
+     *                          A roi name can be given if is_mask=true.
      * \param dims size of dimensions (order given by axes)
      * \param offset offset in voxel coordinates (order given by axes)
      * \param axis order (default: 0,1,2)
      * \param throttle allow only one request at time
      * \param compress enable lz4 compression
      * \param roi specify DVID roi to mask GET operation (return 0s outside ROI)
+     * \param is_mask Use this when requesting ROI mask data as 3D voxels.
      * \return byte buffer corresponding to volume
     */
     BinaryDataPtr get_volume3D(std::string datatype_inst, Dims_t sizes,
         std::vector<int> offset, std::vector<unsigned int> axes,
-        bool throttle, bool compress, std::string roi);
+        bool throttle, bool compress, std::string roi, bool is_mask=false);
 
     /*!
      * Helper function to construct a REST endpoint string for
@@ -734,11 +758,13 @@ class DVIDNodeService {
      * \param throttle allow only one request at time
      * \param compress enable lz4 compression
      * \param roi specify DVID roi to mask operation (default: empty)
+     * \param is_mask Use this when requesting ROI mask data as 3D voxels.
     */
     std::string construct_volume_uri(std::string datatype_inst, Dims_t sizes,
             std::vector<int> offset,
             std::vector<unsigned int> axes, bool throttle, bool compress,
-            std::string roi);
+            std::string roi,
+			bool is_mask=false);
 };
 
 }

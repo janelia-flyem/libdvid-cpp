@@ -233,6 +233,7 @@ namespace libdvid { namespace python {
         // These function pointers specify the ones we want.
         void (DVIDNodeService::*put_binary)(std::string, std::string, BinaryDataPtr) = &DVIDNodeService::put;
         Grayscale3D (DVIDNodeService::*get_gray3D)(std::string, Dims_t, std::vector<int>, bool, bool, std::string) = &DVIDNodeService::get_gray3D;
+        Roi3D (DVIDNodeService::*get_roi3D)(std::string, Dims_t, std::vector<int>, bool, bool) = &DVIDNodeService::get_roi3D;
         Labels3D (DVIDNodeService::*get_labels3D)(std::string, Dims_t, std::vector<int>, bool, bool, std::string) = &DVIDNodeService::get_labels3D;
         void (DVIDNodeService::*put_gray3D)(std::string, Grayscale3D const&, std::vector<int>, bool, bool) = &DVIDNodeService::put_gray3D;
         void (DVIDNodeService::*put_labels3D)(std::string, Labels3D const&, std::vector<int>, bool, bool, std::string) = &DVIDNodeService::put_labels3D;
@@ -283,7 +284,8 @@ namespace libdvid { namespace python {
             .def("post_roi", &DVIDNodeService::post_roi)
             .def("get_roi_partition", &get_roi_partition)
             .def("roi_ptquery", &roi_ptquery)
-        ;
+            .def("get_roi3D", get_roi3D,
+                ( arg("service"), arg("instance"), arg("dims"), arg("offset"), arg("throttle")=true, arg("compress")=false ))			;
 
 
         class_<Vertex>("Vertex", init<VertexID, double>());

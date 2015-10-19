@@ -153,6 +153,9 @@ typedef DVIDVoxels<uint64, 3> Labels3D;
 //! 3D 8-bit volume (corresponding to grayscale)
 typedef DVIDVoxels<uint8, 3> Grayscale3D;
 
+//! 3D bool volume (corresponding to dense roi data)
+typedef DVIDVoxels<uint8, 3> Roi3D;
+
 //! 2D label volume
 typedef DVIDVoxels<uint64, 2> Labels2D;
 
