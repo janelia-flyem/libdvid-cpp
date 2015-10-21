@@ -343,6 +343,8 @@ class ContentsBrowser(QDialog):
         if self._default_node:
             self._select_node_uuid(self._default_node)
 
+        self._repo_treewidget.resizeColumnToContents(0)
+
     def _handle_data_selection(self):
         """
         When the user clicks a new data item, respond by updating the node list.
