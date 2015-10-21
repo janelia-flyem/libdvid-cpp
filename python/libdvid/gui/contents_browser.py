@@ -172,6 +172,11 @@ class ContentsBrowser(QDialog):
         data_groupbox.setEnabled(False)
         node_groupbox.setEnabled(False)
         new_data_groupbox.setEnabled(False)
+        
+        # Set tab order
+        self.setTabOrder(hostname_combobox, repo_treewidget)
+        self.setTabOrder(repo_treewidget, node_listwidget)
+        self.setTabOrder(node_listwidget, buttonbox)
 
         # Save instance members
         self._hostinfo_table = hostinfo_table
@@ -193,11 +198,15 @@ class ContentsBrowser(QDialog):
     def eventFilter(self, watched, event):
         """
         When the user presses the 'Enter' key, auto-click 'Connect'.
+        If we've already connected, auto-click 'OK'.
         """
         if watched == self._hostname_combobox \
         and event.type() == QEvent.KeyPress \
         and ( event.key() == Qt.Key_Return or event.key() == Qt.Key_Enter):
-            self._connect_button.click()
+            if self._hostname:
+                self._buttonbox.button(QDialogButtonBox.Ok).click()
+            else:
+                self._connect_button.click()
             return True
         return False
 
@@ -350,6 +359,7 @@ class ContentsBrowser(QDialog):
             self._select_node_uuid(self._default_nodes[self._hostname])
 
         self._repo_treewidget.resizeColumnToContents(0)
+        self._repo_treewidget.setFocus()
 
     def _handle_data_selection(self):
         """
