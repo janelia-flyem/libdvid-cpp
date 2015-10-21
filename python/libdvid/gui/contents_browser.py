@@ -75,9 +75,11 @@ class ContentsBrowser(QDialog):
         self._hostname_combobox = hostname_combobox
         hostname_combobox.setEditable(True)
         hostname_combobox.setSizePolicy( QSizePolicy.Expanding, QSizePolicy.Maximum )
-        hostname_combobox.installEventFilter(self)
         for hostname in self._suggested_hostnames:
             hostname_combobox.addItem( hostname )
+
+        # EventFilter is installed after everything else is initialized. (See below.)
+        #hostname_combobox.installEventFilter(self)
 
         self._connect_button = QPushButton("Connect", parent=self, clicked=self._handle_new_hostname)
 
@@ -180,6 +182,9 @@ class ContentsBrowser(QDialog):
         self._new_data_edit = new_data_edit
         self._full_url_label = full_url_label
         self._buttonbox = buttonbox
+
+        # Finally install eventfilter (after everything is initialized)
+        hostname_combobox.installEventFilter(self)
 
     def sizeHint(self):
         return QSize(1000,1000)
