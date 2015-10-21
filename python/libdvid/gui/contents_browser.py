@@ -34,17 +34,18 @@ class ContentsBrowser(QDialog):
     * Show more details in node list (e.g. date modified, parents, children)
     * Gray-out nodes that aren't "open" for adding new volumes
     """
-    def __init__(self, suggested_hostnames, default_node=None, mode='select_existing', parent=None):
+    def __init__(self, suggested_hostnames, default_nodes=None, mode='select_existing', parent=None):
         """
         Constructor.
         
         suggested_hostnames: A list of hostnames to suggest to the user, e.g. ["localhost:8000"]
+        default_nodes: A dict of {hostname : uuid} specifying which node to auto-select for each possible host.
         mode: Either 'select_existing' or 'specify_new'
         parent: The parent widget.
         """
         super( ContentsBrowser, self ).__init__(parent)
         self._suggested_hostnames = suggested_hostnames
-        self._default_node = default_node
+        self._default_nodes = default_nodes
         self._mode = mode
         self._current_repo = None
         self._repos_info = None
@@ -344,9 +345,9 @@ class ContentsBrowser(QDialog):
         
         self._repo_treewidget.collapseAll()
         self._repo_treewidget.setSortingEnabled(True)
-        
-        if self._default_node:
-            self._select_node_uuid(self._default_node)
+
+        if self._hostname in self._default_nodes:
+            self._select_node_uuid(self._default_nodes[self._hostname])
 
         self._repo_treewidget.resizeColumnToContents(0)
 
@@ -468,7 +469,7 @@ if __name__ == "__main__":
     from PyQt4.QtGui import QApplication    
     app = QApplication([])
     browser = ContentsBrowser(["localhost:8000", "emdata2:7000"],
-                              default_node='57c4c6a0740d4509a02da6b9453204cb',
+                              default_nodes={ "localhost:8000" : '57c4c6a0740d4509a02da6b9453204cb'},
                               mode="select_existing")
 
     if browser.exec_() == QDialog.Accepted:
