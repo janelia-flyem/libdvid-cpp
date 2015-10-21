@@ -53,19 +53,19 @@ class ContentsBrowser(QDialog):
         # Create the UI
         self._init_layout()
 
-    VolumeSelection = collections.namedtuple( "VolumeSelection", "hostname dataset_uuid data_name node_uuid" )
+    VolumeSelection = collections.namedtuple( "VolumeSelection", "hostname dataset_uuid data_name node_uuid typename" )
     def get_selection(self):
         """
         Get the user's current (or final) selection.
         Returns a VolumeSelection tuple.
         """
         node_uuid = self._get_selected_node()
-        dset_uuid, data_name = self._get_selected_data()
+        dset_uuid, data_name, typename = self._get_selected_data()
         
         if self._mode == "specify_new":
             data_name = str( self._new_data_edit.text() )
         
-        return ContentsBrowser.VolumeSelection(self._hostname, dset_uuid, data_name, node_uuid)
+        return ContentsBrowser.VolumeSelection(self._hostname, dset_uuid, data_name, node_uuid, typename)
 
     def _init_layout(self):
         """
@@ -291,16 +291,16 @@ class ContentsBrowser(QDialog):
             repo_column_dict["UUID"] = repo_uuid
             repo_column_values = [repo_column_dict[k] for k in TREEVIEW_COLUMNS]
             dset_item = QTreeWidgetItem( self._data_treewidget, QStringList( repo_column_values ) )
-            dset_item.setData( 0, Qt.UserRole, (repo_uuid, "") )
+            dset_item.setData( 0, Qt.UserRole, (repo_uuid, "", "") )
             for data_name, data_info in repo_info["DataInstances"].items():
                 data_instance_dict = collections.defaultdict(str)
                 data_instance_dict["Alias"] = data_name
                 typename = data_info["Base"]["TypeName"]
                 data_instance_dict["TypeName"] = typename
 
-                #FIXME: Is there a better way to identify voxel data?
-                is_volume = (typename in ['labelblk', 'uint8blk'])
-                if is_volume:
+                is_roi = (typename == 'roi')
+                is_voxels = (typename in ['labelblk', 'uint8blk'])
+                if is_voxels:
                     start_coord = data_info["Extended"]["MinPoint"]
                     if start_coord:
                         start_coord = tuple(start_coord)
@@ -315,12 +315,12 @@ class ContentsBrowser(QDialog):
 
                 data_column_values = [data_instance_dict[k] for k in TREEVIEW_COLUMNS]
                 data_item = QTreeWidgetItem( dset_item, data_column_values )
-                data_item.setData( 0, Qt.UserRole, (repo_uuid, data_name) )
+                data_item.setData( 0, Qt.UserRole, (repo_uuid, data_name, typename) )
 
                 # If we're in specify_new mode, only the
                 # dataset parent items are selectable.
                 # Also, non-volume items aren't selectable.
-                if not is_volume or self._mode == 'specify_new':
+                if self._mode == 'specify_new' or not (is_voxels or is_roi):
                     flags = data_item.flags()
                     flags &= ~Qt.ItemIsSelectable
                     flags &= ~Qt.ItemIsEnabled
@@ -347,7 +347,7 @@ class ContentsBrowser(QDialog):
         item_data = item.data(0, Qt.UserRole).toPyObject()
         if not item_data:
             return
-        dset_uuid, data_name = item_data
+        dset_uuid, data_name, typename = item_data
         if self._current_dset != dset_uuid:
             self._populate_node_list(dset_uuid)
         
@@ -391,16 +391,16 @@ class ContentsBrowser(QDialog):
         selected_data_item = selected_items[0]
         data_item_data = selected_data_item.data(0, Qt.UserRole).toPyObject()
         if selected_data_item:
-            dset_uuid, data_name = data_item_data
+            dset_uuid, data_name, typename = data_item_data
         else:
-            dset_uuid = data_name = None
-        return dset_uuid, data_name
+            dset_uuid = data_name = typename = None
+        return dset_uuid, data_name, typename
     
     def _update_display(self):
         """
         Update the path label to reflect the user's currently selected uuid and new volume name.
         """
-        hostname, dset_uuid, dataname, node_uuid = self.get_selection()
+        hostname, dset_uuid, dataname, node_uuid, typename = self.get_selection()
         full_path = "http://{hostname}/api/node/{uuid}/{dataname}"\
                     "".format( hostname=self._hostname, uuid=node_uuid, dataname=dataname )
         self._full_url_label.setText( full_path )
