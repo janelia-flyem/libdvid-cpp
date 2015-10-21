@@ -17,7 +17,7 @@ from PyQt4.QtGui import QPushButton, QDialog, QVBoxLayout, QGroupBox, QTreeWidge
 from libdvid import DVIDConnection, ConnectionMethod, ErrMsg, DVIDException
 
 # Must exactly match the fields from dvid: /api/server/info
-# Omitting "Server uptime" because it takes a lot of space.
+# Omitting "Server uptime" because it takes a lot of column space.
 SERVER_INFO_FIELDS =  ["DVID Version", "Datastore Version", "Cores", "Maximum Cores", "Storage backend"]
 TREEVIEW_COLUMNS = ["Alias", "UUID", "TypeName", "Details"]
 
@@ -31,7 +31,6 @@ class ContentsBrowser(QDialog):
     
     **TODO:**
 
-    * Show more details in repo list (e.g. shape, axes, pixel type)
     * Show more details in node list (e.g. date modified, parents, children)
     * Gray-out nodes that aren't "open" for adding new volumes
     """
@@ -121,7 +120,7 @@ class ContentsBrowser(QDialog):
         
         node_listwidget = QListWidget(parent=self)
         node_listwidget.setSizePolicy( QSizePolicy.Preferred, QSizePolicy.Preferred )
-        node_listwidget.itemSelectionChanged.connect( self._update_display )
+        node_listwidget.itemSelectionChanged.connect( self._update_status )
 
         node_layout = QVBoxLayout()
         node_layout.addWidget( node_listwidget )
@@ -129,7 +128,7 @@ class ContentsBrowser(QDialog):
         node_groupbox.setLayout( node_layout )
 
         new_data_edit = QLineEdit(parent=self)
-        new_data_edit.textEdited.connect( self._update_display )
+        new_data_edit.textEdited.connect( self._update_status )
         full_url_label = QLabel(parent=self)
         full_url_label.setSizePolicy( QSizePolicy.Preferred, QSizePolicy.Maximum )
         text_flags = full_url_label.textInteractionFlags()
@@ -186,6 +185,9 @@ class ContentsBrowser(QDialog):
         return QSize(1000,1000)
     
     def eventFilter(self, watched, event):
+        """
+        When the user presses the 'Enter' key, auto-click 'Connect'.
+        """
         if watched == self._hostname_combobox \
         and event.type() == QEvent.KeyPress \
         and ( event.key() == Qt.Key_Return or event.key() == Qt.Key_Enter):
@@ -202,6 +204,11 @@ class ContentsBrowser(QDialog):
         self.raise_()
 
     def _handle_new_hostname(self):
+        """
+        Called by 'Connect' button.
+        Connect to the server, download the server info and repo info,
+        and populate the GUI widgets with the data.
+        """
         new_hostname = str( self._hostname_combobox.currentText() )
         if '://' in new_hostname:
             new_hostname = new_hostname.split('://')[1] 
@@ -240,7 +247,7 @@ class ContentsBrowser(QDialog):
         self._populate_repo_tree()
         
     @classmethod
-    def _get_server_info(self, connection):
+    def _get_server_info(cls, connection):
         status, body, error_message = connection.make_request( "/server/info", ConnectionMethod.GET);
         assert status == httplib.OK, "Request for /server/info returned status {}".format( status )
         assert error_message == ""
@@ -248,7 +255,7 @@ class ContentsBrowser(QDialog):
         return server_info
 
     @classmethod
-    def _get_repos_info(self, connection):
+    def _get_repos_info(cls, connection):
         status, body, error_message = connection.make_request( "/repos/info", ConnectionMethod.GET)
         assert status == httplib.OK, "Request for /repos/info returned status {}".format( status )
         assert error_message == ""
@@ -351,7 +358,7 @@ class ContentsBrowser(QDialog):
         if self._current_repo != repo_uuid:
             self._populate_node_list(repo_uuid)
         
-        self._update_display()
+        self._update_status()
 
     def _populate_node_list(self, repo_uuid):
         """
@@ -374,9 +381,12 @@ class ContentsBrowser(QDialog):
         last_row = self._node_listwidget.count() - 1
         last_item = self._node_listwidget.item( last_row )
         self._node_listwidget.setCurrentItem( last_item )
-        self._update_display()
+        self._update_status()
 
     def _get_selected_node(self):
+        """
+        Return the currently selected node uuid.
+        """
         selected_items = self._node_listwidget.selectedItems()
         if not selected_items:
             return None
@@ -385,6 +395,9 @@ class ContentsBrowser(QDialog):
         return str( node_item_data.toString() )
         
     def _get_selected_data(self):
+        """
+        Return the repo, data name, and type of the currently selected data volume (or ROI).
+        """
         selected_items = self._repo_treewidget.selectedItems()
         if not selected_items:
             return None, None
@@ -398,7 +411,7 @@ class ContentsBrowser(QDialog):
     
     def _select_node_uuid(self, node_uuid):
         """
-        Locate the repo with this uuid, and select it in the GUI.
+        Locate the repo that owns this uuid, and select it in the GUI.
         If the uuid can't be found, do nothing.
         """
         def select_repotree_item(repo_uuid):
@@ -428,7 +441,7 @@ class ContentsBrowser(QDialog):
                 select_nodelist_item(node_uuid)
                 break
 
-    def _update_display(self):
+    def _update_status(self):
         """
         Update the path label to reflect the user's currently selected uuid and new volume name.
         """
@@ -441,60 +454,17 @@ class ContentsBrowser(QDialog):
         ok_button.setEnabled( dataname != "" )
 
 if __name__ == "__main__":
-    """
-    This main section permits simple command-line control.
-    usage: contents_browser.py [-h] [--mock-server-hdf5=MOCK_SERVER_HDF5] hostname:port
-    
-    If --mock-server-hdf5 is provided, the mock server will be launched with the provided hdf5 file.
-    Otherwise, the DVID server should already be running on the provided hostname.
-    """
-    import sys
-    import argparse
-    
     # Make the program quit on Ctrl+C
     import signal
     signal.signal(signal.SIGINT, signal.SIG_DFL)
 
-    from PyQt4.QtGui import QApplication
-
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--mock-server-hdf5", required=False)
-    parser.add_argument("--mode", choices=["select_existing", "specify_new"], default="select_existing")
-    parser.add_argument("hostname", metavar="hostname:port", default="localhost:8000", nargs="?")
-
-    DEBUG = False
-    if DEBUG and len(sys.argv) == 1:
-        # default debug args
-        parser.print_help()
-        print ""
-        print "*******************************************************"
-        print "No args provided.  Starting with special debug args...."
-        print "*******************************************************"
-        sys.argv.append("--mock-server-hdf5=/magnetic/mockdvid_gigacube.h5")
-        #sys.argv.append("--mode=specify_new")
-        sys.argv.append("localhost:8000")
-
-    parsed_args = parser.parse_args()
-    
-    server_proc = None
-    if parsed_args.mock_server_hdf5:
-        from mockserver.h5mockserver import H5MockServer
-        hostname, port = parsed_args.hostname.split(":")
-        server_proc, shutdown_event = H5MockServer.create_and_start( parsed_args.mock_server_hdf5,
-                                                     hostname,
-                                                     int(port),
-                                                     same_process=False,
-                                                     disable_server_logging=False )
-    
+    from PyQt4.QtGui import QApplication    
     app = QApplication([])
-    browser = ContentsBrowser([parsed_args.hostname], '57c4c6a0740d4509a02da6b9453204cb', mode=parsed_args.mode)
+    browser = ContentsBrowser(["localhost:8000", "emdata2:7000"],
+                              default_node='57c4c6a0740d4509a02da6b9453204cb',
+                              mode="select_existing")
 
-    try:
-        if browser.exec_() == QDialog.Accepted:
-            print "The dialog was accepted with result: ", browser.get_selection()
-        else:
-            print "The dialog was rejected."
-    finally:
-        if server_proc:
-            shutdown_event.set()
-            server_proc.join()
+    if browser.exec_() == QDialog.Accepted:
+        print "The dialog was accepted with result: ", browser.get_selection()
+    else:
+        print "The dialog was rejected."
