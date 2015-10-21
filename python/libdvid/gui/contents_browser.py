@@ -2,7 +2,7 @@
 This module implements a simple widget for viewing the list of repos and nodes in a DVID instance.
 Requires PyQt4.  To see a demo of it in action, start up your dvid server run this::
 
-$ python contents_browser.py localhost:8000
+$ python contents_browser.py
 """
 import json
 import httplib
@@ -461,7 +461,7 @@ class ContentsBrowser(QDialog):
         ok_button = self._buttonbox.button( QDialogButtonBox.Ok )
         ok_button.setEnabled( dataname != "" )
 
-if __name__ == "__main__":
+def main():
     # Make the program quit on Ctrl+C
     import signal
     signal.signal(signal.SIGINT, signal.SIG_DFL)
@@ -476,3 +476,8 @@ if __name__ == "__main__":
         print "The dialog was accepted with result: ", browser.get_selection()
     else:
         print "The dialog was rejected."
+
+    return browser.get_selection()
+
+if __name__ == "__main__":
+    main()
