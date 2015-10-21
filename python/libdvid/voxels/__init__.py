@@ -1,2 +1,2 @@
 from voxels_metadata import VoxelsMetadata
-from voxels_accessor import VoxelsAccessor, RoiMaskAccessor
+from voxels_accessor import VoxelsAccessor, RoiMaskAccessor, DVID_BLOCK_WIDTH
