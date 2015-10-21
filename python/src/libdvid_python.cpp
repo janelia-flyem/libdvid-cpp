@@ -231,15 +231,14 @@ namespace libdvid { namespace python {
 
         // For overloaded functions, boost::python needs help figuring out which one we're aiming for.
         // These function pointers specify the ones we want.
-        void (DVIDNodeService::*put_binary)(std::string, std::string, BinaryDataPtr) = &DVIDNodeService::put;
-        Grayscale3D (DVIDNodeService::*get_gray3D)(std::string, Dims_t, std::vector<int>, bool, bool, std::string) = &DVIDNodeService::get_gray3D;
-        Roi3D (DVIDNodeService::*get_roi3D)(std::string, Dims_t, std::vector<int>, bool, bool) = &DVIDNodeService::get_roi3D;
-        Labels3D (DVIDNodeService::*get_labels3D)(std::string, Dims_t, std::vector<int>, bool, bool, std::string) = &DVIDNodeService::get_labels3D;
-        void (DVIDNodeService::*put_gray3D)(std::string, Grayscale3D const&, std::vector<int>, bool, bool) = &DVIDNodeService::put_gray3D;
-        void (DVIDNodeService::*put_labels3D)(std::string, Labels3D const&, std::vector<int>, bool, bool, std::string) = &DVIDNodeService::put_labels3D;
-        bool (DVIDNodeService::*create_labelblk)(std::string, std::string) = &DVIDNodeService::create_labelblk;
-        BinaryDataPtr (DVIDNodeService::*custom_request)(std::string, BinaryDataPtr,
-            ConnectionMethod, bool) = &DVIDNodeService::custom_request;
+        void          (DVIDNodeService::*put_binary)(std::string, std::string, BinaryDataPtr)                                   = &DVIDNodeService::put;
+        Grayscale3D   (DVIDNodeService::*get_gray3D)(std::string, Dims_t, std::vector<int>, bool, bool, std::string)            = &DVIDNodeService::get_gray3D;
+        Roi3D         (DVIDNodeService::*get_roi3D)(std::string, Dims_t, std::vector<int>, bool, bool)                          = &DVIDNodeService::get_roi3D;
+        Labels3D      (DVIDNodeService::*get_labels3D)(std::string, Dims_t, std::vector<int>, bool, bool, std::string)          = &DVIDNodeService::get_labels3D;
+        void          (DVIDNodeService::*put_gray3D)(std::string, Grayscale3D const&, std::vector<int>, bool, bool)             = &DVIDNodeService::put_gray3D;
+        void          (DVIDNodeService::*put_labels3D)(std::string, Labels3D const&, std::vector<int>, bool, bool, std::string) = &DVIDNodeService::put_labels3D;
+        bool          (DVIDNodeService::*create_labelblk)(std::string, std::string)                                             = &DVIDNodeService::create_labelblk;
+        BinaryDataPtr (DVIDNodeService::*custom_request)(std::string, BinaryDataPtr, ConnectionMethod, bool)                    = &DVIDNodeService::custom_request;
 
         // DVIDNodeService python class definition
         class_<DVIDNodeService>("DVIDNodeService", init<std::string, UUID>())
