@@ -163,6 +163,7 @@ class ContentsBrowser(QDialog):
         
         self.setLayout(layout)
         self.setWindowTitle( "Select DVID Volume" )
+        self.resize(1000, 1000)
 
         # Initially disabled
         data_groupbox.setEnabled(False)
@@ -181,7 +182,7 @@ class ContentsBrowser(QDialog):
         self._buttonbox = buttonbox
 
     def sizeHint(self):
-        return QSize(700, 500)
+        return QSize(1000,1000)
     
     def eventFilter(self, watched, event):
         if watched == self._hostname_combobox \
