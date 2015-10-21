@@ -226,7 +226,7 @@ class ContentsBrowser(QDialog):
 
         if error_msg:
             QMessageBox.critical(self, "Connection Error", error_msg)
-            self._populate_node_list(-1)
+            self._populate_node_list(None)
         else:
             self._connect_button.setEnabled(False)
             self._buttonbox.button(QDialogButtonBox.Ok).setEnabled(True)
@@ -260,6 +260,8 @@ class ContentsBrowser(QDialog):
     
     def _populate_hostinfo_table(self):
         self._hostinfo_table.setVisible( self._server_info is not None )
+        if not self._server_info:
+            return
 
         for column_index, fieldname in enumerate(SERVER_INFO_FIELDS):
             try:
@@ -358,7 +360,7 @@ class ContentsBrowser(QDialog):
         """
         self._node_listwidget.clear()
         
-        if self._repos_info is None:
+        if self._repos_info is None or repo_uuid is None:
             return
         
         # For now, we simply show the nodes in sorted order, without respect to dag order
