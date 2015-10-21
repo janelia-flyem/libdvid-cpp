@@ -35,7 +35,7 @@ class ContentsBrowser(QDialog):
     * Show more details in node list (e.g. date modified, parents, children)
     * Gray-out nodes that aren't "open" for adding new volumes
     """
-    def __init__(self, suggested_hostnames, mode='select_existing', parent=None):
+    def __init__(self, suggested_hostnames, default_node=None, mode='select_existing', parent=None):
         """
         Constructor.
         
@@ -45,6 +45,7 @@ class ContentsBrowser(QDialog):
         """
         super( ContentsBrowser, self ).__init__(parent)
         self._suggested_hostnames = suggested_hostnames
+        self._default_node = default_node
         self._mode = mode
         self._current_repo = None
         self._repos_info = None
@@ -237,7 +238,7 @@ class ContentsBrowser(QDialog):
 
         self._populate_hostinfo_table()
         self._populate_repo_tree()
-
+        
     @classmethod
     def _get_server_info(self, connection):
         status, body, error_message = connection.make_request( "/server/info", ConnectionMethod.GET);
@@ -330,12 +331,8 @@ class ContentsBrowser(QDialog):
         self._repo_treewidget.collapseAll()
         self._repo_treewidget.setSortingEnabled(True)
         
-        # Select the first item by default.
-        if self._mode == "select_existing":
-            first_item = self._repo_treewidget.topLevelItem(0).child(0)
-        else:
-            first_item = self._repo_treewidget.topLevelItem(0)            
-        self._repo_treewidget.setCurrentItem( first_item, 0 )
+        if self._default_node:
+            self._select_node_uuid(self._default_node)
 
     def _handle_data_selection(self):
         """
@@ -397,6 +394,38 @@ class ContentsBrowser(QDialog):
             repo_uuid = data_name = typename = None
         return repo_uuid, data_name, typename
     
+    def _select_node_uuid(self, node_uuid):
+        """
+        Locate the repo with this uuid, and select it in the GUI.
+        If the uuid can't be found, do nothing.
+        """
+        def select_repotree_item(repo_uuid):
+            for row in range(self._repo_treewidget.topLevelItemCount()):
+                repo_item = self._repo_treewidget.topLevelItem(row)
+                if repo_uuid == repo_item.data(0, Qt.UserRole).toPyObject()[0]:
+                    self._repo_treewidget.setCurrentItem(repo_item)
+                    repo_item.setExpanded(True)
+                    self._repo_treewidget.scrollTo( self._repo_treewidget.selectedIndexes()[0],
+                                                    QTreeWidget.PositionAtCenter )
+                    break
+
+        def select_nodelist_item(node_uuid):
+            for row in range(self._node_listwidget.count()):
+                item = self._node_listwidget.item(row)
+                if node_uuid == item.data(Qt.UserRole).toPyObject():
+                    self._node_listwidget.setCurrentItem( item )
+                    break
+        
+        for repo_uuid, repo_info in sorted(self._repos_info.items()):
+            if node_uuid in repo_info["DAG"]["Nodes"].keys():
+                # Select the right repo parent item
+                select_repotree_item(repo_uuid)
+
+                # Select the right row in the node list
+                # (The node list was automatically updated when the repo selection changed, above.)
+                select_nodelist_item(node_uuid)
+                break
+
     def _update_display(self):
         """
         Update the path label to reflect the user's currently selected uuid and new volume name.
@@ -456,7 +485,7 @@ if __name__ == "__main__":
                                                      disable_server_logging=False )
     
     app = QApplication([])
-    browser = ContentsBrowser([parsed_args.hostname], parsed_args.mode)
+    browser = ContentsBrowser([parsed_args.hostname], '57c4c6a0740d4509a02da6b9453204cb', mode=parsed_args.mode)
 
     try:
         if browser.exec_() == QDialog.Accepted:
