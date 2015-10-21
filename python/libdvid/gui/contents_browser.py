@@ -1,5 +1,5 @@
 """
-This module implements a simple widget for viewing the list of datasets and nodes in a DVID instance.
+This module implements a simple widget for viewing the list of repos and nodes in a DVID instance.
 Requires PyQt4.  To see a demo of it in action, start up your dvid server run this::
 
 $ python contents_browser.py localhost:8000
@@ -23,15 +23,15 @@ TREEVIEW_COLUMNS = ["Alias", "UUID", "TypeName", "Details"]
 
 class ContentsBrowser(QDialog):
     """
-    Displays the contents of a DVID server, listing all datasets and the volumes/nodes within each dataset.
-    The user's selected dataset, volume, and node can be accessed via the `get_selection()` method.
+    Displays the contents of a DVID server, listing all repos and the volumes/nodes within each repo.
+    The user's selected repo, volume, and node can be accessed via the `get_selection()` method.
     
     If the dialog is constructed with mode='specify_new', then the user is asked to provide a new data name, 
-    and choose the dataset and node to which it will belong. 
+    and choose the repo and node to which it will belong. 
     
     **TODO:**
 
-    * Show more details in dataset list (e.g. shape, axes, pixel type)
+    * Show more details in repo list (e.g. shape, axes, pixel type)
     * Show more details in node list (e.g. date modified, parents, children)
     * Gray-out nodes that aren't "open" for adding new volumes
     """
@@ -46,26 +46,26 @@ class ContentsBrowser(QDialog):
         super( ContentsBrowser, self ).__init__(parent)
         self._suggested_hostnames = suggested_hostnames
         self._mode = mode
-        self._current_dset = None
+        self._current_repo = None
         self._repos_info = None
         self._hostname = None
         
         # Create the UI
         self._init_layout()
 
-    VolumeSelection = collections.namedtuple( "VolumeSelection", "hostname dataset_uuid data_name node_uuid typename" )
+    VolumeSelection = collections.namedtuple( "VolumeSelection", "hostname repo_uuid data_name node_uuid typename" )
     def get_selection(self):
         """
         Get the user's current (or final) selection.
         Returns a VolumeSelection tuple.
         """
         node_uuid = self._get_selected_node()
-        dset_uuid, data_name, typename = self._get_selected_data()
+        repo_uuid, data_name, typename = self._get_selected_data()
         
         if self._mode == "specify_new":
             data_name = str( self._new_data_edit.text() )
         
-        return ContentsBrowser.VolumeSelection(self._hostname, dset_uuid, data_name, node_uuid, typename)
+        return ContentsBrowser.VolumeSelection(self._hostname, repo_uuid, data_name, node_uuid, typename)
 
     def _init_layout(self):
         """
@@ -108,13 +108,13 @@ class ContentsBrowser(QDialog):
         host_groupbox.setLayout( host_layout )
         host_groupbox.setSizePolicy( QSizePolicy.Preferred, QSizePolicy.Preferred )
         
-        data_treewidget = QTreeWidget(parent=self)
-        data_treewidget.setHeaderLabels( TREEVIEW_COLUMNS ) # TODO: Add type, shape, axes, etc.
-        data_treewidget.setSizePolicy( QSizePolicy.Preferred, QSizePolicy.Preferred )
-        data_treewidget.itemSelectionChanged.connect( self._handle_data_selection )
+        repo_treewidget = QTreeWidget(parent=self)
+        repo_treewidget.setHeaderLabels( TREEVIEW_COLUMNS ) # TODO: Add type, shape, axes, etc.
+        repo_treewidget.setSizePolicy( QSizePolicy.Preferred, QSizePolicy.Preferred )
+        repo_treewidget.itemSelectionChanged.connect( self._handle_data_selection )
 
         data_layout = QVBoxLayout()
-        data_layout.addWidget( data_treewidget )
+        data_layout.addWidget( repo_treewidget )
         data_groupbox = QGroupBox("Data Volumes", parent=self)
         data_groupbox.setLayout( data_layout )
         
@@ -174,7 +174,7 @@ class ContentsBrowser(QDialog):
         self._data_groupbox = data_groupbox
         self._node_groupbox = node_groupbox
         self._new_data_groupbox = new_data_groupbox
-        self._data_treewidget = data_treewidget
+        self._repo_treewidget = repo_treewidget
         self._node_listwidget = node_listwidget
         self._new_data_edit = new_data_edit
         self._full_url_label = full_url_label
@@ -207,7 +207,7 @@ class ContentsBrowser(QDialog):
         error_msg = None
         self._server_info = None
         self._repos_info = None
-        self._current_dset = None
+        self._current_repo = None
         self._hostname = None
 
         try:
@@ -235,7 +235,7 @@ class ContentsBrowser(QDialog):
         self._new_data_groupbox.setEnabled(enable_contents)
 
         self._populate_hostinfo_table()
-        self._populate_datasets_tree()
+        self._populate_repo_tree()
 
     @classmethod
     def _get_server_info(self, connection):
@@ -273,11 +273,11 @@ class ContentsBrowser(QDialog):
         self._hostinfo_table.resizeColumnsToContents()
         self._hostinfo_table.horizontalHeader().setStretchLastSection(True) # Force refresh of last column.
 
-    def _populate_datasets_tree(self):
+    def _populate_repo_tree(self):
         """
-        Initialize the tree widget of datasets and volumes.
+        Initialize the tree widget of repos and volumes.
         """
-        self._data_treewidget.clear()
+        self._repo_treewidget.clear()
         
         if self._repos_info is None:
             return
@@ -290,8 +290,8 @@ class ContentsBrowser(QDialog):
             repo_column_dict["Details"] = "Created: " + repo_info["Created"]
             repo_column_dict["UUID"] = repo_uuid
             repo_column_values = [repo_column_dict[k] for k in TREEVIEW_COLUMNS]
-            dset_item = QTreeWidgetItem( self._data_treewidget, QStringList( repo_column_values ) )
-            dset_item.setData( 0, Qt.UserRole, (repo_uuid, "", "") )
+            repo_item = QTreeWidgetItem( self._repo_treewidget, QStringList( repo_column_values ) )
+            repo_item.setData( 0, Qt.UserRole, (repo_uuid, "", "") )
             for data_name, data_info in repo_info["DataInstances"].items():
                 data_instance_dict = collections.defaultdict(str)
                 data_instance_dict["Alias"] = data_name
@@ -314,11 +314,11 @@ class ContentsBrowser(QDialog):
                     data_instance_dict["Details"] = "Size={} | Start={} | Stop={}".format( shape, start_coord, stop_coord )
 
                 data_column_values = [data_instance_dict[k] for k in TREEVIEW_COLUMNS]
-                data_item = QTreeWidgetItem( dset_item, data_column_values )
+                data_item = QTreeWidgetItem( repo_item, data_column_values )
                 data_item.setData( 0, Qt.UserRole, (repo_uuid, data_name, typename) )
 
                 # If we're in specify_new mode, only the
-                # dataset parent items are selectable.
+                # repo parent items are selectable.
                 # Also, non-volume items aren't selectable.
                 if self._mode == 'specify_new' or not (is_voxels or is_roi):
                     flags = data_item.flags()
@@ -326,37 +326,37 @@ class ContentsBrowser(QDialog):
                     flags &= ~Qt.ItemIsEnabled
                     data_item.setFlags( flags )
         
-        self._data_treewidget.collapseAll()
-        self._data_treewidget.setSortingEnabled(True)
+        self._repo_treewidget.collapseAll()
+        self._repo_treewidget.setSortingEnabled(True)
         
         # Select the first item by default.
         if self._mode == "select_existing":
-            first_item = self._data_treewidget.topLevelItem(0).child(0)
+            first_item = self._repo_treewidget.topLevelItem(0).child(0)
         else:
-            first_item = self._data_treewidget.topLevelItem(0)            
-        self._data_treewidget.setCurrentItem( first_item, 0 )
+            first_item = self._repo_treewidget.topLevelItem(0)            
+        self._repo_treewidget.setCurrentItem( first_item, 0 )
 
     def _handle_data_selection(self):
         """
         When the user clicks a new data item, respond by updating the node list.
         """
-        selected_items = self._data_treewidget.selectedItems()
+        selected_items = self._repo_treewidget.selectedItems()
         if not selected_items:
             return None
         item = selected_items[0]
         item_data = item.data(0, Qt.UserRole).toPyObject()
         if not item_data:
             return
-        dset_uuid, data_name, typename = item_data
-        if self._current_dset != dset_uuid:
-            self._populate_node_list(dset_uuid)
+        repo_uuid, data_name, typename = item_data
+        if self._current_repo != repo_uuid:
+            self._populate_node_list(repo_uuid)
         
         self._update_display()
 
-    def _populate_node_list(self, dataset_uuid):
+    def _populate_node_list(self, repo_uuid):
         """
         Replace the contents of the node list widget 
-        to show all the nodes for the currently selected dataset.
+        to show all the nodes for the currently selected repo.
         """
         self._node_listwidget.clear()
         
@@ -364,11 +364,11 @@ class ContentsBrowser(QDialog):
             return
         
         # For now, we simply show the nodes in sorted order, without respect to dag order
-        all_uuids = sorted( self._repos_info[dataset_uuid]["DAG"]["Nodes"].keys() )
+        all_uuids = sorted( self._repos_info[repo_uuid]["DAG"]["Nodes"].keys() )
         for node_uuid in all_uuids:
             node_item = QListWidgetItem( node_uuid, parent=self._node_listwidget )
             node_item.setData( Qt.UserRole, node_uuid )
-        self._current_dset = dataset_uuid
+        self._current_repo = repo_uuid
 
         # Select the last one by default.
         last_row = self._node_listwidget.count() - 1
@@ -385,22 +385,22 @@ class ContentsBrowser(QDialog):
         return str( node_item_data.toString() )
         
     def _get_selected_data(self):
-        selected_items = self._data_treewidget.selectedItems()
+        selected_items = self._repo_treewidget.selectedItems()
         if not selected_items:
             return None, None
         selected_data_item = selected_items[0]
         data_item_data = selected_data_item.data(0, Qt.UserRole).toPyObject()
         if selected_data_item:
-            dset_uuid, data_name, typename = data_item_data
+            repo_uuid, data_name, typename = data_item_data
         else:
-            dset_uuid = data_name = typename = None
-        return dset_uuid, data_name, typename
+            repo_uuid = data_name = typename = None
+        return repo_uuid, data_name, typename
     
     def _update_display(self):
         """
         Update the path label to reflect the user's currently selected uuid and new volume name.
         """
-        hostname, dset_uuid, dataname, node_uuid, typename = self.get_selection()
+        hostname, repo_uuid, dataname, node_uuid, typename = self.get_selection()
         full_path = "http://{hostname}/api/node/{uuid}/{dataname}"\
                     "".format( hostname=self._hostname, uuid=node_uuid, dataname=dataname )
         self._full_url_label.setText( full_path )
