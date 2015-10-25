@@ -425,6 +425,13 @@ class DVIDNodeService {
      * \return json stored at key
     */
     Json::Value get_json(std::string keyvalue, std::string key);
+
+    /*!
+     * Retrieve the list of all keys for a given keyvalue instance.
+     * \param keyvalue name of keyvalue instance
+     * \return list of strings
+    */
+    std::vector<std::string> get_keys(std::string keyvalue);
     
     /************** API to access labelgraph interface **************/
    

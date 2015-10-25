@@ -1,4 +1,5 @@
 import unittest
+import collections
 import numpy
 import json
 
@@ -24,13 +25,21 @@ class Test_DVIDNodeService(unittest.TestCase):
  
     def test_keyvalue(self):
         node_service = DVIDNodeService(TEST_DVID_SERVER, self.uuid)
-        node_service.create_keyvalue("test_keyvalue")
-        node_service.put("test_keyvalue", "kkkk", "vvvv")
-        readback_value = node_service.get("test_keyvalue", "kkkk")
-        self.assertEqual(readback_value, "vvvv")
+        node_service.create_keyvalue("keyvalue_test")
+        node_service.put("keyvalue_test", "key1", "val1")
+        readback_value = node_service.get("keyvalue_test", "key1")
+        self.assertEqual(readback_value, "val1")
+
+        node_service.put("keyvalue_test", "key2", "val2")
+        readback_value = node_service.get("keyvalue_test", "key2")
+        self.assertEqual(readback_value, "val2")
+
+        keys = node_service.get_keys("keyvalue_test")
+        assert isinstance(keys, collections.Iterable)
+        assert set(keys) == set(["key1", "key2"])
   
         with self.assertRaises(ErrMsg):
-            node_service.put("test_keyvalue", "kkkk", 123) # 123 is not a buffer.
+            node_service.put("keyvalue_test", "key1", 123) # 123 is not a buffer.
  
     def test_grayscale_3d(self):
         node_service = DVIDNodeService(TEST_DVID_SERVER, self.uuid)

@@ -6,6 +6,7 @@
 #include <algorithm>
 #include <json/json.h>
 #include <boost/assign/list_of.hpp>
+#include <boost/bind.hpp>
 
 
 using std::string; using std::vector;
@@ -341,6 +342,25 @@ Json::Value DVIDNodeService::get_json(string keyvalue, string key)
         throw ErrMsg("Could not decode JSON");
     }
     return data;
+}
+
+vector<string> DVIDNodeService::get_keys(std::string keyvalue)
+{
+    BinaryDataPtr response_binary = custom_request("/" + keyvalue + "/keys", BinaryDataPtr(), GET);
+
+    // read into json from binary string
+    Json::Value response_json;
+    Json::Reader json_reader;
+    if (!json_reader.parse(response_binary->get_data(), response_json)) {
+        throw ErrMsg("Could not decode JSON");
+    }
+
+    vector<string> keys;
+    std::transform(response_json.begin(), response_json.end(),
+                   std::back_inserter(keys),
+                   boost::bind(&Json::Value::asString, _1));
+    return keys;
+
 }
 
 void DVIDNodeService::get_subgraph(string graph_name,

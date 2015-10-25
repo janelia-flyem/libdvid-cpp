@@ -1,4 +1,5 @@
 #include <boost/python.hpp>
+#include <boost/python/suite/indexing/vector_indexing_suite.hpp>
 #include <boost/foreach.hpp>
 #include <boost/assign/list_of.hpp>
 
@@ -207,6 +208,12 @@ namespace libdvid { namespace python {
         json_value_to_dict();
         std_string_from_python_none(); // None -> std::string("")
 
+        // This special type wraps vector<string> and makes it accessible to Python when used as a return value.
+        // For example, see DVIDNodeService::get_keys()
+        typedef std::vector<std::string> StringVec;
+        class_<StringVec>("StringVec")
+                .def(vector_indexing_suite<StringVec>() );
+
         // DVIDConnection python class definition
         class_<DVIDConnection>("DVIDConnection", init<std::string>())
             .def("make_head_request", &DVIDConnection::make_head_request)
@@ -251,6 +258,7 @@ namespace libdvid { namespace python {
             .def("put", put_binary)
             .def("get", &DVIDNodeService::get)
             .def("get_json", &DVIDNodeService::get_json)
+            .def("get_keys", &DVIDNodeService::get_keys)
 
             // grayscale
             .def("create_grayscale8", &DVIDNodeService::create_grayscale8)
