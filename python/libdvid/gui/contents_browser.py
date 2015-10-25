@@ -21,6 +21,10 @@ from libdvid import DVIDConnection, ConnectionMethod, ErrMsg, DVIDException
 SERVER_INFO_FIELDS =  ["DVID Version", "Datastore Version", "Cores", "Maximum Cores", "Storage backend"]
 TREEVIEW_COLUMNS = ["Alias", "UUID", "TypeName", "Details"]
 
+KEYVALUE_TYPENAME = 'keyvalue'
+ROI_TYPENAME = 'roi'
+VOXEL_TYPENAMES = ('labelblk', 'uint8blk')
+
 class ContentsBrowser(QDialog):
     """
     Displays the contents of a DVID server, listing all repos and the volumes/nodes within each repo.
@@ -34,7 +38,7 @@ class ContentsBrowser(QDialog):
     * Show more details in node list (e.g. date modified, parents, children)
     * Gray-out nodes that aren't "open" for adding new volumes
     """
-    def __init__(self, suggested_hostnames, default_nodes=None, mode='select_existing', parent=None):
+    def __init__(self, suggested_hostnames, default_nodes=None, mode='select_existing', selectable_type=VOXEL_TYPENAMES, parent=None):
         """
         Constructor.
         
@@ -43,6 +47,7 @@ class ContentsBrowser(QDialog):
         mode: Either 'select_existing' or 'specify_new'
         parent: The parent widget.
         """
+        assert mode in ('select_existing', 'specify_new'), "Invalid mode: {}".format(mode)
         super( ContentsBrowser, self ).__init__(parent)
         self._suggested_hostnames = suggested_hostnames
         self._default_nodes = default_nodes
@@ -51,6 +56,12 @@ class ContentsBrowser(QDialog):
         self._repos_info = None
         self._hostname = None
         
+        if isinstance(selectable_type, collections.Iterable): 
+            self._selectable_types = selectable_type
+        else:
+            assert isinstance(selectable_type, str), "selectable_type must be str or list-of-str"
+            self._selectable_types = (selectable_type,)
+
         # Create the UI
         self._init_layout()
 
@@ -60,13 +71,14 @@ class ContentsBrowser(QDialog):
         Get the user's current (or final) selection.
         Returns a VolumeSelection tuple.
         """
-        node_uuid = self._get_selected_node()
-        repo_uuid, data_name, typename = self._get_selected_data()
+        # Convert to str (Qt tends to convert these into unicode)
+        node_uuid = str(self._get_selected_node())
+        repo_uuid, data_name, typename = map(str, self._get_selected_data())
         
         if self._mode == "specify_new":
             data_name = str( self._new_data_edit.text() )
         
-        return ContentsBrowser.VolumeSelection(self._hostname, repo_uuid, data_name, node_uuid, typename)
+        return ContentsBrowser.VolumeSelection(str(self._hostname), repo_uuid, data_name, node_uuid, typename)
 
     def _init_layout(self):
         """
@@ -324,8 +336,7 @@ class ContentsBrowser(QDialog):
                 typename = data_info["Base"]["TypeName"]
                 data_instance_dict["TypeName"] = typename
 
-                is_roi = (typename == 'roi')
-                is_voxels = (typename in ['labelblk', 'uint8blk'])
+                is_voxels = (typename in VOXEL_TYPENAMES)
                 if is_voxels:
                     start_coord = data_info["Extended"]["MinPoint"]
                     if start_coord:
@@ -346,7 +357,7 @@ class ContentsBrowser(QDialog):
                 # If we're in specify_new mode, only the
                 # repo parent items are selectable.
                 # Also, non-volume items aren't selectable.
-                if self._mode == 'specify_new' or not (is_voxels or is_roi):
+                if self._mode == 'specify_new' or typename not in self._selectable_types:
                     flags = data_item.flags()
                     flags &= ~Qt.ItemIsSelectable
                     flags &= ~Qt.ItemIsEnabled
@@ -480,7 +491,8 @@ def main():
     app = QApplication([])
     browser = ContentsBrowser(["localhost:8000", "emdata2:7000"],
                               default_nodes={ "localhost:8000" : '57c4c6a0740d4509a02da6b9453204cb'},
-                              mode="select_existing")
+                              mode="select_existing",
+                              selectable_type=('labelblk', 'uint8blk', 'roi', 'keyvalue'))
 
     if browser.exec_() == QDialog.Accepted:
         print "The dialog was accepted with result: ", browser.get_selection()
