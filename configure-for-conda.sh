@@ -7,6 +7,7 @@ export PREFIX="${1%/}"
 export PYTHON="${PREFIX}/bin/python"
 export CPU_COUNT=`python -c "import multiprocessing; print multiprocessing.cpu_count()"`
 export PATH="${PREFIX}/bin":$PATH
+export NPY_VER=$(python -c 'import numpy; print numpy.version.version[:3]')
 
 # Start in the same directory as this script.
 cd `dirname $0`
@@ -41,4 +42,4 @@ else
 fi
 
 BUILD_SCRIPT_URL=https://raw.githubusercontent.com/janelia-flyem/flyem-build-conda/master/libdvid-cpp/build.sh
-"$CURL" "$BUILD_SCRIPT_URL" | BUILD_DIR="${BUILD_DIR}" bash -x -e -s - --configure-only
+"$CURL" "$BUILD_SCRIPT_URL" | BUILD_DIR="${BUILD_DIR}" NPY_VER=$NPY_VER bash -x -e -s - --configure-only
