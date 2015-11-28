@@ -380,9 +380,6 @@ vector<BinaryDataPtr> get_body_blocks(DVIDNodeService& service, string labelvol_
 
     int num_requests = get_block_spans(service, labelvol_name, bodyid, spans, request_efficiency);
 
-    // launch threads
-    boost::thread_group threads;
-
     if (num_requests < num_threads) {
         num_threads = num_requests;
     }
