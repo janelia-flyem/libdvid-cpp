@@ -12,8 +12,52 @@
 // TODO: implement a copy constructor for DVIDNodeService
 
 #include "DVIDNodeService.h"
+#include <boost/thread/thread.hpp>
+#include <boost/asio/io_service.hpp>
 
 namespace libdvid {
+
+
+#define MINPOOLSIZE 16
+
+/*!
+ * Thread pool singleton for threading resources.
+*/
+class DVIDThreadPool {
+  public:
+    static DVIDThreadPool* get_pool()
+    {
+        static DVIDThreadPool pool;
+        return &pool;
+    }
+
+    template <typename TTask>
+    void add_task(TTask task)
+    {
+        io_service_.dispatch(task);
+    }
+    ~DVIDThreadPool()
+    {
+        delete work_ctrl_;
+    }
+
+  private:
+    DVIDThreadPool()
+    {
+        work_ctrl_ = new boost::asio::io_service::work(io_service_);
+        int workers = boost::thread::hardware_concurrency() * 2;
+        workers = workers < MINPOOLSIZE ? MINPOOLSIZE : workers;
+
+        for (int i = 0; i < workers; ++i) {
+            threads_.create_thread(boost::bind(&boost::asio::io_service::run, &io_service_));
+        }
+    }
+
+    boost::asio::io_service io_service_;
+    boost::thread_group threads_;
+    boost::asio::io_service::work *work_ctrl_;
+
+};
 
 /*!
  * Fetches all the grayscale blocks that intersect the body id in the specified

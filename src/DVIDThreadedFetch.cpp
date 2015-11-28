@@ -2,13 +2,17 @@
 #include <libdvid/DVIDException.h>
 
 #include <vector>
-#include <boost/thread/thread.hpp>
 
 using std::string;
 using std::vector;
 
 //! Max blocks to request at one tiem
 static const int MAX_BLOCKS = 4096;
+
+//! Single mutex for controlling thread gathering is sufficient
+//! given performance requirements
+static boost::mutex m_mutex;
+static boost::condition_variable m_condition;
 
 namespace libdvid {
 
@@ -263,18 +267,22 @@ struct FetchTiles {
             string instance_,
             unsigned int scaling_, int start_, int count_,
             const vector<vector<int> >& tile_locs_array_,
-            vector<BinaryDataPtr>& results_) :
+            vector<BinaryDataPtr>& results_, int& threads_remaining_) :
             service(service_), orientation(orientation_), instance(instance_),
             scaling(scaling_),
             start(start_), count(count_), tile_locs_array(tile_locs_array_),
-            results(results_) {}
+            results(results_), threads_remaining(threads_remaining_) {}
 
     void operator()()
     {
         for (int i = start; i < (start+count); ++i) {
             results[i] = 
                 service.get_tile_slice_binary(instance, orientation, scaling, tile_locs_array[i]);
-        }     
+        }
+        // local and signal
+        boost::mutex::scoped_lock lock(m_mutex);
+        threads_remaining--;
+        m_condition.notify_one();
     }
 
     DVIDNodeService service;
@@ -284,6 +292,7 @@ struct FetchTiles {
     int start; int count;
     const vector<vector<int> >& tile_locs_array;
     vector<BinaryDataPtr>& results;
+    int& threads_remaining;
 };
 
 /*!
@@ -477,24 +486,32 @@ vector<BinaryDataPtr> get_tile_array_binary(DVIDNodeService& service,
     }
     vector<BinaryDataPtr> results(tile_locs_array.size());
     
-    // launch threads
-    boost::thread_group threads;
-
+    DVIDThreadPool* pool = DVIDThreadPool::get_pool();
+    
     // not an optimal partitioning
     int incr = tile_locs_array.size() / num_threads;
     int start = 0;
+
+    int threads_remaining = num_threads;
 
     for (int i = 0; i < num_threads; ++i) {
         int count = incr;
         if (i == (num_threads-1)) {
             count = tile_locs_array.size() - start;
         }
-        threads.create_thread(FetchTiles(service, orientation,
+        pool->add_task(FetchTiles(service, orientation,
                     datatype_instance, scaling, start, count,
-                    tile_locs_array, results));
+                    tile_locs_array, results, threads_remaining));
         start += incr;
     }
-    threads.join_all();
+
+    
+    // wait for threads to finish
+    boost::mutex::scoped_lock lock(m_mutex);
+    while (threads_remaining) {
+        m_condition.wait(lock); 
+    }
+
 
     return results;
 }
