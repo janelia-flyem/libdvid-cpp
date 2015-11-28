@@ -9,20 +9,24 @@ using std::vector;
 //! Max blocks to request at one tiem
 static const int MAX_BLOCKS = 4096;
 
-//! Single mutex for controlling thread gathering is sufficient
+//! Mutex for controlling thread gathering is sufficient
 //! given performance requirements
+// HACK: global variables for each type
 static boost::mutex m_mutex;
 static boost::condition_variable m_condition;
+
+static boost::mutex m_mutex_gray;
+static boost::condition_variable m_condition_gray;
 
 namespace libdvid {
 
 struct FetchGrayBlocks {
     FetchGrayBlocks(DVIDNodeService& service_, string grayscale_name_,
             bool use_blocks_, int request_efficiency_, int start_, int count_,
-            vector<vector<int> >* spans_, vector<BinaryDataPtr>* blocks_) :
+            vector<vector<int> >* spans_, vector<BinaryDataPtr>* blocks_, int& threads_remaining_) :
             service(service_), grayscale_name(grayscale_name_),
             use_blocks(use_blocks_), request_efficiency(request_efficiency_),
-            start(start_), count(count_), spans(spans_), blocks(blocks_) {}
+            start(start_), count(count_), spans(spans_), blocks(blocks_), threads_remaining(threads_remaining_) {}
 
     void operator()()
     {
@@ -102,6 +106,10 @@ struct FetchGrayBlocks {
         if (blockdata) {
             delete []blockdata;
         }
+        
+        boost::mutex::scoped_lock lock(m_mutex_gray);
+        threads_remaining--;
+        m_condition_gray.notify_one();
     }
 
 
@@ -112,6 +120,7 @@ struct FetchGrayBlocks {
     int start; int count;
     vector<vector<int> >* spans;
     vector<BinaryDataPtr>* blocks;
+    int& threads_remaining;
 };
 
 struct FetchLabelBlocks {
@@ -387,6 +396,10 @@ vector<BinaryDataPtr> get_body_blocks(DVIDNodeService& service, string labelvol_
     int incr = num_requests / num_threads;
     int start = 0;
     int count_check = 0;
+    
+    // setup thread pool
+    DVIDThreadPool* pool = DVIDThreadPool::get_pool();
+    int threads_remaining = num_threads;
 
     for (int i = 0; i < num_threads; ++i) {
         int count = incr;
@@ -394,11 +407,19 @@ vector<BinaryDataPtr> get_body_blocks(DVIDNodeService& service, string labelvol_
             count = num_requests - start;
         }
         count_check += count;
-        threads.create_thread(FetchGrayBlocks(service, grayscale_name,
-                    use_blocks, request_efficiency, start, count, &spans, &blocks));
+        
+        pool->add_task(FetchGrayBlocks(service, grayscale_name,
+                    use_blocks, request_efficiency, start, count, &spans, &blocks, threads_remaining));
         start += incr;
     }
-    threads.join_all();
+  
+    // wait for threads to finish
+    boost::mutex::scoped_lock lock(m_mutex_gray);
+    while (threads_remaining) {
+        m_condition_gray.wait(lock); 
+    }
+
+    
     assert(count_check == num_requests);
     std::cout << "Performed " << num_requests << " requests" << std::endl;
     return blocks;
