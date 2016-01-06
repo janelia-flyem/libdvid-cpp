@@ -68,18 +68,16 @@ Developing has never been easier using conda.  If you plan to actively modify
 the code, first install libdvid-cpp as discussed above.  Then clone
 this repository into the directory of your choosing.  The package cmake
 can still be used but the environment variables must be set to point to
-the dependencies and libraries stored in PREFIX/envs/CHOOSE_ENV_NAME.  libdvid-cpp
-includes a simple wrapper script 'compile_against_conda.sh' that simply
-calls cmake with the correct environment variables.  To build libdvid-cpp:
+the dependencies and libraries stored in /condapath/envs/ENV_NAME.  libdvid-cpp
+includes a simple wrapper script 'configure-for-conda.sh' that simply properly configures
+cmake so that a simple make and install can be performed.  To build libdvid-cpp:
 
-    % conda install -n CHOOOSE_ENV_NAME  gcc=4.8.2 -c flyem # 4.8.2.99 on linux
-    % mkdir build; cd build
-    % export CONDA_ENV_PATH=PREFIX/CHOOSE_ENV_NAME
-    % ../compile_against_conda.sh
+    % ./configure-for-conda.sh CHOOSE_ENV_PATH build
+    % cd build
     % make -j NUM_PROCESSORS
     % make install
 
-Calling make install will overwrite the binaries and libraries in your CHOOSE_ENV_NAME.
+Calling make install will overwrite the binaries and libraries in your CHOOSE_ENV_PATH.
 
 For coding that requires adding new dependencies please consult documentation for
 building conda builds and consult Fly EM's conda recipes.
