@@ -318,10 +318,11 @@ class DVIDNodeService {
      * \param throttle allow only one request at time (default: true)
      * \param roi specify DVID roi to mask PUT operation (default: empty)
      * \param compress enable lz4 compression
+     * \param mutate set true if overwriting previous segmentation (default: false)
     */
     void put_labels3D(std::string datatype_instance, Labels3D const & volume,
             std::vector<int> offset, bool throttle=true,
-            bool compress=true, std::string roi="");
+            bool compress=true, std::string roi="", bool mutate=false);
 
     /************** API to access DVID blocks directly **************/
     // This API is probably most relevant for bulk transfers to and
@@ -696,10 +697,11 @@ class DVIDNodeService {
      * \param throttle allow only one request at time
      * \param compress enable lz4 compression
      * \param roi specify DVID roi to mask PUT operation (default: empty)
+     * \param mutate set true if overwriting previous segmentation (default: false)
     */
     void put_volume(std::string datatype_instance, BinaryDataPtr volume,
             std::vector<unsigned int> sizes, std::vector<int> offset,
-            bool throttle, bool compress, std::string roi);
+            bool throttle, bool compress, std::string roi, bool mutate);
 
     /*!
      * Helper to retrieve blocks from DVID for labels and grayscale.
@@ -766,12 +768,13 @@ class DVIDNodeService {
      * \param compress enable lz4 compression
      * \param roi specify DVID roi to mask operation (default: empty)
      * \param is_mask Use this when requesting ROI mask data as 3D voxels.
+     * \param mutate set true if overwriting previous segmentation (default: false)
     */
     std::string construct_volume_uri(std::string datatype_inst, Dims_t sizes,
             std::vector<int> offset,
             std::vector<unsigned int> axes, bool throttle, bool compress,
             std::string roi,
-			bool is_mask=false);
+			bool is_mask=false, bool mutate=false);
 };
 
 }

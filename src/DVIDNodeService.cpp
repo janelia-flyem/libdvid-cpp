@@ -242,11 +242,11 @@ uint64 DVIDNodeService::get_label_by_location(std::string datatype_instance, uns
 }
 
 void DVIDNodeService::put_labels3D(string datatype_instance, Labels3D const & volume,
-            vector<int> offset, bool throttle, bool compress, string roi)
+            vector<int> offset, bool throttle, bool compress, string roi, bool mutate)
 {
     Dims_t sizes = volume.get_dims();
     put_volume(datatype_instance, volume.get_binary(), sizes,
-            offset, throttle, compress, roi);
+            offset, throttle, compress, roi, mutate);
 }
 
 void DVIDNodeService::put_gray3D(string datatype_instance, Grayscale3D const & volume,
@@ -254,7 +254,7 @@ void DVIDNodeService::put_gray3D(string datatype_instance, Grayscale3D const & v
 {
     Dims_t sizes = volume.get_dims();
     put_volume(datatype_instance, volume.get_binary(), sizes,
-            offset, throttle, compress, "");
+            offset, throttle, compress, "", false);
 }
 
 
@@ -1278,7 +1278,7 @@ bool DVIDNodeService::get_coarse_body(string labelvol_name, uint64 bodyid,
 
 void DVIDNodeService::put_volume(string datatype_instance, BinaryDataPtr volume,
             vector<unsigned int> sizes, vector<int> offset,
-            bool throttle, bool compress, string roi)
+            bool throttle, bool compress, string roi, bool mutate)
 {
     // make sure volume specified is legal and block aligned
     if ((sizes.size() != 3) || (offset.size() != 3)) {
@@ -1312,7 +1312,7 @@ void DVIDNodeService::put_volume(string datatype_instance, BinaryDataPtr volume,
     
     string endpoint =  construct_volume_uri(
             datatype_instance, sizes, offset,
-			axes, throttle, compress, roi);
+			axes, throttle, compress, roi, false, mutate);
 
     // compress using lz4
     if (compress) {
@@ -1466,7 +1466,7 @@ BinaryDataPtr DVIDNodeService::get_volume3D(string datatype_inst, Dims_t sizes,
 
 string DVIDNodeService::construct_volume_uri(string datatype_inst, Dims_t sizes,
         vector<int> offset, vector<unsigned int> axes,
-        bool throttle, bool compress, string roi, bool is_mask)
+        bool throttle, bool compress, string roi, bool is_mask, bool mutate)
 {
     string voxels_type = "raw";
     if (is_mask)
@@ -1530,6 +1530,17 @@ string DVIDNodeService::construct_volume_uri(string datatype_inst, Dims_t sizes,
     } else if (roi != "") {
         sstr << "?roi=" << roi;
     }
+
+    if ((compress || throttle || roi != "") && mutate) {
+        // if mutate option is set (default is false on dvid)
+        sstr << "&mutate=true";
+    } else if (mutate) {
+        sstr << "?mutate=true";
+    }
+
+
+
+
 
     return sstr.str();
 }

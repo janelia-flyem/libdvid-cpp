@@ -84,7 +84,6 @@ int main(int argc, char** argv)
         lsizes.push_back(YDIM); lsizes.push_back(ZDIM);
         Labels3D labelsbin(img_labels, XDIM*YDIM*ZDIM, lsizes);
         dvid_node.put_labels3D(label_datatype_name, labelsbin, start);
-        delete []img_labels;
 
         // give labelvol a chance to synchronize (should be fast)
         sleep(1);
@@ -228,6 +227,35 @@ int main(int argc, char** argv)
             }
 
         }
+
+        // ****** test that mutate=true correctly removes a body **********
+        img_labels[0] = 3;
+        img_labels[BLK_SIZE] = 3;
+        img_labels[BLK_SIZE*2] = 3;
+        // write label 5 in x=0,y=0,z=1
+        img_labels[XDIM*YDIM*BLK_SIZE] = 3;
+        
+        // redo put with overwrite option
+        Labels3D labelsbin2(img_labels, XDIM*YDIM*ZDIM, lsizes);
+        dvid_node.put_labels3D(label_datatype_name, labelsbin2, start, true, true, "", true);
+       
+        // give labelvol a chance to synchronize (should be fast)
+        sleep(1);
+
+        // check whether bodies exist or not in the volume
+        if(!dvid_node.body_exists(labelvol_datatype_name, uint64(3))) {
+            throw ErrMsg("Body 3 should exist in labelvol");
+        }
+
+        if(dvid_node.body_exists(labelvol_datatype_name, uint64(5))) {
+            throw ErrMsg("Body 5 should no longer exist in labelvol");
+        }
+
+
+
+
+        delete []img_labels;
+
     } catch (std::exception& e) {
         cerr << e.what() << endl;
         return -1;
