@@ -96,7 +96,7 @@ class DVIDConnection {
     }
 
     //! default timeout in seconds
-    static const int DEFAULT_TIMEOUT = 60;
+    static const int DEFAULT_TIMEOUT = 120;
 
   private:
     /*!

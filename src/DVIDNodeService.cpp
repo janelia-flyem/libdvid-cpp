@@ -7,7 +7,7 @@
 #include <json/json.h>
 #include <boost/assign/list_of.hpp>
 #include <boost/bind.hpp>
-
+#include <sys/time.h>
 
 using std::string; using std::vector;
 
@@ -1319,15 +1319,31 @@ void DVIDNodeService::put_volume(string datatype_instance, BinaryDataPtr volume,
         volume = BinaryData::compress_lz4(volume);
     }
 
+    // make instance random (create random seed based on time of day)
+    int timeout = 20;
+    int timeout_max = 600;
+
+    if (throttle) {
+        // set random number
+        timeval t1;
+        gettimeofday(&t1, NULL);
+        srand(t1.tv_usec * t1.tv_sec);
+    }
+
     // try posting until DVID is available (no contention)
     while (waiting) {
         binary_result = BinaryData::create_binary_data();
         status_code = connection.make_request(endpoint, POST, volume,
                 binary_result, respdata, BINARY);
 
-        // wait 1 second if the server is busy
+        // wait if server is busy
         if (status_code == 503) {
-            sleep(1);
+            // random backoff
+            sleep(rand()%timeout);
+            // capped exponential backoff
+            if (timeout < timeout_max) {
+                timeout *= 2;
+            }
         } else {
             waiting = false;
         }
@@ -1425,6 +1441,18 @@ BinaryDataPtr DVIDNodeService::get_volume3D(string datatype_inst, Dims_t sizes,
     int status_code;
     BinaryDataPtr binary_result; 
     string respdata;
+    
+    // make instance random (create random seed based on time of day)
+    int timeout = 20;
+    int timeout_max = 600;
+
+    if (throttle) {
+        // set random number
+        timeval t1;
+        gettimeofday(&t1, NULL);
+        srand(t1.tv_usec * t1.tv_sec);
+    }
+
 
     // ensure volume is 3D
     if ((sizes.size() != 3) || (offset.size() != 3) ||
@@ -1448,9 +1476,14 @@ BinaryDataPtr DVIDNodeService::get_volume3D(string datatype_inst, Dims_t sizes,
         status_code = connection.make_request(endpoint, GET, BinaryDataPtr(),
                 binary_result, respdata, BINARY);
        
-        // wait 1 second if the server is busy
+        // wait if server is busy
         if (status_code == 503) {
-            sleep(1);
+            // random backoff
+            sleep(rand()%timeout);
+            // capped exponential backoff
+            if (timeout < timeout_max) {
+                timeout *= 2;
+            }
         } else {
             waiting = false;
         }
