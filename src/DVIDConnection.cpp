@@ -2,6 +2,7 @@
 
 #include "DVIDConnection.h"
 #include "DVIDException.h"
+#include <sstream>
 
 extern "C" {
 #include <curl/curl.h>
@@ -44,6 +45,7 @@ DVIDConnection::DVIDConnection(string addr_) : addr(addr_)
 DVIDConnection::DVIDConnection(const DVIDConnection& copy_connection)
 {
     addr = copy_connection.addr;
+    directaddress = copy_connection.directaddress;
     curl_connection = curl_easy_init();
 }
 
@@ -135,7 +137,20 @@ int DVIDConnection::make_request(string endpoint, ConnectionMethod method,
     // get the error code
     long http_code = 0;
     curl_easy_getinfo (curl_connection, CURLINFO_RESPONSE_CODE, &http_code);
-    
+   
+    if (directaddress == "") {
+        // get IP address to bypass dns on first invocation
+        char *ipaddr = 0;
+        curl_easy_getinfo (curl_connection, CURLINFO_PRIMARY_IP, &ipaddr);
+        std::stringstream tempstr;
+        tempstr << ipaddr << ":";        
+        long port = 0;
+        curl_easy_getinfo (curl_connection, CURLINFO_PRIMARY_PORT, &port);
+        tempstr << port;
+
+        directaddress = tempstr.str();
+    }
+
     // throw exception if connection doesn't work
     if (result != CURLE_OK) {
         throw DVIDException("DVIDConnection error: " + string(url), http_code);

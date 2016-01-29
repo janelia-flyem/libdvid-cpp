@@ -92,7 +92,11 @@ class DVIDConnection {
     */
     std::string get_uri_root() const
     {
-        return (addr + DVID_PREFIX);
+        if (directaddress == "") {
+            return (addr + DVID_PREFIX);
+        } else {
+            return (directaddress + DVID_PREFIX);
+        }
     }
 
     //! default timeout in seconds
@@ -110,6 +114,9 @@ class DVIDConnection {
 
     //! DVID address
     std::string addr;
+    
+    //! DVID address to bypass DNS (IP + port)
+    std::string directaddress;
 
     //! prefix for all DVID calls (versioning may be added here in the future) 
     static const char* DVID_PREFIX;
