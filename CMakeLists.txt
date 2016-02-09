@@ -88,17 +88,24 @@ if (NOT ${BUILDEM_DIR} STREQUAL "None")
                       ${BUILDEM_LIB_DIR}/libjpeg.${BUILDEM_PLATFORM_DYLIB_EXTENSION} 
                       ${BUILDEM_LIB_DIR}/liblz4.${BUILDEM_PLATFORM_DYLIB_EXTENSION} )
 else ()
-    FIND_PACKAGE(Boost)
+    set(BOOST_COMPONENTS thread system)
+    if (LIBDVID_WRAP_PYTHON)
+        set(BOOST_COMPONENTS ${BOOST_COMPONENTS} python)
+    endif()
+
+    FIND_PACKAGE(Boost REQUIRED COMPONENTS ${BOOST_COMPONENTS})
     include_directories(AFTER ${Boost_INCLUDE_DIR})
     if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
         set (PLATFORM_DYLIB_EXTENSION "dylib")
     else()
         set (PLATFORM_DYLIB_EXTENSION "so")
     endif()
-   
-    set (boost_LIBS ${Boost_LIBRARY_DIR}/libboost_thread.${PLATFORM_DYLIB_EXTENSION} ${Boost_LIBRARY_DIR}/libboost_system.${PLATFORM_DYLIB_EXTENSION})
+    if (NOT Boost_LIBRARY_DIR_RELEASE)
+        set(Boost_LIBRARY_DIR_RELEASE ${Boost_LIBRARY_DIR_RELEASE})
+    endif()
+    set (boost_LIBS ${Boost_LIBRARY_DIR_RELEASE}/libboost_thread.${PLATFORM_DYLIB_EXTENSION} ${Boost_LIBRARY_DIR_RELEASE}/libboost_system.${PLATFORM_DYLIB_EXTENSION})
     if (LIBDVID_WRAP_PYTHON)
-        set(boostpython_LIB ${Boost_LIBRARY_DIR}/libboost_python.${PLATFORM_DYLIB_EXTENSION})
+        set(boostpython_LIB ${Boost_LIBRARY_DIR_RELEASE}/libboost_python.${PLATFORM_DYLIB_EXTENSION})
     endif()
 
 
