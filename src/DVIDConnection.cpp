@@ -39,6 +39,12 @@ const char* DVIDConnection::DVID_PREFIX = "/api";
 
 DVIDConnection::DVIDConnection(string addr_) : addr(addr_)
 {
+    // trim trailing slash, e.g. http://localhost:8000/
+    while (*addr.rbegin() == '/')
+    {
+        addr = addr.substr(0, addr.size()-1);
+    }
+
     curl_connection = curl_easy_init();
 }
 
