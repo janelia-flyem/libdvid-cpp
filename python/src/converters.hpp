@@ -426,7 +426,7 @@ namespace libdvid { namespace python {
             incref(py_managed_bd.ptr());
 
             // Finally, return a transposed *view* of the array, since the user is expecting fortran order.
-            object c_array = object(handle<>(borrowed(array_object)));
+            object c_array = object(handle<>(array_object));
             object f_array = c_array.attr("T");
 
             // Return the new array.
