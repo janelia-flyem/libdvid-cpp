@@ -60,18 +60,6 @@ class Test_DVIDNodeService(unittest.TestCase):
         Here, we use python's weakref module to see if any objects returned from
         DVIDNodeService (or given to it) linger longer than they are supposed to.
         """
-        node_service = DVIDNodeService(TEST_DVID_SERVER, self.uuid)
-        node_service.create_grayscale8("test_memoryleak_grayscale_3d")
-        data = numpy.random.randint(0, 255, (128,128,128)).astype(numpy.uint8).transpose()
-        assert data.flags['F_CONTIGUOUS']
-
-        w = weakref.ref(data)
-        node_service.put_gray3D( "test_memoryleak_grayscale_3d", data, (0,0,0) )
-        del data
-        assert w() is None, "put_gray3D() kept a reference to the data we gave it!"
-
-        retrieved_data = node_service.get_gray3D( "test_memoryleak_grayscale_3d", (128,128,128), (0,0,0) )
-
         def get_bases(a):
             """
             Return a list of all 'bases' (parents) of
@@ -82,6 +70,21 @@ class Test_DVIDNodeService(unittest.TestCase):
             if not isinstance(a.base, numpy.ndarray):
                 return [a.base]
             return [a] + get_bases(a.base)
+
+        node_service = DVIDNodeService(TEST_DVID_SERVER, self.uuid)
+        node_service.create_grayscale8("test_memoryleak_grayscale_3d")
+        
+        c_order_data = numpy.random.randint(0, 255, (128,128,128)).astype(numpy.uint8)
+        data = c_order_data.transpose()
+        assert data.flags['F_CONTIGUOUS']
+        
+        w = weakref.ref(c_order_data)
+        del c_order_data
+        node_service.put_gray3D( "test_memoryleak_grayscale_3d", data, (0,0,0) )
+        del data
+        assert w() is None, "put_gray3D() kept a reference to the data we gave it!"
+
+        retrieved_data = node_service.get_gray3D( "test_memoryleak_grayscale_3d", (128,128,128), (0,0,0) )
 
         weak_bases = map(weakref.ref, get_bases(retrieved_data))
         del retrieved_data
