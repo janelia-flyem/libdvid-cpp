@@ -29,7 +29,7 @@ DVIDNodeService::DVIDNodeService(string web_addr_, UUID uuid_) :
     int status_code = connection.make_request(endpoint, GET, BinaryDataPtr(),
             binary, respdata, DEFAULT);
     if (status_code != 200) {
-        throw DVIDException(respdata + "\n" + binary->get_data(), status_code);
+        throw DVIDException("DVIDException for " + endpoint + "\n" + respdata + "\n" + binary->get_data(), status_code);
     }
 }
 
@@ -60,7 +60,7 @@ BinaryDataPtr DVIDNodeService::custom_request(string endpoint,
     int status_code = connection.make_request(node_endpoint, method, payload,
             resp_binary, respdata, BINARY);
     if (status_code != 200) {
-        throw DVIDException(respdata + "\n" + resp_binary->get_data(), status_code);
+        throw DVIDException("DVIDException for " + node_endpoint + "\n" + respdata + "\n" + resp_binary->get_data(), status_code);
     }
 
     if (compress) {
@@ -1350,7 +1350,7 @@ void DVIDNodeService::put_volume(string datatype_instance, BinaryDataPtr volume,
     }
 
     if (status_code != 200) {
-        throw DVIDException(respdata + "\n" + binary_result->get_data(),
+        throw DVIDException("DVIDException for " + endpoint + "\n" + respdata + "\n" + binary_result->get_data(),
                 status_code);
     } 
 }
@@ -1409,7 +1409,7 @@ bool DVIDNodeService::create_datatype(string datatype, string datatype_name,
             POST, payload, binary, respdata, JSON);
 
     if (status_code != 200) {
-        throw DVIDException(respdata + "\n" + binary->get_data(), status_code);
+        throw DVIDException("DVIDException for " + endpoint + "\n" + respdata + "\n" + binary->get_data(), status_code);
     }
 
     return true;
@@ -1490,7 +1490,7 @@ BinaryDataPtr DVIDNodeService::get_volume3D(string datatype_inst, Dims_t sizes,
     }
     
     if (status_code != 200) {
-        throw DVIDException(respdata + "\n" + binary_result->get_data(),
+        throw DVIDException("DVIDException for " + endpoint + "\n" + respdata + "\n" + binary_result->get_data(),
                 status_code);
     }
 
