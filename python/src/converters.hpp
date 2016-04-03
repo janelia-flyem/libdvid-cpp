@@ -1,6 +1,7 @@
 #include <vector>
 #include <string>
 #include <sstream>
+#include <algorithm>
 
 #include <boost/unordered_map.hpp>
 #include <boost/assign/list_of.hpp>
@@ -347,16 +348,19 @@ namespace libdvid { namespace python {
             }
 
             // Verify ndarray memory order
-            if (!ndarray.attr("flags")["F_CONTIGUOUS"])
+            if (!ndarray.attr("flags")["C_CONTIGUOUS"])
             {
-                throw ErrMsg("Volume is not F_CONTIGUOUS");
+                throw ErrMsg("Volume is not C_CONTIGUOUS");
             }
 
-            // Extract dims from ndarray.shape (which is already in fortran-order)
+            // Extract dims from ndarray.shape
             object shape = ndarray.attr("shape");
             typedef stl_input_iterator<Dims_t::value_type> shape_iter_t;
             Dims_t dims;
             dims.assign( shape_iter_t(shape), shape_iter_t() );
+
+            // Reverse the shape, since the C++ class expects F-order
+            std::reverse(dims.begin(), dims.end());
 
             // Extract the voxel count
             int voxel_count = extract<int>(ndarray.attr("size"));
@@ -392,7 +396,7 @@ namespace libdvid { namespace python {
             BinaryDataHolder & holder = extract<BinaryDataHolder&>(py_managed_bd);
             holder.ptr = volume_data;
 
-            // REVERSE from Fortran order (XYZ) to C-order (ZYX)
+            // REVERSE shape from Fortran order (XYZ) to C-order (ZYX)
             // (PyArray_SimpleNewFromData will create in C-order.)
             // Also, copy to type numpy expects
             std::vector<npy_intp> numpy_dims( volume.get_dims().rbegin(),
@@ -425,12 +429,8 @@ namespace libdvid { namespace python {
             //  to make sure the binary data object isn't destroyed when we return.
             incref(py_managed_bd.ptr());
 
-            // Finally, return a transposed *view* of the array, since the user is expecting fortran order.
-            object c_array = object(handle<>(array_object));
-            object f_array = c_array.attr("T");
-
             // Return the new array.
-            return incref(f_array.ptr());
+            return array_object;
         }
     };
     template <class VolumeType>
@@ -450,14 +450,17 @@ namespace libdvid { namespace python {
 
 		static std::string classname;
 		static class_member_ptr_vec class_member_ptrs;
+		static bool reverse_constructor_order;
 
 		namedtuple_converter( std::string const & classname_,
 							  std::string const & elementnames,
-							  class_member_ptr_vec member_ptrs )
+							  class_member_ptr_vec member_ptrs,
+							  bool reverse_constructor_order_=false )
         {
 			assert(member_ptrs.size() == N && "Must pass exactly N member pointers for an N-arity type.");
 			classname = classname_;
 			class_member_ptrs = member_ptrs;
+			reverse_constructor_order = reverse_constructor_order_;
 			register_to_python( classname_, elementnames );
 			register_from_python();
         }
@@ -511,6 +514,11 @@ namespace libdvid { namespace python {
 					<< N << " entries, but this sequence contains "
                     << len << " entries.";
                 throw ErrMsg(msg.str());
+            }
+
+            if (reverse_constructor_order)
+            {
+                sequence = sequence[slice(_, _, -1)];
             }
 
             //construct_in_place_from_sequence<ClassType, ElementType, N>::construct(storage, sequence);
@@ -646,5 +654,8 @@ namespace libdvid { namespace python {
 
 	template <class T, typename E, int N>
 	typename namedtuple_converter<T,E,N>::class_member_ptr_vec namedtuple_converter<T,E,N>::class_member_ptrs;
+
+    template <class T, typename E, int N>
+    bool namedtuple_converter<T,E,N>::reverse_constructor_order;
 
 }} // namespace libdvid::python

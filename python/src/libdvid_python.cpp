@@ -39,7 +39,7 @@ namespace libdvid { namespace python {
 
     //! Python wrapper function for DVIDNodeService::get_roi().
     //! Instead of requiring the user to pass an "out-parameter" (not idiomatic in python),
-    //! This wrapper function returns the result as a python list of BlockXYZ objects.
+    //! This wrapper function returns the result as a python list of BlockZYX objects.
     boost::python::list get_roi( DVIDNodeService & nodeService, std::string roi_name )
     {
     	using namespace boost::python;
@@ -59,7 +59,7 @@ namespace libdvid { namespace python {
 
     //! Python wrapper function for DVIDConnection::get_roi_partition().
     //! (Since "return-by-reference" is not an option in Python, boost::python can't provide an automatic wrapper.)
-    //! Returns a tuple: (status, result_body, error_msg)
+    //! Returns a tuple: (status, result_list, error_msg), where result_list is a list of SubstackZYX tuples
     boost::python::tuple get_roi_partition( DVIDNodeService & nodeService,
     										std::string roi_name,
 											unsigned int partition_size )
@@ -101,6 +101,89 @@ namespace libdvid { namespace python {
     	return result_list;
     }
 
+    Grayscale3D get_gray3D_zyx( DVIDNodeService & nodeService,
+                                std::string datatype_instance,
+                                Dims_t sizes,
+                                std::vector<int> offset,
+                                bool throttle,
+                                bool compress,
+                                std::string roi )
+    {
+        // Reverse offset and sizes
+        std::reverse(offset.begin(), offset.end());
+        std::reverse(sizes.begin(), sizes.end());
+        return nodeService.get_gray3D(datatype_instance, sizes, offset, throttle, compress, roi);
+    }
+
+    void put_gray3D_zyx( DVIDNodeService & nodeService,
+                         std::string datatype_instance,
+                         Grayscale3D const & volume,
+                         std::vector<int> offset,
+                         bool throttle,
+                         bool compress )
+    {
+        // Reverse offset
+        std::reverse(offset.begin(), offset.end());
+        nodeService.put_gray3D(datatype_instance, volume, offset, throttle, compress);
+    }
+
+    Labels3D get_labels3D_zyx( DVIDNodeService & nodeService,
+                                  std::string datatype_instance,
+                                  Dims_t sizes,
+                                  std::vector<int> offset,
+                                  bool throttle,
+                                  bool compress,
+                                  std::string roi )
+    {
+        // Reverse offset and sizes
+        std::reverse(offset.begin(), offset.end());
+        std::reverse(sizes.begin(), sizes.end());
+
+        // Result is automatically converted to ZYX order thanks
+        // to DVIDVoxels converter logic in converters.hpp
+        return nodeService.get_labels3D(datatype_instance, sizes, offset, throttle, compress, roi);
+    }
+
+    void put_labels3D_zyx( DVIDNodeService & nodeService,
+                           std::string datatype_instance,
+                           Labels3D const & volume,
+                           std::vector<int> offset,
+                           bool throttle,
+                           bool compress,
+                           std::string roi,
+                           bool mutate )
+    {
+        // Reverse offset
+        std::reverse(offset.begin(), offset.end());
+
+        // The Labels3d volume is automatically converted from ZYX order
+        // to XYZ thanks to DVIDVoxels converter logic in converters.hpp
+        nodeService.put_labels3D(datatype_instance, volume, offset, throttle, compress, roi, mutate);
+    }
+
+    boost::int64_t get_label_by_location_zyx( DVIDNodeService & nodeService,
+                                              std::string datatype_instance,
+                                              PointXYZ point )
+    {
+        // The user gives a python PointZYX, which is converted to C++ PointXYZ for this function.
+        return nodeService.get_label_by_location( datatype_instance, point.x, point.y, point.z );
+    }
+
+    Roi3D get_roi3D_zyx( DVIDNodeService & nodeService,
+                        std::string roi_name,
+                        Dims_t dims,
+                        std::vector<int> offset,
+                        bool throttle,
+                        bool compress )
+    {
+        // Reverse offset and sizes
+        std::reverse(offset.begin(), offset.end());
+        std::reverse(dims.begin(), dims.end());
+
+        // Result is automatically converted to ZYX order thanks
+        // to DVIDVoxels converter logic in converters.hpp
+        return nodeService.get_roi3D( roi_name, dims, offset, throttle, compress );
+    }
 
     //! Create a new python Exception type.
     //! Copied from: http://stackoverflow.com/a/9690436/162094
@@ -174,10 +257,10 @@ namespace libdvid { namespace python {
         ndarray_to_volume<Grayscale2D>();
         ndarray_to_volume<Labels2D>();
 
-        // BlockXYZ
+        // BlockXYZ <--> BlockZYX
         namedtuple_converter<BlockXYZ, int, 3>::class_member_ptr_vec block_members =
-			boost::assign::list_of(&BlockXYZ::x)(&BlockXYZ::y)(&BlockXYZ::z);
-        namedtuple_converter<BlockXYZ, int, 3>("BlockXYZ", "x y z", block_members);
+			boost::assign::list_of(&BlockXYZ::z)(&BlockXYZ::y)(&BlockXYZ::x);
+        namedtuple_converter<BlockXYZ, int, 3>("BlockZYX", "z y x", block_members, true);
 
 
         /*
@@ -195,13 +278,13 @@ namespace libdvid { namespace python {
 
         // PointXYZ
         namedtuple_converter<PointXYZ, int, 3>::class_member_ptr_vec point_members =
-			boost::assign::list_of(&PointXYZ::x)(&PointXYZ::y)(&PointXYZ::z);
-        namedtuple_converter<PointXYZ, int, 3>("PointXYZ", "x y z", point_members);
+			boost::assign::list_of(&PointXYZ::z)(&PointXYZ::y)(&PointXYZ::x);
+        namedtuple_converter<PointXYZ, int, 3>("PointZYX", "z y x", point_members, true);
 
         // SubstackXYZ
         namedtuple_converter<SubstackXYZ, int, 4>::class_member_ptr_vec substack_members =
-			boost::assign::list_of(&SubstackXYZ::x)(&SubstackXYZ::y)(&SubstackXYZ::z)(&SubstackXYZ::size);
-        namedtuple_converter<SubstackXYZ, int, 4>("SubstackXYZ", "x y z size", substack_members);
+			boost::assign::list_of(&SubstackXYZ::size)(&SubstackXYZ::z)(&SubstackXYZ::y)(&SubstackXYZ::x);
+        namedtuple_converter<SubstackXYZ, int, 4>("SubstackZYX", "size z y x", substack_members, true);
 
         binary_data_ptr_to_python_str();
         binary_data_ptr_from_python_buffer();
@@ -238,61 +321,73 @@ namespace libdvid { namespace python {
 
         // For overloaded functions, boost::python needs help figuring out which one we're aiming for.
         // These function pointers specify the ones we want.
-        void          (DVIDNodeService::*put_binary)(std::string, std::string, BinaryDataPtr)                                   = &DVIDNodeService::put;
-        Grayscale3D   (DVIDNodeService::*get_gray3D)(std::string, Dims_t, std::vector<int>, bool, bool, std::string)            = &DVIDNodeService::get_gray3D;
-        Roi3D         (DVIDNodeService::*get_roi3D)(std::string, Dims_t, std::vector<int>, bool, bool)                          = &DVIDNodeService::get_roi3D;
-        Labels3D      (DVIDNodeService::*get_labels3D)(std::string, Dims_t, std::vector<int>, bool, bool, std::string)          = &DVIDNodeService::get_labels3D;
-        void          (DVIDNodeService::*put_gray3D)(std::string, Grayscale3D const&, std::vector<int>, bool, bool)             = &DVIDNodeService::put_gray3D;
-        void          (DVIDNodeService::*put_labels3D)(std::string, Labels3D const&, std::vector<int>, bool, bool, std::string, bool) = &DVIDNodeService::put_labels3D;
-        bool          (DVIDNodeService::*create_labelblk)(std::string, std::string)                                             = &DVIDNodeService::create_labelblk;
-        BinaryDataPtr (DVIDNodeService::*custom_request)(std::string, BinaryDataPtr, ConnectionMethod, bool)                    = &DVIDNodeService::custom_request;
+        void          (DVIDNodeService::*put_binary)(std::string, std::string, BinaryDataPtr)                = &DVIDNodeService::put;
+        bool          (DVIDNodeService::*create_labelblk)(std::string, std::string)                          = &DVIDNodeService::create_labelblk;
+        BinaryDataPtr (DVIDNodeService::*custom_request)(std::string, BinaryDataPtr, ConnectionMethod, bool) = &DVIDNodeService::custom_request;
 
         // DVIDNodeService python class definition
         class_<DVIDNodeService>("DVIDNodeService", init<std::string, UUID>())
-            .def("get_typeinfo", &DVIDNodeService::get_typeinfo)
-            .def("create_graph", &DVIDNodeService::create_graph)
-            .def("custom_request", custom_request, (arg("endpoint"), arg("payload"), arg("method"), arg("compress")=false))
+            .def("get_typeinfo", &DVIDNodeService::get_typeinfo,
+                ( arg("datatype_name") ))
+            .def("create_graph", &DVIDNodeService::create_graph,
+                ( arg("name") ))
+            .def("custom_request", custom_request,
+                (arg("endpoint"), arg("payload"), arg("method"), arg("compress")=false))
 
             // keyvalue
-            .def("create_keyvalue", &DVIDNodeService::create_keyvalue)
-            .def("put", put_binary)
-            .def("get", &DVIDNodeService::get)
-            .def("get_json", &DVIDNodeService::get_json)
-            .def("get_keys", &DVIDNodeService::get_keys)
+            .def("create_keyvalue", &DVIDNodeService::create_keyvalue,
+                ( arg("instance_name") ))
+            .def("put", put_binary,
+                ( arg("instance_name"), arg("key"), arg("value_bytes") ))
+            .def("get", &DVIDNodeService::get,
+                ( arg("instance_name"), arg("key") ))
+            .def("get_json", &DVIDNodeService::get_json,
+                ( arg("instance_name"), arg("key") ))
+            .def("get_keys", &DVIDNodeService::get_keys,
+                ( arg("instance_name") ))
 
             // grayscale
-            .def("create_grayscale8", &DVIDNodeService::create_grayscale8)
-            .def("get_gray3D", get_gray3D,
-                ( arg("service"), arg("instance"), arg("dims"), arg("offset"), arg("throttle")=true, arg("compress")=false, arg("roi")=object() ))
-            .def("put_gray3D", put_gray3D,
-                ( arg("service"), arg("instance"), arg("ndarray"), arg("offset"), arg("throttle")=true, arg("compress")=false))
+            .def("create_grayscale8", &DVIDNodeService::create_grayscale8,
+                ( arg("instance_name") ))
+            .def("get_gray3D", &get_gray3D_zyx,
+                ( arg("service"), arg("instance_name"), arg("shape_zyx"), arg("offset_zyx"), arg("throttle")=true, arg("compress")=false, arg("roi")=object() ))
+            .def("put_gray3D", &put_gray3D_zyx,
+                ( arg("service"), arg("instance_name"), arg("grayscale_vol"), arg("offset_zyx"), arg("throttle")=true, arg("compress")=false))
 
             // labels
-            .def("create_labelblk", create_labelblk, (arg("service"), arg("instance"), arg("instance2")=object() ))
-            .def("get_labels3D", get_labels3D,
-                ( arg("service"), arg("instance"), arg("dims"), arg("offset"), arg("throttle")=true, arg("compress")=false, arg("roi")=object() ))
-            .def("get_label_by_location",  &DVIDNodeService::get_label_by_location)
-            .def("put_labels3D", put_labels3D,
-                ( arg("service"), arg("instance"), arg("ndarray"), arg("offset"), arg("throttle")=true, arg("compress")=false, arg("roi")=object(), arg("mutate")=false ))
+            .def("create_labelblk", create_labelblk,
+                (arg("service"), arg("instance_name"), arg("instance2")=object() ))
+            .def("get_labels3D", &get_labels3D_zyx,
+                ( arg("service"), arg("instance_name"), arg("shape_zyx"), arg("offset_zyx"), arg("throttle")=true, arg("compress")=false, arg("roi")=object() ))
+            .def("get_label_by_location",  &get_label_by_location_zyx,
+                    ( arg("service"), arg("instance_name"), arg("point") ))
+            .def("put_labels3D", &put_labels3D_zyx,
+                ( arg("service"), arg("instance_name"), arg("label_vol_zyx"), arg("offset_zyx"), arg("throttle")=true, arg("compress")=false, arg("roi")=object(), arg("mutate")=false ))
             .def("body_exists", &DVIDNodeService::body_exists)
 
             // 2D slices
-            .def("get_tile_slice", &DVIDNodeService::get_tile_slice)
-            .def("get_tile_slice_binary", &DVIDNodeService::get_tile_slice_binary)
-
+            .def("get_tile_slice", &DVIDNodeService::get_tile_slice,
+                ( arg("service"), arg("instance_name"), arg("slice_type"), arg("scaling"), arg("tile_numbers") ))
+            .def("get_tile_slice_binary", &DVIDNodeService::get_tile_slice_binary,
+                ( arg("service"), arg("instance_name"), arg("slice_type"), arg("scaling"), arg("tile_numbers") ))
 
             // graph
             .def("update_vertices", &DVIDNodeService::update_vertices)
             .def("update_edges", &DVIDNodeService::update_edges)
 
             // ROI
-            .def("create_roi", &DVIDNodeService::create_roi)
-            .def("get_roi", &get_roi)
-            .def("post_roi", &DVIDNodeService::post_roi)
-            .def("get_roi_partition", &get_roi_partition)
-            .def("roi_ptquery", &roi_ptquery)
-            .def("get_roi3D", get_roi3D,
-                ( arg("service"), arg("instance"), arg("dims"), arg("offset"), arg("throttle")=true, arg("compress")=false ))			;
+            .def("create_roi", &DVIDNodeService::create_roi,
+                ( arg("name") ) )
+            .def("get_roi", &get_roi,
+                ( arg("service"), arg("roi") ) )
+            .def("post_roi", &DVIDNodeService::post_roi,
+                ( arg("service"), arg("blocks_zyx") ))
+            .def("get_roi_partition", &get_roi_partition,
+                ( arg("service"), arg("roi"), arg("partition_size") ))
+            .def("roi_ptquery", &roi_ptquery,
+                ( arg("service"), arg("roi"), arg("point_list_zyx") ))
+            .def("get_roi3D", &get_roi3D_zyx,
+                ( arg("service"), arg("instance_name"), arg("dims_zyx"), arg("offset_zyx"), arg("throttle")=true, arg("compress")=false ))			;
 
 
         class_<Vertex>("Vertex", init<VertexID, double>());
