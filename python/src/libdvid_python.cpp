@@ -52,6 +52,8 @@ namespace libdvid { namespace python {
     	list result_list;
     	BOOST_FOREACH(BlockXYZ const & block, result_vector)
     	{
+            // Thanks to some logic in converters.hpp,
+            // this cast will convert the BlockXYZ to a tuple in (z, y, x) order.
     		result_list.append( static_cast<object>(block) );
     	}
     	return result_list;
@@ -74,14 +76,20 @@ namespace libdvid { namespace python {
     	list result_list;
     	BOOST_FOREACH(SubstackXYZ const & substack, result_substacks)
     	{
+    	    // Thanks to some logic in converters.hpp,
+    	    // this cast will convert the substack to a tuple in (size, z, y, x) order.
     		result_list.append( static_cast<object>(substack) );
     	}
+
     	return make_tuple(result_list, packing_factor);
     }
 
     //! Python wrapper function for DVIDNodeService::roi_ptquery().
     //! Instead of requiring the user to pass an "out-parameter" (not idiomatic in python),
     //! This wrapper function returns the result as a python list of bools.
+    //!
+    //! NOTE: The user gives point list as PointZYX, which is already converted
+    //!       to C++ PointXYZ when this function is called.
     boost::python::list roi_ptquery( DVIDNodeService & nodeService,
     				  	  	  	     std::string roi_name,
 									 const std::vector<PointXYZ>& points )
@@ -258,31 +266,17 @@ namespace libdvid { namespace python {
         ndarray_to_volume<Grayscale2D>();
         ndarray_to_volume<Labels2D>();
 
-        // BlockXYZ <--> BlockZYX
+        // BlockXYZ <--> BlockZYX (for python conventions)
         namedtuple_converter<BlockXYZ, int, 3>::class_member_ptr_vec block_members =
 			boost::assign::list_of(&BlockXYZ::z)(&BlockXYZ::y)(&BlockXYZ::x);
         namedtuple_converter<BlockXYZ, int, 3>("BlockZYX", "z y x", block_members, true);
 
-
-        /*
-        // Vertex 
-        namedtuple_converter<Vertex, int, 2>::class_member_ptr_vec vertex_members =
-			boost::assign::list_of(&Vertex::id)(&Vertex::weight);
-        namedtuple_converter<Vertex, int, 2>("Vertex", "id weight", vertex_members);
-
-
-        // Edge 
-        namedtuple_converter<Edge, int, 3>::class_member_ptr_vec edge_members =
-			boost::assign::list_of(&Edge::id1)(&Edge::id2)(&Edge::weight);
-        namedtuple_converter<Edge, int, 3>("Edge", "x y z", edge_members);
-        */
-
-        // PointXYZ
+        // PointXYZ <--> PointZYX (for python conventions)
         namedtuple_converter<PointXYZ, int, 3>::class_member_ptr_vec point_members =
 			boost::assign::list_of(&PointXYZ::z)(&PointXYZ::y)(&PointXYZ::x);
         namedtuple_converter<PointXYZ, int, 3>("PointZYX", "z y x", point_members, true);
 
-        // SubstackXYZ
+        // C++ SubstackXYZ --> SubstackZYX (size, z, y, x)
         namedtuple_converter<SubstackXYZ, int, 4>::class_member_ptr_vec substack_members =
 			boost::assign::list_of(&SubstackXYZ::size)(&SubstackXYZ::z)(&SubstackXYZ::y)(&SubstackXYZ::x);
         namedtuple_converter<SubstackXYZ, int, 4>("SubstackZYX", "size z y x", substack_members, true);
