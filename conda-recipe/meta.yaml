@@ -1,0 +1,54 @@
+package:
+  name: libdvid-cpp
+
+  # If we're using a non-tagged revision, append '.postN' to the version
+  {% if GIT_DESCRIBE_NUMBER|int != 0 %}
+  version: {{GIT_DESCRIBE_TAG}}.post{{GIT_DESCRIBE_NUMBER}}
+  {% else %}
+  version: {{GIT_DESCRIBE_TAG}}
+  {% endif %}
+  
+source:
+  git_url: ../
+  git_tag: HEAD
+
+build:
+  number: 0
+
+  #
+  # You must build this recipe using 'conda build --numpy=X.Y'
+  #
+  string: np{{CONDA_NPY}}py{{CONDA_PY}}_{{PKG_BUILDNUM}}_g{{GIT_FULL_HASH[:7]}}
+  
+requirements:
+  build:
+    - gcc 4.8.5
+    - boost 1.55.0
+    - jsoncpp
+    - lz4
+    - jpeg
+    - libpng 1.6.17
+    - curl
+    - python 2.7*
+    - numpy >=1.9,{{NPY_VER}}*
+    
+  run:
+    - libgcc
+    - boost 1.55.0
+    - jsoncpp
+    - lz4
+    - jpeg
+    - libpng 1.6.17
+    - curl
+    - python {{PY_VER}}*
+    - numpy  {{NPY_VER}}*
+
+test:
+  # Python imports
+  imports:
+    - libdvid
+
+about:
+  home: http://github.com/janelia-flyem/libdvid-cpp
+  license: BSD (3-clause)
+  summary: C++ library for accessing DVID's REST API 
