@@ -7,6 +7,15 @@ DVIDNodeService
 
 .. autoclass:: DVIDNodeService
 
+  .. note::
+  
+     Numpy uses C-order array indexing by default, which means 3D arrays are typically
+     indexed in the order ``[z,y,x]``, not the other way around.
+     These python bindings follow the same convention.  All functions accepting 3D
+     arrays expect **contiguous** data, in z-y-x order.  The same goes for returned data.
+     Similarly, tuple parameters such as ``shape`` and ``offset`` should be passed
+     in ``(z,y,x)`` order.
+
   **Methods List:**
 
   - :py:meth:`__init__ <DVIDNodeService.__init__>`

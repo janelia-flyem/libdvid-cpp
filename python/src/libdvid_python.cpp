@@ -509,7 +509,7 @@ namespace libdvid { namespace python {
                 \n\
                 :param instance_name: name of new datatype instance \n\
                 :param labelvol_name: name of labelvolume to associate with labelblks \n\
-                \return true if both created, false if one already exists \n\
+                :returns: true if both created, false if one already exists \n\
                 ")
 
             .def("get_labels3D", &get_labels3D_zyx,
