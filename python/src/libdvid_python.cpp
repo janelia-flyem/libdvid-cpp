@@ -231,6 +231,7 @@ namespace libdvid { namespace python {
     BOOST_PYTHON_MODULE(_dvid_python)
     {
         using namespace boost::python;
+        docstring_options doc_options(true, true, false);
 
         // http://docs.scipy.org/doc/numpy/reference/c-api.array.html#importing-the-api
         import_array();
@@ -298,15 +299,60 @@ namespace libdvid { namespace python {
                 .def(vector_indexing_suite<StringVec>() );
 
         // DVIDConnection python class definition
-        class_<DVIDConnection>("DVIDConnection", init<std::string>())
-            .def("make_head_request", &DVIDConnection::make_head_request)
+        class_<DVIDConnection>("DVIDConnection",
+            "Creates a ``libcurl`` connection and \
+            provides utilities for transferring data between this library \
+            and DVID.  Each service will call ``DVIDConnection`` independently \
+            and does not need to be accessed very often by the end-user. \
+            This class uses a static variable to set the curl context \
+            and also sets a curl connection. \n\
+            \n\
+            .. warning::\
+            \n\
+                It is currently not possible to use a single ``DVIDConnection`` \
+                for multiple threads.  Users should instantiate multiple services \
+                to access DVID rather than reusing the same one.  This problem will \
+                be fixed when the curl connection is given thread-level scope as \
+                available in C++11.",
+            init<std::string>( ( arg("server_address") )))
+
+            .def("make_head_request", &DVIDConnection::make_head_request,
+                    ( arg("endpoint") ),
+                    "Simple HEAD requests to DVID.  An exception is generated \
+                    if curl cannot properly connect to the URL. \n\
+                    \n\
+                    :param endpoint: endpoint where request is performed \n\
+                    :returns: html status code \n\
+                    ")
             .def("make_request", &make_request,
-                                 ( arg("connection"), arg("endpoint"), arg("method"), arg("payload")=object(), arg("timeout")=DVIDConnection::DEFAULT_TIMEOUT ))
-            .def("get_addr", &DVIDConnection::get_addr)
-            .def("get_uri_root", &DVIDConnection::get_uri_root)
+                 ( arg("connection"), arg("endpoint"), arg("method"), arg("payload")=object(), arg("timeout")=DVIDConnection::DEFAULT_TIMEOUT ),
+                 "Main helper function retrieving data from DVID.  The function \
+                 performs the action specified in method.  An exception is generated \
+                 if curl cannot properly connect to the URL. \n\
+                 \n\
+                 :param endpoint: endpoint where request is performed \n\
+                 :param method: ``libdivd.ConnectionMethod``, (``HEAD``, ``GET``, ``POST``, ``PUT``, ``DELETE``) \n\
+                 :param payload: binary data containing data to be posted \n\
+                 :param timeout: timeout for the request (seconds) \n\
+                 :returns: tuple: (status_code, results (bytes), err_msg) \n\
+                 ")
+            .def("get_addr", &DVIDConnection::get_addr,
+                "Get the address for the DVID connection.")
+            .def("get_uri_root", &DVIDConnection::get_uri_root,
+                "Get the prefix for all DVID API calls")
         ;
 
-        enum_<ConnectionMethod>("ConnectionMethod")
+        enum_<ConnectionMethod>("ConnectionMethod",
+            "Enum for Http Verbs.\n\
+            \n\
+            Members:\n\
+            \n\
+            - HEAD \n\
+            - GET \n\
+            - POST \n\
+            - PUT \n\
+            - DELETE \n\
+            ")
             .value("HEAD", HEAD)
             .value("GET", GET)
             .value("POST", POST)
@@ -315,8 +361,13 @@ namespace libdvid { namespace python {
         ;
 
         // DVIDServerService python class definition
-        class_<DVIDServerService>("DVIDServerService", init<std::string>())
-            .def("create_new_repo", &DVIDServerService::create_new_repo)
+        class_<DVIDServerService>("DVIDServerService",
+            "Class that helps access different functionality on a DVID server.",
+            init<std::string>( ( arg("server_address") )))
+            .def("create_new_repo", &DVIDServerService::create_new_repo,
+                ( arg("alias"), arg("description") ),
+                "Create a new DVID repo with the given alias name \
+                and string description.  A DVID UUID is returned.")
         ;
 
         // For overloaded functions, boost::python needs help figuring out which one we're aiming for.
@@ -326,11 +377,30 @@ namespace libdvid { namespace python {
         BinaryDataPtr (DVIDNodeService::*custom_request)(std::string, BinaryDataPtr, ConnectionMethod, bool) = &DVIDNodeService::custom_request;
 
         // DVIDNodeService python class definition
-        class_<DVIDNodeService>("DVIDNodeService", init<std::string, UUID>())
+        class_<DVIDNodeService>("DVIDNodeService",
+                "Class that helps access different DVID version node actions.",
+                init<std::string, UUID>(
+                    ( arg("web_addr"), arg("uuid") ),
+                    "Constructor sets up an http connection and checks\n"
+                    "whether a node of the given uuid and web server exists.\n"
+                    "\n"
+                    ":param web_addr: address of DVID server\n"
+                    ":param uuid: uuid corresponding to a DVID node\n"))
+
             .def("get_typeinfo", &DVIDNodeService::get_typeinfo,
-                ( arg("datatype_name") ))
+                ( arg("datatype_name") ),
+                "Retrieves meta data for a given datatype instance\n"
+                "\n"
+                ":param datatype_name: name of datatype instance\n"
+                ":returns: JSON describing instance meta data\n")
+
             .def("create_graph", &DVIDNodeService::create_graph,
-                ( arg("name") ))
+                ( arg("name") ),
+                "Create an instance of labelgraph datatype.\n"
+                "\n"
+                ":param name: name of new datatype instance\n"
+                ":returns: true if create, false if already exists\n")
+
             .def("custom_request", custom_request,
                 (arg("endpoint"), arg("payload"), arg("method"), arg("compress")=false))
 
@@ -393,7 +463,15 @@ namespace libdvid { namespace python {
         class_<Vertex>("Vertex", init<VertexID, double>());
         class_<Edge>("Edge", init<VertexID, VertexID, double>());
 
-        enum_<Slice2D>("Slice2D")
+        enum_<Slice2D>("Slice2D",
+            "Enum for tile orientations.\n\
+            \n\
+            Members:\n\
+            \n\
+            - XY \n\
+            - XZ \n\
+            - YZ \n\
+            ")
             .value("XY", XY)
             .value("XZ", XZ)
             .value("YZ", YZ)
