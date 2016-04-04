@@ -8,13 +8,20 @@ The ``libdvid`` Python module implements bindings to the
 library to provide convenient access to selected portions of the
 `DVID <https://github.com/janelia-flyem/dvid>`_ REST API to Python code. 
 
+Installation
+============
+
+.. code-block:: bash
+
+   conda install -c flyem libdvid-cpp
+
 API Reference
 =============
 
 .. toctree::
    :maxdepth: 2
 
+   DVIDNodeService
    DVIDConnection
    DVIDServerService
-   DVIDNodeService
    

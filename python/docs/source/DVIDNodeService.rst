@@ -19,13 +19,13 @@ DVIDNodeService
     - :py:meth:`get_json <DVIDNodeService.get_json>`
     - :py:meth:`get_keys <DVIDNodeService.get_keys>`
 
-  - Grayscale Voxels
+  - Grayscale
 
     - :py:meth:`create_grayscale8 <DVIDNodeService.create_grayscale8>`
     - :py:meth:`get_gray3D <DVIDNodeService.get_gray3D>`
     - :py:meth:`put_gray3D <DVIDNodeService.put_gray3D>`
 
-  - Label Voxels
+  - Labels
 
     - :py:meth:`create_labelblk <DVIDNodeService.create_labelblk>`
     - :py:meth:`put_labels3D <DVIDNodeService.put_labels3D>`
@@ -70,13 +70,13 @@ DVIDNodeService
    .. automethod:: get_json
    .. automethod:: get_keys
 
-   .. Grayscale Voxels
+   .. Grayscale
 
    .. automethod:: create_grayscale8
    .. automethod:: get_gray3D
    .. automethod:: put_gray3D
 
-   .. Label Voxels
+   .. Labels
 
    .. automethod:: create_labelblk
    .. automethod:: get_labels3D
@@ -115,3 +115,13 @@ Slice2D
 
 .. autoclass:: Slice2D
 
+Graph Primitives
+----------------
+
+.. autoclass:: Vertex
+
+   .. automethod:: __init__
+
+.. autoclass:: Edge
+
+   .. automethod:: __init__

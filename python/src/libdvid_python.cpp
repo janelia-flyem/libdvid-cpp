@@ -331,7 +331,7 @@ namespace libdvid { namespace python {
                  if curl cannot properly connect to the URL. \n\
                  \n\
                  :param endpoint: endpoint where request is performed \n\
-                 :param method: ``libdivd.ConnectionMethod``, (``HEAD``, ``GET``, ``POST``, ``PUT``, ``DELETE``) \n\
+                 :param method: ``libdvid.ConnectionMethod``, (``HEAD``, ``GET``, ``POST``, ``PUT``, ``DELETE``) \n\
                  :param payload: binary data containing data to be posted \n\
                  :param timeout: timeout for the request (seconds) \n\
                  :returns: tuple: (status_code, results (bytes), err_msg) \n\
@@ -387,6 +387,9 @@ namespace libdvid { namespace python {
                     ":param web_addr: address of DVID server\n"
                     ":param uuid: uuid corresponding to a DVID node\n"))
 
+            //
+            // GENERAL
+            //
             .def("get_typeinfo", &DVIDNodeService::get_typeinfo,
                 ( arg("datatype_name") ),
                 "Retrieves meta data for a given datatype instance\n"
@@ -394,6 +397,221 @@ namespace libdvid { namespace python {
                 ":param datatype_name: name of datatype instance\n"
                 ":returns: JSON describing instance meta data\n")
 
+            .def("custom_request", custom_request,
+                ( arg("endpoint"), arg("payload"), arg("method"), arg("compress")=false ),
+                "Allow client to specify a custom http request with an \
+                http endpoint for a given node and uuid.  A request \
+                to ``/node/<uuid>/blah`` should provide the endpoint \
+                as ``/blah``. \n\
+                \n\
+                :param endpoint: REST endpoint given the node's uuid \n\
+                :param payload: binary data to be sent in the request \n\
+                :param method: ``libdvid.ConnectionMethod``, (``HEAD``, ``GET``, ``POST``, ``PUT``, ``DELETE``) \n\
+                :param compress: use lz4 compression if true \n\
+                :returns: http response as binary data \n\
+                ")
+
+            //
+            // KEY-VALUE
+            //
+            .def("create_keyvalue", &DVIDNodeService::create_keyvalue,
+                ( arg("instance_name") ),
+                "Create an instance of keyvalue datatype.\n\n\
+                 :param instance_name: name of new keyvalue instance \n\
+                 :returns: True if created, False if already exists. \n\
+                ")
+
+            .def("put", put_binary,
+                ( arg("instance_name"), arg("key"), arg("value_bytes") ),
+                "Put binary blob at a given key location.  It will overwrite data \
+                that exists at the key for the given node version. \n\n\
+                :param instance_name: name of keyvalue instance \n\
+                :param key: name of key to the keyvalue instance \n\
+                :param value_bytes: binary blob to store at key (str or bytes) \n\
+                ")
+            .def("get", &DVIDNodeService::get,
+                ( arg("instance_name"), arg("key") ),
+                "Retrieve binary data at a given key location. \n\n\
+                :param instance_name: name of keyvalue instance \n\
+                :param key: name of key within the keyvalue instance \n\
+                :returns: binary data stored at key \n\
+                ")
+            .def("get_json", &DVIDNodeService::get_json,
+                ( arg("instance_name"), arg("key") ),
+                "Retrieve json data at a given key location, parsed into a dict. \n\n\
+                :param instance_name: name of keyvalue instance \n\
+                :param key: name of key within the keyvalue instance \n\
+                :returns: json stored at key \n\
+                ")
+            .def("get_keys", &DVIDNodeService::get_keys,
+                ( arg("instance_name") ),
+                "Retrieve the list of all keys for a given keyvalue instance. \n\n\
+                :param instance_name: name of keyvalue instance \n\
+                :returns: list of strings \n\
+                ")
+
+            //
+            // GRAYSCALE
+            //
+            .def("create_grayscale8", &DVIDNodeService::create_grayscale8,
+                ( arg("instance_name") ),
+                "Create an instance of uint8 grayscale datatype. \n\n\
+                :param instance_name: name of new datatype instance \n\
+                :returns: True if created, False if already exists \n\
+                ")
+
+            .def("get_gray3D", &get_gray3D_zyx,
+                ( arg("service"), arg("instance_name"), arg("shape_zyx"), arg("offset_zyx"), arg("throttle")=true, arg("compress")=false, arg("roi")=object() ),
+                "Retrieve a 3D 1-byte grayscale volume with the specified \
+                dimension size and spatial offset.  The dimension \
+                sizes and offset default to X,Y,Z (the \
+                DVID 0,1,2 axis order).  The data is returned so X corresponds \
+                to the matrix column.  Because it is easy to overload a single \
+                server implementation of DVID with hundreds of volume requests, \
+                we support a throttle command that prevents multiple volume \
+                GETs/PUTs from executing at the same time. \
+                A 2D slice should be requested as X x Y x 1.  The requested \
+                number of voxels cannot be larger than INT_MAX/8. \n\
+                \n\
+                :param instance_name: name of grayscale type instance \n\
+                :param shape_zyx: volume dimensions in voxel coordinates \n\
+                :param offset_zyx: volume location in voxel coordinates \n\
+                :param throttle: allow only one request at time (default: true) \n\
+                :param compress: enable lz4 compression \n\
+                :param roi: specify DVID roi to mask GET operation (return 0s outside ROI) \n\
+                :returns: 3D ``ndarray``, with dtype ``uint8`` \n\
+                ")
+
+            .def("put_gray3D", &put_gray3D_zyx,
+                ( arg("service"), arg("instance_name"), arg("grayscale_vol"), arg("offset_zyx"), arg("throttle")=true, arg("compress")=false),
+                "Put a 3D 1-byte grayscale volume to DVID with the specified \
+                dimension and spatial offset.  THE DIMENSION AND OFFSET ARE \
+                IN VOXEL COORDINATS BUT MUST BE BLOCK ALIGNED.  The size \
+                of DVID blocks are determined at repo creation and is \
+                always 32x32x32 currently.  The axis order is always \
+                X, Y, Z.  Because it is easy to overload a single server \
+                implementation of DVID with hundreds \
+                of volume PUTs, we support a throttle command that prevents \
+                multiple volume GETs/PUTs from executing at the same time. \
+                The number of voxels put cannot be larger than INT_MAX/8. \n\
+                \n\
+                :param instance_name: name of the grayscale type instance \n\
+                :param grayscale_vol: ``ndarray`` with dtype ``uint8`` \n\
+                :param offset_zyx: offset in voxel coordinates \n\
+                :param throttle: allow only one request at time (default: true) \n\
+                :param compress: enable lz4 compression \n\
+                ")
+
+            //
+            // LABELS
+            //
+            .def("create_labelblk", create_labelblk,
+                ( arg("instance_name"), arg("labelvol_name")=object() ),
+                "Create an instance of uint64 labelblk datatype and optionally \
+                create a label volume datatype.  WARNING: If the function returns false \
+                and a label volume is requested it is possible that the two \
+                datatypes created will not be synced together.  Currently, \
+                the syncing configuration needs to be set on creation. \n\
+                \n\
+                :param instance_name: name of new datatype instance \n\
+                :param labelvol_name: name of labelvolume to associate with labelblks \n\
+                \return true if both created, false if one already exists \n\
+                ")
+
+            .def("get_labels3D", &get_labels3D_zyx,
+                ( arg("service"), arg("instance_name"), arg("shape_zyx"), arg("offset_zyx"), arg("throttle")=true, arg("compress")=false, arg("roi")=object() ),
+                "Retrieve a 3D 8-byte label volume with the specified \
+                dimension size and spatial offset.  The dimension \
+                sizes and offset default to X,Y,Z (the \
+                DVID 0,1,2 axis order).  The data is returned so X corresponds \
+                to the matrix column.  Because it is easy to overload a single \
+                server implementation of DVID with hundreds of volume requests, \
+                we support a throttle command that prevents multiple volume \
+                GETs/PUTs from executing at the same time. \
+                A 2D slice should be requested as X x Y x 1.  The requested \
+                number of voxels cannot be larger than INT_MAX/8. \n\
+                \n\
+                :param instance_name: name of the labelblk type instance \n\
+                :param shape_zyx: size of X, Y, Z dimensions in voxel coordinates \n\
+                :param offset_zyx: offset in voxel coordinates \n\
+                :param throttle: allow only one request at time (default: true) \n\
+                :param compress: enable lz4 compression \n\
+                :param roi: specify DVID roi to mask GET operation (return 0s outside ROI) \n\
+                :returns: 3D ``ndarray`` with dtype ``uint64`` \n\
+                ")
+
+            .def("get_label_by_location",  &get_label_by_location_zyx,
+                ( arg("service"), arg("instance_name"), arg("point_zyx") ),
+                "Retrieve label id at the specified point.  If no ID is found, return 0. \n\
+                \n\
+                :param datatype_instance: name of the labelblk type instance \n\
+                :param point_zyx: tuple: ``(z,y,x)`` of the point to inspect\n\
+                :returns: body id for given location (0 if none found) \n\
+                ")
+
+            .def("put_labels3D", &put_labels3D_zyx,
+                ( arg("service"), arg("instance_name"), arg("label_vol_zyx"), arg("offset_zyx"), arg("throttle")=true, arg("compress")=false, arg("roi")=object(), arg("mutate")=false ),
+                "Put a 3D 8-byte label volume to DVID with the specified \
+                 dimension and spatial offset.  THE DIMENSION AND OFFSET ARE \
+                 IN VOXEL COORDINATS BUT MUST BE BLOCK ALIGNED.  The size \
+                 of DVID blocks are determined at repo creation and is \
+                 always 32x32x32 currently.  The axis order is always \
+                 X, Y, Z.  Because it is easy to overload a single server \
+                 implementation of DVID with hundreds \
+                 of volume PUTs, we support a throttle command that prevents \
+                 multiple volume GETs/PUTs from executing at the same time. \
+                 The number of voxels put cannot be larger than INT_MAX/8. \n\
+                 \n\
+                 :param instance_name: name of the grayscale type instance \n\
+                 :param volume: label 3D volume encodes dimension sizes and binary buffer \n\
+                 :param offset_zyx: offset in voxel coordinates \n\
+                 :param throttle: allow only one request at time (default: true) \n\
+                 :param roi: specify DVID roi to mask PUT operation (default: empty) \n\
+                 :param compress: enable lz4 compression \n\
+                 :param mutate: set to True if overwriting previous segmentation (default: False) \n\
+                 ")
+
+            .def("body_exists", &DVIDNodeService::body_exists,
+                ( arg("labelvol_name"), arg("bodyid") ),
+                "Determine whether body exists in labelvolume. \n\
+                \n\
+                :param labelvol_name: name of label volume type \n\
+                :param bodyid: body id being queried (int) \n\
+                :returns: True if in label volume, False otherwise \n\
+                ")
+
+            //
+            // TILES
+            //
+            .def("get_tile_slice", &DVIDNodeService::get_tile_slice,
+                ( arg("instance_name"), arg("slice_type"), arg("scaling"), arg("tile_numbers") ),
+                "Retrieve a pre-computed tile from DVID at the specified \
+                location and zoom level. \n\
+                \n\
+                :param instance_name: name of tile type instance \n\
+                :param slice_type: ``Slice2D.XY``, ``YZ``, or ``XZ`` \n\
+                :param scaling: specify zoom level (1=max res) \n\
+                :param tile_loc: tuple: X,Y,Z location of tile (X and Y are in tile coordinates) \n\
+                :returns: 2D ``ndarray`` with dtype ``uint8`` \n\
+                ")
+
+            .def("get_tile_slice_binary", &DVIDNodeService::get_tile_slice_binary,
+                ( arg("instance_name"), arg("slice_type"), arg("scaling"), arg("tile_numbers") ),
+                "Retrive the raw pre-computed tile (no decompression) from \
+                 DVID at the specified location and zoom level.  In theory, this \
+                 could be applied to multi-scale label data, but DVID typically \
+                 only stores tiles for grayscale data since it is immutable. \n\
+                 \n\
+                 :param instance_name: name of tile type instance \n\
+                 :param slice_type: ``Slice2D.XY``, ``YZ``, or ``XZ`` \n\
+                 :param scaling: specify zoom level (1=max res) \n\
+                 :param tile_loc: tuple: X,Y,Z location of tile (X and Y are in tile coordinates) \n\
+                 :returns: byte buffer (str) for the raw compressed data stored (e.g, JPEG or PNG)  \n\
+                 ")
+
+            //
+            // GRAPH
+            //
             .def("create_graph", &DVIDNodeService::create_graph,
                 ( arg("name") ),
                 "Create an instance of labelgraph datatype.\n"
@@ -401,67 +619,131 @@ namespace libdvid { namespace python {
                 ":param name: name of new datatype instance\n"
                 ":returns: true if create, false if already exists\n")
 
-            .def("custom_request", custom_request,
-                (arg("endpoint"), arg("payload"), arg("method"), arg("compress")=false))
+            .def("update_vertices", &DVIDNodeService::update_vertices,
+                ( arg("graph_name"), arg("vertices") ),
+                "Add the provided vertices to the labelgraph with the associated \
+                vertex weights.  If the vertex already exists, it will increment \
+                the vertex weight by the weight specified.  This function \
+                can be used for creation and incrementing vertex weights in parallel. \n\
+                \n\
+                :param graph_name: name of labelgraph instance \n\
+                :param vertices: list of vertices to create or update \n\
+                ")
 
-            // keyvalue
-            .def("create_keyvalue", &DVIDNodeService::create_keyvalue,
-                ( arg("instance_name") ))
-            .def("put", put_binary,
-                ( arg("instance_name"), arg("key"), arg("value_bytes") ))
-            .def("get", &DVIDNodeService::get,
-                ( arg("instance_name"), arg("key") ))
-            .def("get_json", &DVIDNodeService::get_json,
-                ( arg("instance_name"), arg("key") ))
-            .def("get_keys", &DVIDNodeService::get_keys,
-                ( arg("instance_name") ))
+            .def("update_edges", &DVIDNodeService::update_edges,
+                ( arg("graph_name"), arg("vertices") ),
+                "Add the provided edges to the labelgraph with the associated \
+                edge weights.  If the edge already exists, it will increment \
+                the vertex weight by the weight specified.  This function \
+                can be used for creation and incrementing edge weights in parallel. \
+                The command will fail if the vertices for the given edges \
+                were not created first. \
+                \n\n\
+                :param graph_name: name of labelgraph instance \n\
+                :param vertices: list of vertices to create or update \n\
+                ")
 
-            // grayscale
-            .def("create_grayscale8", &DVIDNodeService::create_grayscale8,
-                ( arg("instance_name") ))
-            .def("get_gray3D", &get_gray3D_zyx,
-                ( arg("service"), arg("instance_name"), arg("shape_zyx"), arg("offset_zyx"), arg("throttle")=true, arg("compress")=false, arg("roi")=object() ))
-            .def("put_gray3D", &put_gray3D_zyx,
-                ( arg("service"), arg("instance_name"), arg("grayscale_vol"), arg("offset_zyx"), arg("throttle")=true, arg("compress")=false))
-
-            // labels
-            .def("create_labelblk", create_labelblk,
-                (arg("service"), arg("instance_name"), arg("instance2")=object() ))
-            .def("get_labels3D", &get_labels3D_zyx,
-                ( arg("service"), arg("instance_name"), arg("shape_zyx"), arg("offset_zyx"), arg("throttle")=true, arg("compress")=false, arg("roi")=object() ))
-            .def("get_label_by_location",  &get_label_by_location_zyx,
-                    ( arg("service"), arg("instance_name"), arg("point") ))
-            .def("put_labels3D", &put_labels3D_zyx,
-                ( arg("service"), arg("instance_name"), arg("label_vol_zyx"), arg("offset_zyx"), arg("throttle")=true, arg("compress")=false, arg("roi")=object(), arg("mutate")=false ))
-            .def("body_exists", &DVIDNodeService::body_exists)
-
-            // 2D slices
-            .def("get_tile_slice", &DVIDNodeService::get_tile_slice,
-                ( arg("service"), arg("instance_name"), arg("slice_type"), arg("scaling"), arg("tile_numbers") ))
-            .def("get_tile_slice_binary", &DVIDNodeService::get_tile_slice_binary,
-                ( arg("service"), arg("instance_name"), arg("slice_type"), arg("scaling"), arg("tile_numbers") ))
-
-            // graph
-            .def("update_vertices", &DVIDNodeService::update_vertices)
-            .def("update_edges", &DVIDNodeService::update_edges)
-
+            //
             // ROI
+            //
             .def("create_roi", &DVIDNodeService::create_roi,
-                ( arg("name") ) )
+                ( arg("name") ),
+                "Create an instance of ROI datatype. \
+                \n\n\
+                :param name: name of new datatype instance \n\
+                :returns: True if created, False if already exists \n\
+                ")
+
             .def("get_roi", &get_roi,
-                ( arg("service"), arg("roi") ) )
+                ( arg("service"), arg("roi") ),
+                "Retrieve an ROI and store in a vector of block coordinates. \
+                The blocks returned will be ordered by Z then Y then X. \
+                \n\n\
+                :param roi: name of the roi instance \n\
+                :returns: list of ``BlockZYX`` coordinate tuples \n\
+                ")
+
             .def("post_roi", &DVIDNodeService::post_roi,
-                ( arg("service"), arg("blocks_zyx") ))
+                ( arg("roi_name"), arg("blocks_zyx") ),
+                "Load an ROI defined by a list of blocks.  This command \
+                will extend the ROI if it defines blocks outside of the \
+                currently defined ROI.  The blocks can be provided in \
+                any order. \
+                \n\n\
+                :param roi_name: name of the roi instance \n\
+                :param blocks_zyx: list of tuples ``(z,y,x)`` \n\
+                ")
+
             .def("get_roi_partition", &get_roi_partition,
-                ( arg("service"), arg("roi"), arg("partition_size") ))
+                ( arg("service"), arg("roi"), arg("partition_size") ),
+                "Retrieve a partition of the ROI covered by substacks \
+                of the specified partition size.  The substacks will be ordered \
+                by Z then Y then X. \
+                \n\n\
+                :param roi: name of the roi instance \n\
+                :param substacks: list of ``SubstackZYX`` tuples, i.e. ``(size, z, y, x)`` \n\
+                :param partition_size: substack size as number of blocks in one dimension \n\
+                :returns: tuple: ``(substacks, packing_factor)`` where ``substacks`` is a list of \
+                          ``SubstackZYX`` tuples, i.e. ``(size, z, y, x)`` and ``packing_factor`` is the \
+                          fraction of substack volumes that cover blocks \n\
+                ")
+
             .def("roi_ptquery", &roi_ptquery,
-                ( arg("service"), arg("roi"), arg("point_list_zyx") ))
+                ( arg("service"), arg("roi"), arg("point_list_zyx") ),
+                "Check whether a list of points (any order) exists in \
+                the given ROI.  A vector of true and false has the same order \
+                as the list of points. \
+                \n\n\
+                :param roi: name of the roi instance \n\
+                :param point_list_zyx: list of tuples ``(z,y,x)`` \n\
+                :returns: list of bool \n\
+                ")
+
             .def("get_roi3D", &get_roi3D_zyx,
-                ( arg("service"), arg("instance_name"), arg("dims_zyx"), arg("offset_zyx"), arg("throttle")=true, arg("compress")=false ))			;
+                ( arg("service"), arg("instance_name"), arg("dims_zyx"), arg("offset_zyx"), arg("throttle")=true, arg("compress")=false ),
+                "Retrieve a 3D 1-byte bool volume for a roi with the specified \
+                dimension size and spatial offset.  The dimension \
+                sizes and offset default to X,Y,Z (the \
+                DVID 0,1,2 axis order).  The data is returned so X corresponds \
+                to the matrix column.  Because it is easy to overload a single \
+                server implementation of DVID with hundreds of volume requests, \
+                we support a throttle command that prevents multiple volume \
+                GETs/PUTs from executing at the same time. \
+                A 2D slice should be requested as X x Y x 1.  The requested \
+                number of voxels cannot be larger than INT_MAX/8. \
+                \n\n\
+                :param roi_name: name of roi mask instance \n\
+                :param dims_zyx: requested shape in voxel coordinates \n\
+                :param offset_zyx: requested starting location in voxel coordinates \n\
+                :param throttle: allow only one request at time (default: true) \n\
+                :param compress: enable lz4 compression \n\
+                :returns: Roi3D object that wraps a byte buffer \n\
+                ");
 
 
-        class_<Vertex>("Vertex", init<VertexID, double>());
-        class_<Edge>("Edge", init<VertexID, VertexID, double>());
+        class_<Vertex>("Vertex",
+            "Vertex is its unique ID and its weight (typically representing \
+             the size of the vertex in voxels",
+            init<VertexID, double>(
+                ( arg("id_"), arg("weight") ),
+                "Constructor to explicitly set vertex information. \
+                \n\n\
+                :param id_: vertex id \n\
+                :param weight: weight for the vertex \n\
+                "));
+
+        class_<Edge>("Edge",
+            "Edge constitutes two vertex ids and a weight.  For example, \
+            the weight could indicate the sizes of the edge between two \
+            vertices in voxels.",
+            init<VertexID, VertexID, double>(
+                ( arg("id1"), arg("id2"), arg("weight") ),
+                "Constructor using supplied vertex ids and weight. \
+                \n\n\
+                :param id1: vertex 1 of edge \n\
+                :param id2: vertex 2 of edge \n\
+                :param weight: weight of edge \n\
+                "));
 
         enum_<Slice2D>("Slice2D",
             "Enum for tile orientations.\n\
