@@ -15,6 +15,12 @@ Installation
 
    conda install -c flyem libdvid-cpp
 
+Tutorials
+=========
+
+- `Basic Tutorial <_static/basic-tutorial.html>`_
+
+
 API Reference
 =============
 
