@@ -513,7 +513,7 @@ namespace libdvid { namespace python {
                 ")
 
             .def("get_labels3D", &get_labels3D_zyx,
-                ( arg("service"), arg("instance_name"), arg("shape_zyx"), arg("offset_zyx"), arg("throttle")=true, arg("compress")=false, arg("roi")=object() ),
+                ( arg("service"), arg("instance_name"), arg("shape_zyx"), arg("offset_zyx"), arg("throttle")=true, arg("compress")=true, arg("roi")=object() ),
                 "Retrieve a 3D 8-byte label volume with the specified \
                 dimension size and spatial offset.  The dimension \
                 sizes and offset default to X,Y,Z (the \
@@ -544,7 +544,7 @@ namespace libdvid { namespace python {
                 ")
 
             .def("put_labels3D", &put_labels3D_zyx,
-                ( arg("service"), arg("instance_name"), arg("label_vol_zyx"), arg("offset_zyx"), arg("throttle")=true, arg("compress")=false, arg("roi")=object(), arg("mutate")=false ),
+                ( arg("service"), arg("instance_name"), arg("label_vol_zyx"), arg("offset_zyx"), arg("throttle")=true, arg("compress")=true, arg("roi")=object(), arg("mutate")=false ),
                 "Put a 3D 8-byte label volume to DVID with the specified \
                  dimension and spatial offset.  THE DIMENSION AND OFFSET ARE \
                  IN VOXEL COORDINATS BUT MUST BE BLOCK ALIGNED.  The size \
