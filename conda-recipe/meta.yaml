@@ -1,11 +1,11 @@
 package:
-  name: libdvid-cpp
+    name: libdvid-cpp
 
-  # If we're using a non-tagged revision, append '.postN' to the version
-  {% if GIT_DESCRIBE_NUMBER|int != 0 %}
-  version: {{GIT_DESCRIBE_TAG}}.post{{GIT_DESCRIBE_NUMBER}}
+  {% if GIT_DESCRIBE_NUMBER|int == 0 %}
+    version: {{GIT_DESCRIBE_TAG}}
   {% else %}
-  version: {{GIT_DESCRIBE_TAG}}
+    # If we're using a non-tagged revision, append '.postN' to the version
+    version: {{GIT_DESCRIBE_TAG}}.post{{GIT_DESCRIBE_NUMBER}}
   {% endif %}
   
 source:
