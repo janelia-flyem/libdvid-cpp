@@ -94,11 +94,19 @@ bool DVIDNodeService::create_grayscale8(string datatype_name)
 bool DVIDNodeService::create_labelblk(string datatype_name,
         string labelvol_name)
 {
-    bool is_created = create_datatype("labelblk", datatype_name, labelvol_name);
+    bool is_created = create_datatype("labelblk", datatype_name);
     bool is_created2 = true;
+
     if (labelvol_name != "") {
-        is_created2 = create_datatype("labelvol", labelvol_name, datatype_name);
+        // create labelvol instance
+        // and setup bi-directional sync
+        is_created2 =
+            create_datatype("labelvol", labelvol_name)
+            && sync(labelvol_name, datatype_name)
+            && sync(datatype_name, labelvol_name);
+
     }
+
     return is_created && is_created2;
 }
 
@@ -1384,23 +1392,19 @@ void DVIDNodeService::put_blocks(string datatype_instance,
     custom_request(endpoint, binary, POST);
 }
 
-bool DVIDNodeService::create_datatype(string datatype, string datatype_name,
-        std::string sync_name)
+bool DVIDNodeService::create_datatype(string datatype, string datatype_name)
 {
     if (exists("/node/" + uuid + "/" + datatype_name + "/info")) {
         return false;
     } 
+
     string endpoint = "/repo/" + uuid + "/instance";
     string respdata;
 
     // serialize as a JSON string
     string data = "{\"typename\": \"" + datatype + "\", \"dataname\": \"" + 
-        datatype_name;
-    if (sync_name != "") {
-        data += "\", \"Sync\": \"" + sync_name + "\"}";
-    } else {
-        data += "\"}";
-    }
+        datatype_name + "\"}";
+
     BinaryDataPtr payload = 
         BinaryData::create_binary_data(data.c_str(), data.length());
     BinaryDataPtr binary = BinaryData::create_binary_data();
@@ -1410,6 +1414,28 @@ bool DVIDNodeService::create_datatype(string datatype, string datatype_name,
 
     if (status_code != 200) {
         throw DVIDException("DVIDException for " + endpoint + "\n" + respdata + "\n" + binary->get_data(), status_code);
+    }
+
+    return true;
+}
+
+bool DVIDNodeService::sync(string datatype_name, string sync_name)
+{
+    string endpoint = "/node/" + uuid + "/" + datatype_name + "/sync";
+    string data = "{\"sync\": \"" + sync_name + "\"}";
+
+    BinaryDataPtr payload =
+        BinaryData::create_binary_data(data.c_str(), data.length());
+    BinaryDataPtr binary = BinaryData::create_binary_data();
+    string response;
+
+    int status = connection.make_request(
+        endpoint, POST, payload, binary, response, JSON);
+
+    if (status != 200) {
+        throw DVIDException(
+            "DVIDException for " + endpoint + "\n" + response + "\n"
+            + binary->get_data(), status);
     }
 
     return true;

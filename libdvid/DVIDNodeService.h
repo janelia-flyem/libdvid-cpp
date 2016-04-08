@@ -118,7 +118,15 @@ class DVIDNodeService {
     */
     bool create_labelblk(std::string datatype_name,
             std::string labelvol_name = "");
-    
+
+    /*!
+     * Helper function to sync two datatype instances
+     * \param datatype_name name of datatype instance to be synced
+     * \param sync_name name of datatype instance to sync with
+     * \return true if synced, false otherwise
+    */
+    bool sync(std::string datatype_name, std::string sync_name);
+
     /*!
      * Create an instance of keyvalue datatype.
      * \param datatype_name name of new datatype instance
@@ -727,11 +735,9 @@ class DVIDNodeService {
      * Helper function to create an instance of the specified type.
      * \param datatype name of the datatype to create
      * \param datatype_name name of new datatype instance
-     * \param syn_name dataname to sync with if provided
      * \return true if create, false if already exists
     */
-    bool create_datatype(std::string datatype, std::string datatype_name,
-            std::string sync_name = "");
+    bool create_datatype(std::string datatype, std::string datatype_name);
 
     /*!
      * Checks if data exists for the given datatype name.
