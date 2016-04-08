@@ -734,6 +734,14 @@ class DVIDNodeService {
             std::string sync_name = "");
 
     /*!
+     * Helper function to sync two datatype instances
+     * \param datatype_name name of datatype instance to be synced
+     * \param sync_name name of datatype instance to sync with
+     * \return true if synced, false otherwise
+    */
+    bool sync(std::string datatype_name, std::string sync_name);
+
+    /*!
      * Checks if data exists for the given datatype name.
      * \return true if the instance already exists
     */

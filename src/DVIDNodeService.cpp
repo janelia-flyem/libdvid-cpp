@@ -1415,6 +1415,30 @@ bool DVIDNodeService::create_datatype(string datatype, string datatype_name,
     return true;
 }
 
+bool DVIDNodeService::sync(string datatype_name, string sync_name)
+{
+    if (exists("/node/" + uuid + "/" + datatype_name + "/info")) {
+        return false;
+    }
+
+    string endpoint = "/node/" + uuid + "/" + datatype_name + "/sync";
+    string data = "{\"sync\": \"" + sync_name + "\"}";
+
+    BinaryDataPtr payload =
+        BinaryData::create_binary_data(data.c_str(), data.length());
+    BinaryDataPtr binary = BinaryData::create_binary_data();
+    string response;
+
+    int status = connection.make_request(
+        endpoint, POST, payload, binary, response, JSON);
+
+    if (status != 200) {
+        throw DVIDException(
+            "DVIDException for " + endpoint + "\n" + response + "\n"
+            + binary->get_data(), status);
+    }
+}
+
 bool DVIDNodeService::exists(string datatype_endpoint)
 { 
     try {
