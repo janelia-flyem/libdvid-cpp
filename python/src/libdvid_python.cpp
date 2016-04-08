@@ -34,7 +34,7 @@ namespace libdvid { namespace python {
         std::string err_msg ;
 
         int status_code = connection.make_request(endpoint, method, payload_data, results, err_msg, DEFAULT, timeout);
-        return make_tuple(status_code, object(results), err_msg);
+        return boost::python::make_tuple(status_code, object(results), err_msg);
     }
 
     //! Python wrapper function for DVIDNodeService::get_roi().
