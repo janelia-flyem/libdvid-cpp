@@ -1417,10 +1417,6 @@ bool DVIDNodeService::create_datatype(string datatype, string datatype_name,
 
 bool DVIDNodeService::sync(string datatype_name, string sync_name)
 {
-    if (exists("/node/" + uuid + "/" + datatype_name + "/info")) {
-        return false;
-    }
-
     string endpoint = "/node/" + uuid + "/" + datatype_name + "/sync";
     string data = "{\"sync\": \"" + sync_name + "\"}";
 
@@ -1437,6 +1433,8 @@ bool DVIDNodeService::sync(string datatype_name, string sync_name)
             "DVIDException for " + endpoint + "\n" + response + "\n"
             + binary->get_data(), status);
     }
+
+    return true;
 }
 
 bool DVIDNodeService::exists(string datatype_endpoint)
