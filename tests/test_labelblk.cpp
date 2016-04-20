@@ -85,7 +85,14 @@ int main(int argc, char** argv)
 
         // retrieve the image volume and make sure it makes the posted volume
         Labels3D labelcomp = dvid_node.get_labels3D(label_datatype_name, lsizes, start);
-        
+       
+        // verify the blocksize is 32
+        size_t blocksize = dvid_node.get_blocksize(label_datatype_name);
+        if (blocksize != 32) {
+            cerr << label_datatype_name << " is not 32x32x32" << endl;
+            return -1;
+        }
+
         const uint64* labeldatacomp = labelcomp.get_raw();
         for (int i = 0; i < BLK_SIZE*BLK_SIZE*BLK_SIZE; ++i) {
             if (labeldatacomp[i] != img_labels[i]) {

@@ -95,12 +95,25 @@ class DVIDNodeService {
     */
     Json::Value get_typeinfo(std::string datatype_name);
 
+
+    /*!
+     * Determines block size for a given datatype instance
+     * and also caches the result for future invocation.  libdvid
+     * only supports isotropic blocks.  If there is no block
+     * size for the given datatype instance name, an exception
+     * is thrown.
+     * \param datatype_name name of datatype instance
+     * \return block size
+    */
+    size_t get_blocksize(std::string datatype_name);
+
+
     /************* API to create datatype instances **************/
     // TODO: pass configuration data.
-    // WARNING: DO NOT USE '-' IN NAMES FOR NOW
     
     /*!
      * Create an instance of uint8 grayscale datatype.
+     * Defaults to 32x32x32 blocks.
      * \param datatype_name name of new datatype instance
      * \return true if create, false if already exists
     */
@@ -112,6 +125,7 @@ class DVIDNodeService {
      * and a label volume is requested it is possible that the two
      * datatypes created will not be synced together.  Currently,
      * the syncing configuration needs to be set on creation.
+     * Defaults to 32x32x32 blocks.
      * \param datatype_name name of new datatype instance
      * \param labelvol_name name of labelvolume to associate with labelblks
      * \return true if both created, false if one already exists
@@ -143,6 +157,7 @@ class DVIDNodeService {
 
     /*!
      * Create an instance of ROI datatype.
+     * Defaults to 32x32x32 blocks.
      * \param name name of new datatype instance
      * \return true if create, false if already exists
     */
@@ -290,8 +305,8 @@ class DVIDNodeService {
      * Put a 3D 1-byte grayscale volume to DVID with the specified
      * dimension and spatial offset.  THE DIMENSION AND OFFSET ARE
      * IN VOXEL COORDINATS BUT MUST BE BLOCK ALIGNED.  The size
-     * of DVID blocks are determined at repo creation and is
-     * always 32x32x32 currently.  The axis order is always
+     * of DVID blocks are determined at instance creation and is
+     * 32x32x32 by default.  The axis order is always
      * X, Y, Z.  Because it is easy to overload a single server
      * implementation of DVID with hundreds
      * of volume PUTs, we support a throttle command that prevents
@@ -312,8 +327,8 @@ class DVIDNodeService {
      * Put a 3D 8-byte label volume to DVID with the specified
      * dimension and spatial offset.  THE DIMENSION AND OFFSET ARE
      * IN VOXEL COORDINATS BUT MUST BE BLOCK ALIGNED.  The size
-     * of DVID blocks are determined at repo creation and is
-     * always 32x32x32 currently.  The axis order is always
+     * of DVID blocks are determined at instance creation and is
+     * 32x32x32 by default.  The axis order is always
      * X, Y, Z.  Because it is easy to overload a single server
      * implementation of DVID with hundreds
      * of volume PUTs, we support a throttle command that prevents
@@ -340,8 +355,9 @@ class DVIDNodeService {
      * Fetch grayscale blocks from DVID.  The call will fetch
      * a series of contiguous blocks along the first dimension (X).
      * The number of blocks fetched is encoded in the GrayscaleBlocks
-     * returned structure. 
-     * TODO: support compression and throttling.
+     * returned structure.
+     *
+     * DEPRECATED.  Only supports 32x32x32 blocks.
      * \param datatype instance name of grayscale type instance
      * \param block_coords location of first block in span (block coordinates) (X,Y,Z)
      * \param span number of blocks to attemp to read
@@ -355,7 +371,7 @@ class DVIDNodeService {
      * a series of contiguous blocks along the first dimension (X).
      * The number of blocks fetched is encoded in the LabelBlocks
      * returned structure.
-     * TODO: support compression and throttling.
+     * DEPRECATED.  Only supports 32x32x32 blocks.
      * \param datatype instance name of labelblk type instance
      * \param block_coords location of first block in span (block coordinates) (X,Y,Z)
      * \param span number of blocks to attemp to read
@@ -368,7 +384,7 @@ class DVIDNodeService {
      * Put grayscale blocks to DVID.   The call will put
      * a series of contiguous blocks along the first spatial dimension (X).
      * The number of blocks posted is encoded in GrayscaleBlocks.
-     * TODO: support compression and throttling.
+     * DEPRECATED.  Only supports 32x32x32 blocks.
      * \param datatype instance name of grayscale type instance
      * \param blocks stores buffer for array of blocks
      * \param block_coords location of first block in span (block coordinates) (X,Y,Z)
@@ -380,7 +396,7 @@ class DVIDNodeService {
      * Put label blocks to DVID.   The call will put
      * a series of contiguous blocks along the first spatial dimension (X).
      * The number of blocks posted is encoded in LabelBlocks.
-     * TODO: support compression and throttling.
+     * DEPRECATED.  Only supports 32x32x32 blocks.
      * NOTE: UNTESTED (DVID DOES NOT YET SUPPORT)
      * \param datatype instance name of labelblk type instance
      * \param blocks stores buffer for array of blocks
@@ -694,6 +710,9 @@ class DVIDNodeService {
 
     //! buffer from decompression
     NodeBuffer glb_buffer;
+
+    //! a map containing instance block sizes
+    std::tr1::unordered_map<std::string, size_t> instance_blocksize_map; 
 
     /*!
      * Helper function to put a 3D volume to DVID with the specified

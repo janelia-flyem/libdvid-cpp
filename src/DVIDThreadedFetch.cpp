@@ -30,9 +30,10 @@ struct FetchGrayBlocks {
 
     void operator()()
     {
+        size_t blocksize = service.get_blocksize(grayscale_name);
         uint8* blockdata = 0;
         if ((request_efficiency == 1) && !use_blocks) {
-            blockdata = new uint8[DEFBLOCKSIZE*DEFBLOCKSIZE*DEFBLOCKSIZE];
+            blockdata = new uint8[blocksize*blocksize*blocksize];
         }
         // iterate only for the threads parts 
         for (int index = start; index < (start+count); ++index) {
@@ -50,21 +51,22 @@ struct FetchGrayBlocks {
                 block_coords.push_back(xmin);
                 block_coords.push_back(y);
                 block_coords.push_back(z);
+                // !! only works with 32x32x32 blocks
                 GrayscaleBlocks blocks2 = service.get_grayblocks(grayscale_name, block_coords, curr_runlength);
                 for (int j = 0; j < curr_runlength; ++j) {
-                    BinaryDataPtr ptr = BinaryData::create_binary_data((const char*)blocks2[j], DEFBLOCKSIZE*DEFBLOCKSIZE*DEFBLOCKSIZE);
+                    BinaryDataPtr ptr = BinaryData::create_binary_data((const char*)blocks2[j], blocksize*blocksize*blocksize);
                     (*blocks)[block_index] = ptr;
                     ++block_index;
                 }
             } else {
                 Dims_t dims;
-                dims.push_back(DEFBLOCKSIZE*curr_runlength);
-                dims.push_back(DEFBLOCKSIZE);
-                dims.push_back(DEFBLOCKSIZE);
+                dims.push_back(blocksize*curr_runlength);
+                dims.push_back(blocksize);
+                dims.push_back(blocksize);
                 vector<int> offset;
-                offset.push_back(xmin*DEFBLOCKSIZE);
-                offset.push_back(y*DEFBLOCKSIZE);
-                offset.push_back(z*DEFBLOCKSIZE);
+                offset.push_back(xmin*blocksize);
+                offset.push_back(y*blocksize);
+                offset.push_back(z*blocksize);
 
                 Grayscale3D grayvol = service.get_gray3D(grayscale_name,
                         dims, offset, false); 
@@ -78,24 +80,24 @@ struct FetchGrayBlocks {
 
                     // otherwise create a buffer and do something more complicated 
                     for (int j = 0; j < curr_runlength; ++j) {
-                        int offsetx = j * DEFBLOCKSIZE;
-                        int offsety = curr_runlength*DEFBLOCKSIZE;
-                        int offsetz = curr_runlength*DEFBLOCKSIZE*DEFBLOCKSIZE;
+                        int offsetx = j * blocksize;
+                        int offsety = curr_runlength*blocksize;
+                        int offsetz = curr_runlength*blocksize*blocksize;
                         uint8* mod_data_iter = blockdata; 
 
-                        for (int ziter = 0; ziter < DEFBLOCKSIZE; ++ziter) {
+                        for (int ziter = 0; ziter < blocksize; ++ziter) {
                             const uint8* data_iter = raw_data + ziter * offsetz;    
                             data_iter += (offsetx);
-                            for (int yiter = 0; yiter < DEFBLOCKSIZE; ++yiter) {
-                                for (int xiter = 0; xiter < DEFBLOCKSIZE; ++xiter) {
+                            for (int yiter = 0; yiter < blocksize; ++yiter) {
+                                for (int xiter = 0; xiter < blocksize; ++xiter) {
                                     *mod_data_iter = *data_iter;
                                     ++mod_data_iter;
                                     ++data_iter;
                                 }
-                                data_iter += ((offsety) - DEFBLOCKSIZE);
+                                data_iter += ((offsety) - blocksize);
                             }
                         }
-                        BinaryDataPtr ptr = BinaryData::create_binary_data((const char*) blockdata, DEFBLOCKSIZE*DEFBLOCKSIZE*DEFBLOCKSIZE);
+                        BinaryDataPtr ptr = BinaryData::create_binary_data((const char*) blockdata, blocksize*blocksize*blocksize);
                         (*blocks)[block_index] = ptr;
                         ++block_index;
                     }
@@ -131,8 +133,9 @@ struct FetchLabelBlocks {
 
     void operator()()
     {
+        size_t blocksize = service.get_blocksize(labelsname);
         uint64* blockdata = 0;
-        blockdata = new uint64[DEFBLOCKSIZE*DEFBLOCKSIZE*DEFBLOCKSIZE];
+        blockdata = new uint64[blocksize*blocksize*blocksize];
         // iterate only for the threads parts 
         for (int index = start; index < (start+count); ++index) {
             // load span info
@@ -143,14 +146,15 @@ struct FetchLabelBlocks {
             int curr_runlength = span[3];
             int block_index = span[4];
 
+
             Dims_t dims;
-            dims.push_back(DEFBLOCKSIZE*curr_runlength);
-            dims.push_back(DEFBLOCKSIZE);
-            dims.push_back(DEFBLOCKSIZE);
+            dims.push_back(blocksize*curr_runlength);
+            dims.push_back(blocksize);
+            dims.push_back(blocksize);
             vector<int> offset;
-            offset.push_back(xmin*DEFBLOCKSIZE);
-            offset.push_back(y*DEFBLOCKSIZE);
-            offset.push_back(z*DEFBLOCKSIZE);
+            offset.push_back(xmin*blocksize);
+            offset.push_back(y*blocksize);
+            offset.push_back(z*blocksize);
 
             Labels3D labelvol = service.get_labels3D(labelsname,
                     dims, offset, false); 
@@ -164,25 +168,25 @@ struct FetchLabelBlocks {
 
                 // otherwise create a buffer and do something more complicated 
                 for (int j = 0; j < curr_runlength; ++j) {
-                    int offsetx = j * DEFBLOCKSIZE;
-                    int offsety = curr_runlength*DEFBLOCKSIZE;
-                    int offsetz = curr_runlength*DEFBLOCKSIZE*DEFBLOCKSIZE;
+                    int offsetx = j * blocksize;
+                    int offsety = curr_runlength*blocksize;
+                    int offsetz = curr_runlength*blocksize*blocksize;
                     uint64* mod_data_iter = blockdata; 
 
-                    for (int ziter = 0; ziter < DEFBLOCKSIZE; ++ziter) {
+                    for (int ziter = 0; ziter < blocksize; ++ziter) {
                         const uint64* data_iter = raw_data + ziter * offsetz;    
                         data_iter += (offsetx);
-                        for (int yiter = 0; yiter < DEFBLOCKSIZE; ++yiter) {
-                            for (int xiter = 0; xiter < DEFBLOCKSIZE; ++xiter) {
+                        for (int yiter = 0; yiter < blocksize; ++yiter) {
+                            for (int xiter = 0; xiter < blocksize; ++xiter) {
                                 *mod_data_iter = *data_iter;
                                 ++mod_data_iter;
                                 ++data_iter;
                             }
-                            data_iter += ((offsety) - DEFBLOCKSIZE);
+                            data_iter += ((offsety) - blocksize);
                         }
                     }
                     BinaryDataPtr ptr = BinaryData::create_binary_data((const char*) blockdata,
-                            sizeof(uint64)*DEFBLOCKSIZE*DEFBLOCKSIZE*DEFBLOCKSIZE);
+                            sizeof(uint64)*blocksize*blocksize*blocksize);
                     (*blocks)[block_index] = ptr;
                     ++block_index;
                 }
@@ -210,6 +214,7 @@ struct WriteLabelBlocks {
 
     void operator()()
     {
+        size_t blocksize = service.get_blocksize(labelsname);
         // iterate only for the threads parts 
         for (int index = start; index < (start+count); ++index) {
             // load span info
@@ -221,40 +226,40 @@ struct WriteLabelBlocks {
             int block_index = span[4];
 
             Dims_t dims;
-            dims.push_back(DEFBLOCKSIZE*curr_runlength);
-            dims.push_back(DEFBLOCKSIZE);
-            dims.push_back(DEFBLOCKSIZE);
+            dims.push_back(blocksize*curr_runlength);
+            dims.push_back(blocksize);
+            dims.push_back(blocksize);
             vector<int> offset;
-            offset.push_back(xmin*DEFBLOCKSIZE);
-            offset.push_back(y*DEFBLOCKSIZE);
-            offset.push_back(z*DEFBLOCKSIZE);
+            offset.push_back(xmin*blocksize);
+            offset.push_back(y*blocksize);
+            offset.push_back(z*blocksize);
 
-            uint64* blockdata = new uint64[DEFBLOCKSIZE*DEFBLOCKSIZE*DEFBLOCKSIZE*curr_runlength];
+            uint64* blockdata = new uint64[blocksize*blocksize*blocksize*curr_runlength];
 
             // otherwise create a buffer and do something more complicated 
             for (int j = 0; j < curr_runlength; ++j) {
-                int offsetx = j * DEFBLOCKSIZE;
-                int offsety = curr_runlength*DEFBLOCKSIZE;
-                int offsetz = curr_runlength*DEFBLOCKSIZE*DEFBLOCKSIZE;
+                int offsetx = j * blocksize;
+                int offsety = curr_runlength*blocksize;
+                int offsetz = curr_runlength*blocksize*blocksize;
                 const uint64* copy_data_iter = (uint64*) (*blocks)[block_index]->get_raw();
 
-                for (int ziter = 0; ziter < DEFBLOCKSIZE; ++ziter) {
+                for (int ziter = 0; ziter < blocksize; ++ziter) {
                     uint64* data_iter = blockdata + ziter * offsetz;    
                     data_iter += (offsetx);
-                    for (int yiter = 0; yiter < DEFBLOCKSIZE; ++yiter) {
-                        for (int xiter = 0; xiter < DEFBLOCKSIZE; ++xiter) {
+                    for (int yiter = 0; yiter < blocksize; ++yiter) {
+                        for (int xiter = 0; xiter < blocksize; ++xiter) {
                             *data_iter = *copy_data_iter;
                             ++copy_data_iter;
                             ++data_iter;
                         }
-                        data_iter += ((offsety) - DEFBLOCKSIZE);
+                        data_iter += ((offsety) - blocksize);
                     }
                 }
                 ++block_index;
             }
 
             // actually put label volume
-            Labels3D volume(blockdata, DEFBLOCKSIZE*DEFBLOCKSIZE*DEFBLOCKSIZE*curr_runlength, dims);
+            Labels3D volume(blockdata, blocksize*blocksize*blocksize*curr_runlength, dims);
             service.put_labels3D(labelsname, volume, offset, false); 
             delete []blockdata;
         }

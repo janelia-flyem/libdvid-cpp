@@ -7,6 +7,8 @@ namespace libdvid {
 
 /*!
  * Copies a body from node1 to node2.
+ * Note: blocksize must be the same in src
+ * and destination!
  * \param node1 node with src body
  * \param node2 node with dest body
  * \param src_labels name of src labels

@@ -21,6 +21,9 @@ namespace libdvid {
  * user can define a specific blocksize in case DVID is initialized
  * with a different blocksize.  The blocks object contains a buffer
  * to a contiguous chunk of memory.
+ *
+ * TODO: refactor by adding a generic base class to allow
+ * a common interface to blocks with different sizes.
 */
 template <typename T, unsigned int N = DEFBLOCKSIZE>
 class DVIDBlocks {

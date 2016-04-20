@@ -85,6 +85,48 @@ Json::Value DVIDNodeService::get_typeinfo(string datatype_name)
     }
     return data;
 }
+    
+size_t DVIDNodeService::get_blocksize(string datatype_name)
+{
+    if (instance_blocksize_map.find(datatype_name) !=
+            instance_blocksize_map.end()) {
+        return instance_blocksize_map[datatype_name];
+    }
+   
+    BinaryDataPtr binary = custom_request("/" + datatype_name + "/info", BinaryDataPtr(), GET);
+   
+    // read into json from binary string 
+    Json::Value data;
+    Json::Reader json_reader;
+    if (!json_reader.parse(binary->get_data(), data)) {
+        throw ErrMsg("Could not decode JSON");
+    }
+  
+    // retrieve block information if it exists 
+    Json::Value extended_data = data["Extended"];
+    if (!extended_data) {
+        throw ErrMsg("Instance does not contain blocksize information");
+    }
+    Json::Value blockdata = extended_data["BlockSize"];
+    if (!blockdata) {
+        throw ErrMsg("Instance does not contain blocksize information");
+    }
+     
+    // check if all block dimensions are equal
+    size_t x = blockdata[0u].asUInt();
+    size_t y = blockdata[1u].asUInt();
+    size_t z = blockdata[2u].asUInt(); 
+   
+    if (x != y || x != z) {
+        throw ErrMsg("Instance does not have a block size with equal dimensions");
+    } 
+
+    // set size in cache (assume that metadata cannot change
+    // for instance name for the same repo)
+    instance_blocksize_map[datatype_name] = x;
+    return x; 
+}
+
 
 bool DVIDNodeService::create_grayscale8(string datatype_name)
 {
@@ -925,6 +967,8 @@ double DVIDNodeService::get_roi_partition(std::string roi_name,
     if (!json_reader.parse(binary->get_data(), returned_data)) {
         throw ErrMsg("Could not decode JSON");
     }
+    
+    size_t blocksize = get_blocksize(roi_name);
 
     // order the substacks (might be redundant depending on DVID output order)
     set<SubstackXYZ> sorted_substacks;
@@ -936,7 +980,7 @@ double DVIDNodeService::get_roi_partition(std::string roi_name,
         int z = returned_data["Subvolumes"][i]["MinPoint"][2].asInt();
         
         sorted_substacks.insert(SubstackXYZ(x, y, z,
-                    DEFBLOCKSIZE*partition_size));
+                    blocksize*partition_size));
     }
 
     // returned sorted substacks back to caller
@@ -1017,20 +1061,22 @@ PointXYZ DVIDNodeService::get_body_location(string labelvol_name,
     if (!get_coarse_body(labelvol_name, bodyid, blockcoords)) {
         throw ErrMsg("Requested body does not exist");
     }
-   
+  
+    size_t blocksize = get_blocksize(labelvol_name);
+
     // just choose some arbitrary block point somewhere in the middle
     unsigned int num_blocks = blockcoords.size();
     unsigned int index = num_blocks / 2;
-    int x = blockcoords[index].x * DEFBLOCKSIZE + DEFBLOCKSIZE/2;
-    int y = blockcoords[index].y * DEFBLOCKSIZE + DEFBLOCKSIZE/2;
-    int z = blockcoords[index].z * DEFBLOCKSIZE + DEFBLOCKSIZE/2; 
+    int x = blockcoords[index].x * blocksize + blocksize/2;
+    int y = blockcoords[index].y * blocksize + blocksize/2;
+    int z = blockcoords[index].z * blocksize + blocksize/2; 
     PointXYZ point(x,y,z); 
    
 
     // try to get a point in the middle of the Z plane chose
     // if not found just default to somewhere in the middle of the body 
     if (zplane != INT_MAX) {
-        int zplaneblk = zplane / DEFBLOCKSIZE;
+        int zplaneblk = zplane / blocksize;
         int start_pos = -1;
         int last_pos = -1;
         // blocks are ordered z,y,x
@@ -1045,8 +1091,8 @@ PointXYZ DVIDNodeService::get_body_location(string labelvol_name,
         if (start_pos != -1) {
             unsigned int index =
                 (unsigned int)(start_pos + ((last_pos - start_pos) / 2));
-            point.x = blockcoords[index].x * DEFBLOCKSIZE + DEFBLOCKSIZE/2;
-            point.y = blockcoords[index].y * DEFBLOCKSIZE + DEFBLOCKSIZE/2;
+            point.x = blockcoords[index].x * blocksize + blocksize/2;
+            point.y = blockcoords[index].y * blocksize + blocksize/2;
             point.z = zplane;
         }
     }
@@ -1061,6 +1107,8 @@ PointXYZ DVIDNodeService::get_body_extremum(string labelvol_name,
     if (!get_coarse_body(labelvol_name, bodyid, blockcoords)) {
         throw ErrMsg("Requested body does not exist");
     }
+    
+    size_t blocksize = get_blocksize(labelvol_name);
 
     // get block id at boundary
     int blockid = 0;
@@ -1114,10 +1162,10 @@ PointXYZ DVIDNodeService::get_body_extremum(string labelvol_name,
     }
     
     // set body query filter
-    int planeloc = DEFBLOCKSIZE * blockid;
+    int planeloc = blocksize * blockid;
     string filtername = "maxx";
     if (minvalue) {
-        planeloc = DEFBLOCKSIZE * blockid + DEFBLOCKSIZE - 1;
+        planeloc = blocksize * blockid + blocksize - 1;
         if (plane == 1) {
             filtername = "maxy";
         } else if (plane == 2) {
@@ -1292,14 +1340,16 @@ void DVIDNodeService::put_volume(string datatype_instance, BinaryDataPtr volume,
     if ((sizes.size() != 3) || (offset.size() != 3)) {
         throw ErrMsg("Did not correctly specify 3D volume");
     }
-    
-    if ((offset[0] % DEFBLOCKSIZE != 0) || (offset[1] % DEFBLOCKSIZE != 0)
-            || (offset[2] % DEFBLOCKSIZE != 0)) {
+   
+    size_t blocksize = get_blocksize(datatype_instance);
+
+    if ((offset[0] % blocksize != 0) || (offset[1] % blocksize != 0)
+            || (offset[2] % blocksize != 0)) {
         throw ErrMsg("Label POST error: Not block aligned");
     }
 
-    if ((sizes[0] % DEFBLOCKSIZE != 0) || (sizes[1] % DEFBLOCKSIZE != 0)
-            || (sizes[2] % DEFBLOCKSIZE != 0)) {
+    if ((sizes[0] % blocksize != 0) || (sizes[1] % blocksize != 0)
+            || (sizes[2] % blocksize != 0)) {
         throw ErrMsg("Label POST error: Region is not a multiple of block size");
     }
 

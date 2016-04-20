@@ -548,8 +548,8 @@ namespace libdvid { namespace python {
                 "Put a 3D 8-byte label volume to DVID with the specified \
                  dimension and spatial offset.  THE DIMENSION AND OFFSET ARE \
                  IN VOXEL COORDINATS BUT MUST BE BLOCK ALIGNED.  The size \
-                 of DVID blocks are determined at repo creation and is \
-                 always 32x32x32 currently.  The axis order is always \
+                 of DVID blocks are determined at instance creation and is \
+                 32x32x32 by default.  The axis order is always \
                  X, Y, Z.  Because it is easy to overload a single server \
                  implementation of DVID with hundreds \
                  of volume PUTs, we support a throttle command that prevents \
