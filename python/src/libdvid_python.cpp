@@ -391,6 +391,18 @@ namespace libdvid { namespace python {
                 ":param datatype_name: name of datatype instance\n"
                 ":returns: JSON describing instance meta data\n")
 
+            .def("get_blocksize", &DVIDNodeService::get_blocksize,
+                ( arg("datatype_name") ),
+                "Determines block size for a given datatype instance \
+                and also caches the result for future invocation.  libdvid \
+                only supports isotropic blocks.  If there is no block \
+                size for the given datatype instance name, an exception \
+                is thrown. \n\
+                \n\
+                :param datatype_name: name of datatype instance\n\
+                :returns: block size\n\
+                ")
+
             .def("custom_request", custom_request,
                 ( arg("endpoint"), arg("payload"), arg("method"), arg("compress")=false ),
                 "Allow client to specify a custom http request with an \
