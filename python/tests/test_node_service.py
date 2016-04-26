@@ -92,10 +92,14 @@ class Test_DVIDNodeService(unittest.TestCase):
     def test_labels_3d(self):
         node_service = DVIDNodeService(TEST_DVID_SERVER, self.uuid)
         node_service.create_labelblk("test_labels_3d")
-        
         lblksize = node_service.get_blocksize("test_labels_3d")
 
         self.assertEqual(32, lblksize)
+        
+        
+        node_service.create_labelblk("test_labels_3d64", "", 64)
+        lblksize64 = node_service.get_blocksize("test_labels_3d64")
+        self.assertEqual(64, lblksize64)
        
         data = numpy.random.randint(0, 2**63-1, (128,128,128)).astype(numpy.uint64)
         assert data.flags['C_CONTIGUOUS']
