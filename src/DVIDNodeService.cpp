@@ -128,22 +128,22 @@ size_t DVIDNodeService::get_blocksize(string datatype_name)
 }
 
 
-bool DVIDNodeService::create_grayscale8(string datatype_name)
+bool DVIDNodeService::create_grayscale8(string datatype_name, size_t blocksize)
 {
-    return create_datatype("uint8blk", datatype_name);
+    return create_datatype("uint8blk", datatype_name, blocksize);
 }
 
 bool DVIDNodeService::create_labelblk(string datatype_name,
-        string labelvol_name)
+        string labelvol_name, size_t blocksize)
 {
-    bool is_created = create_datatype("labelblk", datatype_name);
+    bool is_created = create_datatype("labelblk", datatype_name, blocksize);
     bool is_created2 = true;
 
     if (labelvol_name != "") {
         // create labelvol instance
         // and setup bi-directional sync
         is_created2 =
-            create_datatype("labelvol", labelvol_name)
+            create_datatype("labelvol", labelvol_name, blocksize)
             && sync(labelvol_name, datatype_name)
             && sync(datatype_name, labelvol_name);
 
@@ -1442,18 +1442,27 @@ void DVIDNodeService::put_blocks(string datatype_instance,
     custom_request(endpoint, binary, POST);
 }
 
-bool DVIDNodeService::create_datatype(string datatype, string datatype_name)
+bool DVIDNodeService::create_datatype(string datatype, string datatype_name, size_t blocksize)
 {
     if (exists("/node/" + uuid + "/" + datatype_name + "/info")) {
         return false;
-    } 
+    }
 
     string endpoint = "/repo/" + uuid + "/instance";
     string respdata;
 
     // serialize as a JSON string
     string data = "{\"typename\": \"" + datatype + "\", \"dataname\": \"" + 
-        datatype_name + "\"}";
+        datatype_name + "\"";
+
+    if (blocksize > 0) {
+        stringstream sstr;
+        sstr << blocksize << "," << blocksize << "," << blocksize;
+ 
+        data += ",\"BlockSize\": \"" + sstr.str() + "\""; 
+    }
+
+    data += "}";
 
     BinaryDataPtr payload = 
         BinaryData::create_binary_data(data.c_str(), data.length());

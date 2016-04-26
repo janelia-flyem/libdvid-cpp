@@ -115,9 +115,10 @@ class DVIDNodeService {
      * Create an instance of uint8 grayscale datatype.
      * Defaults to 32x32x32 blocks.
      * \param datatype_name name of new datatype instance
+     * \param blocksize size of block chunks
      * \return true if create, false if already exists
     */
-    bool create_grayscale8(std::string datatype_name);
+    bool create_grayscale8(std::string datatype_name, size_t blocksize=DEFBLOCKSIZE);
     
     /*!
      * Create an instance of uint64 labelblk datatype and optionally
@@ -128,10 +129,11 @@ class DVIDNodeService {
      * Defaults to 32x32x32 blocks.
      * \param datatype_name name of new datatype instance
      * \param labelvol_name name of labelvolume to associate with labelblks
+     * \param blocksize size of block chunks
      * \return true if both created, false if one already exists
     */
     bool create_labelblk(std::string datatype_name,
-            std::string labelvol_name = "");
+            std::string labelvol_name = "", size_t blocksize=DEFBLOCKSIZE);
 
     /*!
      * Helper function to sync two datatype instances
@@ -754,9 +756,10 @@ class DVIDNodeService {
      * Helper function to create an instance of the specified type.
      * \param datatype name of the datatype to create
      * \param datatype_name name of new datatype instance
+     * \param blocksize size of block chunks (0 if not applicable)
      * \return true if create, false if already exists
     */
-    bool create_datatype(std::string datatype, std::string datatype_name);
+    bool create_datatype(std::string datatype, std::string datatype_name, size_t blocksize=0);
 
     /*!
      * Checks if data exists for the given datatype name.

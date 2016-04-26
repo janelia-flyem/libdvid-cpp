@@ -367,7 +367,8 @@ namespace libdvid { namespace python {
         // For overloaded functions, boost::python needs help figuring out which one we're aiming for.
         // These function pointers specify the ones we want.
         void          (DVIDNodeService::*put_binary)(std::string, std::string, BinaryDataPtr)                = &DVIDNodeService::put;
-        bool          (DVIDNodeService::*create_labelblk)(std::string, std::string)                          = &DVIDNodeService::create_labelblk;
+        bool          (DVIDNodeService::*create_grayscale8)(std::string, size_t)                          = &DVIDNodeService::create_grayscale8;
+        bool          (DVIDNodeService::*create_labelblk)(std::string, std::string, size_t)                          = &DVIDNodeService::create_labelblk;
         BinaryDataPtr (DVIDNodeService::*custom_request)(std::string, BinaryDataPtr, ConnectionMethod, bool) = &DVIDNodeService::custom_request;
 
         // DVIDNodeService python class definition
@@ -455,14 +456,15 @@ namespace libdvid { namespace python {
                 :param instance_name: name of keyvalue instance \n\
                 :returns: list of strings \n\
                 ")
-
+            
             //
             // GRAYSCALE
             //
-            .def("create_grayscale8", &DVIDNodeService::create_grayscale8,
-                ( arg("instance_name") ),
+            .def("create_grayscale8", create_grayscale8,
+                ( arg("instance_name"), arg("blocksize")=DEFBLOCKSIZE ),
                 "Create an instance of uint8 grayscale datatype. \n\n\
                 :param instance_name: name of new datatype instance \n\
+                :param blocksize: size of block chunks \n\
                 :returns: True if created, False if already exists \n\
                 ")
 
@@ -512,7 +514,7 @@ namespace libdvid { namespace python {
             // LABELS
             //
             .def("create_labelblk", create_labelblk,
-                ( arg("instance_name"), arg("labelvol_name")=object() ),
+                ( arg("instance_name"), arg("labelvol_name")=object(), arg("blocksize")=DEFBLOCKSIZE ),
                 "Create an instance of uint64 labelblk datatype and optionally \
                 create a label volume datatype.  WARNING: If the function returns false \
                 and a label volume is requested it is possible that the two \
@@ -521,6 +523,7 @@ namespace libdvid { namespace python {
                 \n\
                 :param instance_name: name of new datatype instance \n\
                 :param labelvol_name: name of labelvolume to associate with labelblks \n\
+                :param blocksize: size of block chunks \n\
                 :returns: true if both created, false if one already exists \n\
                 ")
 

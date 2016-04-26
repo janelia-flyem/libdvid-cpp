@@ -49,6 +49,17 @@ int main(int argc, char** argv)
                 + " already exists");
         }
 
+        // create 64x64x64 label
+        string label_datatype_name64 = "labels1_64";
+        string labelvol_datatype_name64 = "labels1_vol_64";
+        // should be a new instance
+        if(!dvid_node.create_labelblk(label_datatype_name64,
+                    labelvol_datatype_name64, 64)) {
+            throw ErrMsg(label_datatype_name64 + " or " + labelvol_datatype_name64
+                    + " already exists");
+        }
+
+
         // should not recreate labelblk if it already exists
          if(dvid_node.create_labelblk(label_datatype_name)) {
             throw ErrMsg(label_datatype_name + " should exist");
@@ -84,6 +95,17 @@ int main(int argc, char** argv)
         lsizes.push_back(YDIM); lsizes.push_back(ZDIM);
         Labels3D labelsbin(img_labels, XDIM*YDIM*ZDIM, lsizes);
         dvid_node.put_labels3D(label_datatype_name, labelsbin, start);
+
+        // push 32 aligned to 64 (should fail)
+        bool notaligned = false;
+        try {
+            dvid_node.put_labels3D(label_datatype_name64, labelsbin, start);
+        } catch (std::exception& e) {
+            notaligned = true;
+        }
+        if (!notaligned) {
+            throw ErrMsg("Post to 64x64x64 labelblk should fail");
+        }
 
         // give labelvol a chance to synchronize (should be fast)
         sleep(1);
