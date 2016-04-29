@@ -8,7 +8,8 @@ using std::string;
 
 namespace libdvid {
 
-DVIDServerService::DVIDServerService(std::string addr_) : connection(addr_)
+DVIDServerService::DVIDServerService(std::string addr_, string user, string app) : 
+    connection(addr_, user, app)
 {
     string endpoint = "/server/info";
     string respdata;

@@ -37,7 +37,8 @@ const int DVIDConnection::DEFAULT_TIMEOUT;
 //! Defines DVID prefix -- this might have a version ID eventually 
 const char* DVIDConnection::DVID_PREFIX = "/api";
 
-DVIDConnection::DVIDConnection(string addr_) : addr(addr_)
+DVIDConnection::DVIDConnection(string addr_, string user, string app) : 
+    addr(addr_), username(user), appname(app)
 {
     // trim trailing slash, e.g. http://localhost:8000/
     while (*addr.rbegin() == '/')
@@ -51,6 +52,8 @@ DVIDConnection::DVIDConnection(string addr_) : addr(addr_)
 DVIDConnection::DVIDConnection(const DVIDConnection& copy_connection)
 {
     addr = copy_connection.addr;
+    username = copy_connection.username;
+    appname = copy_connection.appname;
     directaddress = copy_connection.directaddress;
     curl_connection = curl_easy_init();
 }
@@ -80,6 +83,19 @@ int DVIDConnection::make_request(string endpoint, ConnectionMethod method,
     } 
     curl_easy_setopt(curl_connection, CURLOPT_HTTPHEADER, headers);
     curl_easy_setopt(curl_connection, CURLOPT_NOSIGNAL, 1);
+
+    // handle any special characters
+    char * user_enc = curl_easy_escape(curl_connection, username.c_str(), username.length());
+    char * app_enc = curl_easy_escape(curl_connection, appname.c_str(), appname.length());
+
+    // append user and app info for dvid requests
+    if (endpoint.find('?') == string::npos) {
+        // create query string
+        endpoint += "?u=" + string(user_enc) + "&app=" + string(app_enc);
+    } else {
+        // add to query string
+        endpoint += "&u=" + string(user_enc) + "&app=" + string(app_enc);
+    }
 
     // load url
     string url = get_uri_root() + endpoint;
@@ -159,11 +175,17 @@ int DVIDConnection::make_request(string endpoint, ConnectionMethod method,
 
     // throw exception if connection doesn't work
     if (result != CURLE_OK) {
+        curl_free(user_enc);
+        curl_free(app_enc);
         throw DVIDException("DVIDConnection error: " + string(url), http_code);
     }
 
     // load error if there is one
     error_msg = error_buf;
+
+    // free allocated string 
+    curl_free(user_enc);
+    curl_free(app_enc);
 
     // return status
     return int(http_code);

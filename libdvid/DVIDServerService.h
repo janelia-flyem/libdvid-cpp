@@ -27,8 +27,12 @@ class DVIDServerService {
     /*!
      * Constructor takes http address of DVID server.
      * \param addr_ DVID address
+     * \param user username used in DVID requests
+     * \param app name of the application used in DVID requests 
     */
-    explicit DVIDServerService(std::string addr_);
+    explicit DVIDServerService(std::string addr_,
+            std::string user="anonymous",
+            std::string app="libdvid");
     
     /*************** API for server services ***********************/
 

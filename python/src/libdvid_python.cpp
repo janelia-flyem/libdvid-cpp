@@ -308,8 +308,7 @@ namespace libdvid { namespace python {
                 to access DVID rather than reusing the same one.  This problem will \
                 be fixed when the curl connection is given thread-level scope as \
                 available in C++11.",
-            init<std::string>( ( arg("server_address") )))
-
+            init<std::string, std::string, std::string>( ( arg("server_address"), arg("user"), arg("app") )))
             .def("make_head_request", &DVIDConnection::make_head_request,
                     ( arg("endpoint") ),
                     "Simple HEAD requests to DVID.  An exception is generated \
@@ -357,7 +356,7 @@ namespace libdvid { namespace python {
         // DVIDServerService python class definition
         class_<DVIDServerService>("DVIDServerService",
             "Class that helps access different functionality on a DVID server.",
-            init<std::string>( ( arg("server_address") )))
+            init<std::string, std::string, std::string>( ( arg("server_address"), arg("user"), arg("app") )))
             .def("create_new_repo", &DVIDServerService::create_new_repo,
                 ( arg("alias"), arg("description") ),
                 "Create a new DVID repo with the given alias name \
@@ -374,8 +373,8 @@ namespace libdvid { namespace python {
         // DVIDNodeService python class definition
         class_<DVIDNodeService>("DVIDNodeService",
                 "Class that helps access different DVID version node actions.",
-                init<std::string, UUID>(
-                    ( arg("web_addr"), arg("uuid") ),
+                init<std::string, UUID, std::string, std::string>(
+                    ( arg("web_addr"), arg("uuid"), arg("user"), arg("app") ),
                     "Constructor sets up an http connection and checks\n"
                     "whether a node of the given uuid and web server exists.\n"
                     "\n"

@@ -20,8 +20,9 @@ static const unsigned int TransactionLimit = 1000;
 
 namespace libdvid {
 
-DVIDNodeService::DVIDNodeService(string web_addr_, UUID uuid_) :
-    connection(web_addr_), uuid(uuid_) 
+DVIDNodeService::DVIDNodeService(string web_addr_, UUID uuid_,
+        string user, string app) :
+    connection(web_addr_, user, app), uuid(uuid_) 
 {
     string endpoint = "/repo/" + uuid + "/info";
     string respdata;

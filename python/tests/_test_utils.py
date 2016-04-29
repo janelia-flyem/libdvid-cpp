@@ -6,7 +6,7 @@ from libdvid import DVIDConnection, ConnectionMethod
 TEST_DVID_SERVER = os.getenv("TEST_DVID_SERVER", "127.0.0.1:8000")
 
 def get_testrepo_root_uuid():
-    connection = DVIDConnection(TEST_DVID_SERVER)
+    connection = DVIDConnection(TEST_DVID_SERVER, "test1@blah.com", "myapp")
     status, body, error_message = connection.make_request( "/repos/info", ConnectionMethod.GET)
     assert status == httplib.OK, "Request for /repos/info returned status {}".format( status )
     assert error_message == ""
@@ -18,12 +18,12 @@ def get_testrepo_root_uuid():
         return str(uuid)
     else:
         from libdvid import DVIDServerService
-        server = DVIDServerService(TEST_DVID_SERVER)
+        server = DVIDServerService(TEST_DVID_SERVER, "user5@foo.bar", "app")
         uuid = server.create_new_repo("testrepo", "This repo is for unit tests to use and abuse.");
         return str(uuid)
 
 def delete_all_data_instances(uuid):
-    connection = DVIDConnection(TEST_DVID_SERVER)
+    connection = DVIDConnection(TEST_DVID_SERVER, "test1@blah.com", "myapp")
     repo_info_uri = "/repo/{uuid}/info".format( uuid=uuid )
     status, body, error_message = connection.make_request( repo_info_uri, ConnectionMethod.GET)
     assert status == httplib.OK, "Request for {} returned status {}".format(repo_info_uri, status)

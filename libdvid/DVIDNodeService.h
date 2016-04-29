@@ -70,9 +70,12 @@ class DVIDNodeService {
      * whether a node of the given uuid and web server exists.
      * \param web_addr_ address of DVID server
      * \param uuid_ uuid corresponding to a DVID node
+     * \param user username used in DVID requests
+     * \param app name of the application used in DVID requests 
     */
-    DVIDNodeService(std::string web_addr_, UUID uuid_);
-
+    DVIDNodeService(std::string web_addr_, UUID uuid_,
+            std::string user="anonymous",
+            std::string app="libdvid");
 
     /*!
      * Allow client to specify a custom http request with an

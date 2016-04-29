@@ -37,8 +37,12 @@ class DVIDConnection {
   public:
     /*!
      * Starts curl connection.
+     * \param addr_ dvid server address
+     * \param user username used in DVID requests
+     * \param app name of the application used in DVID requests 
     */
-    explicit DVIDConnection(std::string addr_);
+    explicit DVIDConnection(std::string addr_, std::string user,
+            std::string app);
   
     /*!
      * Copy constructor to ensure that creation of curl connection
@@ -117,6 +121,12 @@ class DVIDConnection {
     
     //! DVID address to bypass DNS (IP + port)
     std::string directaddress;
+
+    //! Name of user making request
+    std::string username;
+
+    //! Name of application making request
+    std::string appname;
 
     //! prefix for all DVID calls (versioning may be added here in the future) 
     static const char* DVID_PREFIX;
