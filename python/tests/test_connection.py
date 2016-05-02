@@ -5,6 +5,11 @@ from _test_utils import TEST_DVID_SERVER
 
 class Test_DVIDConnection(unittest.TestCase):
 
+    def test_default_user(self):
+        # For backwards compatibility, make sure we can create a
+        # DVIDNodeService without supplying a user name
+        connection = DVIDConnection(TEST_DVID_SERVER)
+
     def test_get(self):
         connection = DVIDConnection(TEST_DVID_SERVER, "me@foo.com", "myapp")
         status, body, error_message = connection.make_request( "/server/info", ConnectionMethod.GET);

@@ -18,6 +18,11 @@ class Test_DVIDNodeService(unittest.TestCase):
     def tearDownClass(cls):
         delete_all_data_instances(cls.uuid)
 
+    def test_default_user(self):
+        # For backwards compatibility, make sure we can create a
+        # DVIDNodeService without supplying a user name
+        node_service = DVIDNodeService(TEST_DVID_SERVER, self.uuid)
+
     def test_custom_request(self):
         node_service = DVIDNodeService(TEST_DVID_SERVER, self.uuid, "foo@bar.com", "test_custom_app")
         response_body = node_service.custom_request( "log", "", ConnectionMethod.GET )

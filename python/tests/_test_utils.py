@@ -18,7 +18,7 @@ def get_testrepo_root_uuid():
         return str(uuid)
     else:
         from libdvid import DVIDServerService
-        server = DVIDServerService(TEST_DVID_SERVER, "user5@foo.bar", "app")
+        server = DVIDServerService(TEST_DVID_SERVER)
         uuid = server.create_new_repo("testrepo", "This repo is for unit tests to use and abuse.");
         return str(uuid)
 
