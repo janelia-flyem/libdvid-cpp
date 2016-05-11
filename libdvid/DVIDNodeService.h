@@ -386,6 +386,18 @@ class DVIDNodeService {
            std::vector<int> block_coords, unsigned int span);
 
     /*!
+     * Fetch label blocks from DVID with teh specified dimension
+     * size and spatial offset.  The request must be block aligned.
+     * \param datatype instance name of labelblk type instance
+     * \param dims size of X, Y, Z dimensions in voxel coordinates
+     * \param offset X, Y, Z offset in voxel coordinates
+     * \param throttle allow only one request at time (default: false)
+     * \return array of lz4 compressed label blocks
+    */
+    std::vector<DVIDCompressedBlock> get_labelblocks3D(std::string datatype_instance,
+           Dims_t dims, std::vector<int> offset, bool throttle= false);
+
+    /*!
      * Put grayscale blocks to DVID.   The call will put
      * a series of contiguous blocks along the first spatial dimension (X).
      * The number of blocks posted is encoded in GrayscaleBlocks.

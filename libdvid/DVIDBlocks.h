@@ -16,6 +16,64 @@
 namespace libdvid {
 
 /*!
+ * Class holds reference to a compressed block (assume lzz compression).
+ * Assumes that the block size is less than INT_MAX.
+ * TODO: create hash index function and add comparators
+*/
+class DVIDCompressedBlock {
+  public:
+    
+    /*!
+     * Constructor takes compressed data, offset, blocksize.
+     * \param data lz4 compressed data
+     * \param offset offset in global coordinates
+     * \param blocksize size of block (needed for lz4 conversion)
+     * \param typesize size of data in bytes
+    */
+    DVIDCompressedBlock(BinaryDataPtr data, std::vector<int> offset_,
+            size_t blocksize_, size_t typesize_) : cdata(data),
+            offset(offset_), blocksize(blocksize_), typesize(typesize_) {}
+    
+    /*!
+     * Gets block offset in global coordinates.
+     * \return vector of x,y,z offset
+    */
+    std::vector<int> get_offset() const { return offset; }
+
+    /*!
+     * Gets block size.
+     * \return block size
+    */
+    size_t get_blocksize() const { return blocksize; }
+
+    /*!
+     * Gets type size.
+     * \return type size
+    */
+    size_t get_typesize() const { return typesize; }
+
+    /*!
+     * Decompress data.
+     * \return decompressed binary
+    */
+    BinaryDataPtr get_uncompressed_data()
+    {
+        // lz4 decompress
+        int decomp_size = blocksize*blocksize*blocksize*typesize;
+        return BinaryData::decompress_lz4(cdata, decomp_size);
+    }
+
+  private:
+    
+    BinaryDataPtr cdata;
+    std::vector<int> offset; 
+    size_t blocksize;
+    size_t typesize;
+};
+
+
+
+/*!
  * Class to access DVID blocks.  The block size is almost always
  * 32x32x32 as dictated by DVID.  For flexiblity purposes, the
  * user can define a specific blocksize in case DVID is initialized

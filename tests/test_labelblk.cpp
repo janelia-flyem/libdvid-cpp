@@ -85,7 +85,7 @@ int main(int argc, char** argv)
 
         // retrieve the image volume and make sure it makes the posted volume
         Labels3D labelcomp = dvid_node.get_labels3D(label_datatype_name, lsizes, start);
-       
+        
         // verify the blocksize is 32
         size_t blocksize = dvid_node.get_blocksize(label_datatype_name);
         if (blocksize != 32) {
@@ -100,6 +100,17 @@ int main(int argc, char** argv)
                 return -1;
             }
         }
+
+        // check block return
+        vector<DVIDCompressedBlock> lblocks  = dvid_node.get_labelblocks3D(label_datatype_name, lsizes, start);
+        labeldatacomp = (uint64*) lblocks[0].get_uncompressed_data()->get_raw();
+        for (int i = 0; i < BLK_SIZE*BLK_SIZE*BLK_SIZE; ++i) {
+            if (labeldatacomp[i] != img_labels[i]) {
+                cerr << "Read/write mismatch using block request" << endl;
+                return -1;
+            }
+        }
+
         delete []img_labels;
     } catch (std::exception& e) {
         cerr << e.what() << endl;

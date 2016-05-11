@@ -267,10 +267,102 @@ Labels3D DVIDNodeService::get_labels3D(string datatype_instance, Dims_t sizes,
         data = BinaryData::decompress_lz4(data, decomp_size);
     }
 
-
     Labels3D labels(data, sizes);
     return labels; 
 }
+
+vector<DVIDCompressedBlock> DVIDNodeService::get_labelblocks3D(string datatype_instance, Dims_t sizes,
+        vector<int> offset, bool throttle)
+{
+    // make sure volume specified is legal and block aligned
+    if ((sizes.size() != 3) || (offset.size() != 3)) {
+        throw ErrMsg("Did not correctly specify 3D volume");
+    }
+   
+    size_t blocksize = get_blocksize(datatype_instance);
+
+    if ((offset[0] % blocksize != 0) || (offset[1] % blocksize != 0)
+            || (offset[2] % blocksize != 0)) {
+        throw ErrMsg("Label block GET error: Not block aligned");
+    }
+
+    if ((sizes[0] % blocksize != 0) || (sizes[1] % blocksize != 0)
+            || (sizes[2] % blocksize != 0)) {
+        throw ErrMsg("Label block GET error: Region is not a multiple of block size");
+    }
+
+    // construct query string
+    string uri = "/node/" + uuid + "/"
+                    + datatype_instance + "/blocks/";
+   
+    stringstream sstr;
+    sstr << uri;
+    sstr << sizes[0];
+    for (unsigned int i = 1; i < sizes.size(); ++i) {
+        sstr << "_" << sizes[i];
+    }
+    sstr << "/" << offset[0];
+    for (unsigned int i = 1; i < offset.size(); ++i) {
+        sstr << "_" << offset[i];
+    }
+    if (throttle) {
+        sstr << "?throttle=on";
+    }
+ 
+    // try get until DVID is available (no contention)
+    BinaryDataPtr binary_result; 
+    string respdata;
+    bool waiting = true;
+    int timeout = 20;
+    int timeout_max = 600;
+    while (waiting) {
+        binary_result = BinaryData::create_binary_data();
+        int status_code = connection.make_request(sstr.str(), GET, BinaryDataPtr(),
+                binary_result, respdata, BINARY);
+       
+        // wait if server is busy
+        if (status_code == 503) {
+            // random backoff
+            sleep(rand()%timeout);
+            // capped exponential backoff
+            if (timeout < timeout_max) {
+                timeout *= 2;
+            }
+        } else {
+            waiting = false;
+        }
+    }
+
+    // put compressed blocks into vector
+    int num_blocks = (sizes[0]/blocksize)*(sizes[1]/blocksize)*(sizes[2]/blocksize);
+
+    const unsigned char * head = binary_result->get_raw();
+
+    vector<DVIDCompressedBlock> c_blocks;
+
+    while (num_blocks--) {
+        // retrieve offset
+        vector<int> offset;
+        offset.push_back(*((int*)head) * blocksize);
+        head += 4;
+        offset.push_back(*((int*)head) * blocksize);
+        head += 4;
+        offset.push_back(*((int*)head) * blocksize);
+        head += 4;
+        int lz4_bytes = *((int*)head);
+        head += 4;
+
+        BinaryDataPtr blockdata = BinaryData::create_binary_data((const char*) head, lz4_bytes);
+
+        DVIDCompressedBlock c_block(blockdata, offset, blocksize, sizeof(uint64));
+        c_blocks.push_back(c_block);
+        head += lz4_bytes;
+    }
+
+    return c_blocks;
+}
+
+
 
 Labels3D DVIDNodeService::get_labels3D(string datatype_instance, Dims_t sizes,
         vector<int> offset, bool throttle, bool compress, string roi)
