@@ -60,7 +60,11 @@ BinaryDataPtr DVIDNodeService::custom_request(string endpoint,
     BinaryDataPtr resp_binary = BinaryData::create_binary_data();
     int status_code = connection.make_request(node_endpoint, method, payload,
             resp_binary, respdata, BINARY);
-    if (status_code != 200) {
+
+    // FIXME: For some reason, DVID sometimes returns status 206 for ROI requests.
+    //        For now, treat 206 as if it were 200.
+    //if (status_code != 200) {
+    if (status_code != 200 && status_code != 206) {
         throw DVIDException("DVIDException for " + node_endpoint + "\n" + respdata + "\n" + resp_binary->get_data(), status_code);
     }
 
