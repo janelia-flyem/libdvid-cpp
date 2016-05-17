@@ -33,7 +33,15 @@ class DVIDCompressedBlock {
     DVIDCompressedBlock(BinaryDataPtr data, std::vector<int> offset_,
             size_t blocksize_, size_t typesize_) : cdata(data),
             offset(offset_), blocksize(blocksize_), typesize(typesize_) {}
+  
+    /*!
+     * Sets data value.
+     * \param data compressed block data
+    */ 
+    void set_data(BinaryDataPtr data) { cdata = data; }
     
+    BinaryDataPtr get_data() const { return cdata; }
+
     /*!
      * Gets block offset in global coordinates.
      * \return vector of x,y,z offset
@@ -62,6 +70,12 @@ class DVIDCompressedBlock {
         int decomp_size = blocksize*blocksize*blocksize*typesize;
         return BinaryData::decompress_lz4(cdata, decomp_size);
     }
+
+    /*!
+     * Get size of compressed buffer.
+     * \return size of buffer.
+    */
+    size_t get_datasize() const { return cdata->length(); }
 
   private:
     
