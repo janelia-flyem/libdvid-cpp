@@ -11,6 +11,7 @@
 #include "Globals.h"
 #include "DVIDException.h"
 
+#include <vector>
 #include <string>
 
 namespace libdvid {
@@ -33,6 +34,8 @@ class DVIDCompressedBlock {
     DVIDCompressedBlock(BinaryDataPtr data, std::vector<int> offset_,
             size_t blocksize_, size_t typesize_) : cdata(data),
             offset(offset_), blocksize(blocksize_), typesize(typesize_) {}
+ 
+    DVIDCompressedBlock() {}
   
     /*!
      * Sets data value.
