@@ -338,29 +338,36 @@ vector<DVIDCompressedBlock> DVIDNodeService::get_labelblocks3D(string datatype_i
     }
 
     // put compressed blocks into vector
-    int num_blocks = (sizes[0]/blocksize)*(sizes[1]/blocksize)*(sizes[2]/blocksize);
+    //int num_blocks = (sizes[0]/blocksize)*(sizes[1]/blocksize)*(sizes[2]/blocksize);
 
     const unsigned char * head = binary_result->get_raw();
+    int buffer_size = binary_result->length();
 
     vector<DVIDCompressedBlock> c_blocks;
 
-    while (num_blocks--) {
+    // it is possible to have less blocks than requested if they are blank
+    while (buffer_size) {
         // retrieve offset
         vector<int> offset;
         offset.push_back(*((int*)head) * blocksize);
         head += 4;
+        buffer_size -= 4;
         offset.push_back(*((int*)head) * blocksize);
         head += 4;
+        buffer_size -= 4;
         offset.push_back(*((int*)head) * blocksize);
         head += 4;
+        buffer_size -= 4;
         int lz4_bytes = *((int*)head);
         head += 4;
+        buffer_size -= 4;
 
         BinaryDataPtr blockdata = BinaryData::create_binary_data((const char*) head, lz4_bytes);
 
         DVIDCompressedBlock c_block(blockdata, offset, blocksize, sizeof(uint64));
         c_blocks.push_back(c_block);
         head += lz4_bytes;
+        buffer_size -= lz4_bytes;
     }
 
     return c_blocks;
