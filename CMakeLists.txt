@@ -175,9 +175,13 @@ if (${BUILDEM_DIR} STREQUAL "None")
     INSTALL(DIRECTORY ${PROJECT_SOURCE_DIR}/libdvid DESTINATION include)
     INSTALL(DIRECTORY ${PROJECT_SOURCE_DIR}/png++ DESTINATION include)
     INSTALL(TARGETS dvidcpp DESTINATION lib)
-    INSTALL(FILES ${PROJECT_BINARY_DIR}/libdvidcppConfig.cmake
-    ${PROJECT_BINARY_DIR}/libdvidcppConfigVersion.cmake ${PROJECT_BINARY_DIR}/libdvidcppTargets.cmake
-    DESTINATION lib${LIB_SUFFIX}/libdvidcpp)
+
+    ## Apparently the config files generated here aren't relocatable,
+    ## which we need if we want to use the package in a conda environment.
+    #INSTALL(FILES ${PROJECT_BINARY_DIR}/libdvidcppConfig.cmake
+    #              ${PROJECT_BINARY_DIR}/libdvidcppConfigVersion.cmake
+    #              ${PROJECT_BINARY_DIR}/libdvidcppTargets.cmake
+    #        DESTINATION lib${LIB_SUFFIX}/libdvidcpp)
 else()
     add_custom_command (
     TARGET dvidcpp
