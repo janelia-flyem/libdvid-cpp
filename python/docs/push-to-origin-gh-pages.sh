@@ -23,6 +23,15 @@ ln -s ../../build/python/_dvid_python.so || true
 cd ${repo_dir}/build
 make
 
+CMAKE_INSTALL_PREFIX_CACHE_ENTRY=$(grep CMAKE_INSTALL_PREFIX CMakeCache.txt)
+CMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX_CACHE_ENTRY##*PATH=}
+LIB_DIR=${CMAKE_INSTALL_PREFIX}/lib
+
+if [[ $(uname) == "Darwin" ]]; then
+    export DYLD_FALLBACK_LIBRARY_PATH=${LIB_DIR}
+else
+    export LD_LIBRARY_PATH=${LIB_DIR}
+fi
 
 # Build the docs in the user's repo
 echo "Building the docs..."
