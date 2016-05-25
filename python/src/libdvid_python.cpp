@@ -379,7 +379,10 @@ namespace libdvid { namespace python {
                     "whether a node of the given uuid and web server exists.\n"
                     "\n"
                     ":param web_addr: address of DVID server\n"
-                    ":param uuid: uuid corresponding to a DVID node\n"))
+                    ":param uuid: uuid corresponding to a DVID node\n"
+                    ":param user: username used in DVID requests\n"
+                    ":param app: name of the application used in DVID requests\n"
+                    ))
 
             //
             // GENERAL
