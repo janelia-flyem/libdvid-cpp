@@ -29,15 +29,14 @@ class TestVoxelsAccessor(unittest.TestCase):
         cls.node_location = "/repos/{dvid_repo}/nodes/{data_uuid}".format( **cls.__dict__ )
 
         # Generate some test data
-        data = numpy.random.randint(0, 255, (1, 128, 256, 512))
-        data = numpy.asfortranarray(data, numpy.uint8)
+        data = numpy.random.randint(0, 255, (512, 256, 128, 1)).astype(numpy.uint8)
         cls.original_data = data
-        cls.voxels_metadata = VoxelsMetadata.create_default_metadata(data.shape, data.dtype, "cxyz", 1.0, "")
+        cls.voxels_metadata = VoxelsMetadata.create_default_metadata(data.shape, data.dtype, "zyxc", 1.0, "")
 
         # Write it to a new data instance
         node_service = DVIDNodeService(TEST_DVID_SERVER, cls.data_uuid)
         node_service.create_grayscale8(cls.data_name)
-        node_service.put_gray3D( cls.data_name, data[0,...], (0,0,0) )
+        node_service.put_gray3D( cls.data_name, data[...,0], (0,0,0) )
 
     @classmethod
     def tearDownClass(cls):
@@ -50,7 +49,7 @@ class TestVoxelsAccessor(unittest.TestCase):
         """
         Get some data from the server and check it.
         """
-        start, stop = (0,9,5,50), (1,10,20,150)
+        start, stop = (50,5,9,0), (150,20,10,1)
         dvid_vol = VoxelsAccessor( TEST_DVID_SERVER, self.data_uuid, self.data_name )
         subvolume = dvid_vol.get_ndarray( start, stop )
         assert (self.original_data[roi_to_slice(start, stop)] == subvolume).all()
@@ -62,7 +61,7 @@ class TestVoxelsAccessor(unittest.TestCase):
          
         Note: This test doesn't really exercise our handling of 503 responses...
         """
-        start, stop = (0,9,5,50), (1,10,20,150)
+        start, stop = (50,5,9,0), (150,20,10,1)
         dvid_vol = VoxelsAccessor( TEST_DVID_SERVER, self.data_uuid, self.data_name, throttle=True )
         subvolume = dvid_vol.get_ndarray( start, stop )
         assert (self.original_data[roi_to_slice(start, stop)] == subvolume).all()
@@ -74,7 +73,7 @@ class TestVoxelsAccessor(unittest.TestCase):
  
         Note: This test doesn't really exercise our handling of 503 responses...
         """
-        start, stop = (0,9,5,50), (1,10,20,150)
+        start, stop = (50,5,9,0), (150,20,10,1)
         dvid_vol = VoxelsAccessor( TEST_DVID_SERVER, self.data_uuid, self.data_name, query_args={'throttle' : 'on'} )
         subvolume = dvid_vol.get_ndarray( start, stop )
         assert (self.original_data[roi_to_slice(start, stop)] == subvolume).all()
@@ -97,12 +96,11 @@ class TestVoxelsAccessor(unittest.TestCase):
         Modify a remote subvolume and verify that the server wrote it.
         """
         # Cutout dims
-        start, stop = (0,0,32,64), (1,32,64,96)
+        start, stop =  (64,32,0,0), (96,64,32,1)
         shape = numpy.subtract( stop, start )
    
         # Generate test data
         new_subvolume = numpy.random.randint( 0,1000, shape ).astype( numpy.uint8 )
-        new_subvolume = numpy.asfortranarray(new_subvolume, numpy.uint8)
    
         # Send to server
         dvid_vol = VoxelsAccessor( TEST_DVID_SERVER, self.data_uuid, self.data_name )
@@ -118,12 +116,11 @@ class TestVoxelsAccessor(unittest.TestCase):
    
     def test_post_slicing(self):
         # Cutout dims
-        start, stop = (0,0,32,64), (1,32,64,96)
+        start, stop = (64,32,0,0), (96,64,32,1)
         shape = numpy.subtract( stop, start )
    
         # Generate test data
         new_subvolume = numpy.random.randint( 0,1000, shape ).astype( numpy.uint8 )
-        new_subvolume = numpy.asfortranarray(new_subvolume, numpy.uint8)
    
         # Send to server
         dvid_vol = VoxelsAccessor( TEST_DVID_SERVER, self.data_uuid, self.data_name )
@@ -138,16 +135,15 @@ class TestVoxelsAccessor(unittest.TestCase):
   
     def test_post_reduced_dim_slicing(self):
         # Cutout dims
-        start, stop = (0,0,32,64), (1,32,64,96)
+        start, stop = (64,32,0,0), (96,64,32,1)
         shape = numpy.subtract( stop, start )
    
         # Generate test data
         new_subvolume = numpy.random.randint( 0,1000, shape ).astype( numpy.uint8 )
-        new_subvolume = numpy.asfortranarray(new_subvolume, numpy.uint8)
    
         # Send to server
         dvid_vol = VoxelsAccessor( TEST_DVID_SERVER, self.data_uuid, self.data_name )
-        dvid_vol[0, 0:32, 32:64, 64:96] = new_subvolume[0,...]
+        dvid_vol[64:96, 32:64, 0:32, 0] = new_subvolume[...,0]
 
         # Now read it back
         read_subvolume = dvid_vol.get_ndarray( start, stop )
@@ -190,12 +186,12 @@ class TestVoxelsAccessor(unittest.TestCase):
     def test_get_reduced_dim_slicing(self):
         # Retrieve from server
         dvid_vol = VoxelsAccessor( TEST_DVID_SERVER, self.data_uuid, self.data_name )
-        assert self.original_data.shape == (1, 128, 256, 512), "Update this unit test."
-        full_roi = ((0,0,0,0), (1, 128, 256, 512))        
-        subvol_roi = ((0,0,10,0), (1, 128, 11, 512))
+        assert self.original_data.shape == (512, 256, 128, 1), "Update this unit test."
+        full_roi = ((0,0,0,0), (512, 256, 128, 1))        
+        subvol_roi = ((0,0,10,0), (512, 256, 128, 1))
         
-        reduced_subvol_roi = ((0,0,0), (1, 128, 512))
-        reduced_dim_slicing = numpy.s_[0:1, 0:128, 10, 0:512] # Notice that the third dim is dropped
+        reduced_subvol_roi = ((0,0,0), (512, 128, 1))
+        reduced_dim_slicing = numpy.s_[0:512, 10, 0:128, 0:1] # Notice that the third dim is dropped
         
         # request
         subvolume = dvid_vol[reduced_dim_slicing]
@@ -217,22 +213,22 @@ class TestVoxelsAccessor(unittest.TestCase):
         """
         # Retrieve from server
         dvid_vol = VoxelsAccessor( TEST_DVID_SERVER, self.data_uuid, self.data_name )
-        subvolume = dvid_vol[0:1, 9:10, 5:20, 50:150]
+        subvolume = dvid_vol[50:150, 5:20, 9:10, 0:1]
           
         # Compare
-        assert (subvolume == self.original_data[0:1, 9:10, 5:20, 50:150]).all()
+        assert (subvolume == self.original_data[50:150, 5:20, 9:10, 0:1]).all()
   
     def test_get_stepped_slicing(self):
         """
         """
         # Retrieve from server
         dvid_vol = VoxelsAccessor( TEST_DVID_SERVER, self.data_uuid, self.data_name )
-        subvolume = dvid_vol[0:1, 1:10:3, 5:20:5, 50:150:10]
+        subvolume = dvid_vol[50:150:10, 5:20:5, 1:10:3, 0:1]
           
         # Compare to file
         full_start = (0,) * len( self.original_data.shape )
         full_stop = self.original_data.shape
-        stored_stepped_volume = self.original_data[0:1, 1:10:3, 5:20:5, 50:150:10]
+        stored_stepped_volume = self.original_data[50:150:10, 5:20:5, 1:10:3, 0:1]
   
         assert subvolume.shape == stored_stepped_volume.shape
         assert subvolume.dtype == stored_stepped_volume.dtype
@@ -245,7 +241,7 @@ class TestVoxelsAccessor(unittest.TestCase):
         http://localhost/api/node/mydata/_0_1_2/10_10_10/0_0_0?roi=whatever&attenuation=3
         """
         # Retrieve from server
-        start, stop = (0,9,5,50), (1,10,20,150)
+        start, stop = (50,5,9,0), (150,20,10,1)
         query_args = {'roi' : 'some_ref', 'attenuation' : 5}
         dvid_vol = VoxelsAccessor( TEST_DVID_SERVER, self.data_uuid, self.data_name, query_args=query_args )
         subvolume = dvid_vol.get_ndarray( start, stop )
@@ -258,12 +254,11 @@ class TestVoxelsAccessor(unittest.TestCase):
         Just make sure nothing blows up if we post to negative coordinates.
         """
         # Cutout dims (must be block-aligned for the POST)
-        start, stop = (0,-32,0,-64), (1,32,32,128)
+        start, stop = (-64,0,-32,0), (128,32,32,1)
         shape = numpy.subtract( stop, start )
    
         # Generate test data
         subvolume = numpy.random.randint( 0,1000, shape ).astype(numpy.uint8)
-        subvolume = numpy.asfortranarray(subvolume, numpy.uint8)
  
         dvid_vol = VoxelsAccessor( TEST_DVID_SERVER, self.data_uuid, self.data_name )
  
@@ -290,7 +285,7 @@ class TestVoxelsAccessor(unittest.TestCase):
           
         # Create a new remote volume (assuming you already know the uuid of the node)
         uuid = UUID
-        voxels_metadata = VoxelsMetadata.create_default_metadata( (1,0,0,0), numpy.uint8, 'cxyz', 1.0, "" )
+        voxels_metadata = VoxelsMetadata.create_default_metadata( (0,0,0,1), numpy.uint8, 'zyxc', 1.0, "" )
         VoxelsAccessor.create_new( "localhost:8000", uuid, "my_volume", voxels_metadata )
   
         # Use the VoxelsAccessor convenience class to manipulate a particular data volume     
@@ -299,21 +294,18 @@ class TestVoxelsAccessor(unittest.TestCase):
            
         # Add some data (must be block-aligned)
         # Must include all channels.
-        # Must be FORTRAN array, using FORTRAN indexing order conventions
-        # (Use order='F', and make sure you're indexing it as cxyz)
-        updated_data = numpy.ones( (1,128,192,256), dtype=numpy.uint8, order='F' )
-        updated_data = numpy.asfortranarray(updated_data)
-        accessor[:, 0:128, 32:224, 256:512] = updated_data
+        updated_data = numpy.ones( (256,192,128,1), dtype=numpy.uint8)
+        accessor[256:512, 32:224, 0:128, :] = updated_data
         # OR:
         #accessor.post_ndarray( (0,10,20,30), (1,110,120,130), updated_data )
           
         # Read from it (First axis is channel.)
-        cutout_array = accessor[:, 10:110, 40:120, 300:330]
+        cutout_array = accessor[300:330, 40:120, 10:110, :]
         # OR:
-        cutout_array = accessor.get_ndarray( (0,10,40,300), (1,110,120,330) )
+        cutout_array = accessor.get_ndarray( (300,40,10,0), (330,120,110,1) )
   
         assert isinstance(cutout_array, numpy.ndarray)
-        assert cutout_array.shape == (1,100,80,30)
+        assert cutout_array.shape == (30,80,100,1)
 
 if __name__ == "__main__":
     unittest.main()

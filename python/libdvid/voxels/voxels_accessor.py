@@ -156,7 +156,8 @@ class VoxelsAccessor(object):
               but this function can handle the alignment issue on the client side.
               Also, this function permits the user to request a subset of channels.
         """
-        coord_start, coord_stop = numpy.array((start[1:], stop[1:]))
+        coord_start, coord_stop = numpy.array((start, stop))[:, :-1] # drop channel
+        
         if request_aligned:
             # Expand coordinates to 32-px blocks
             aligned_start = (coord_start // DVID_BLOCK_WIDTH)*DVID_BLOCK_WIDTH
@@ -165,14 +166,15 @@ class VoxelsAccessor(object):
             aligned_start, aligned_stop = coord_start, coord_stop
 
         # Must request all channels
-        max_channels = self.voxels_metadata.shape[0]        
-        aligned_roi = (0,) + tuple(aligned_start), (max_channels,) + tuple(aligned_stop)
+        max_channels = self.voxels_metadata.shape[-1]        
+        aligned_roi = ( tuple(aligned_start) + (0,),
+                        tuple(aligned_stop) + (max_channels,) )
 
-        # Request aligned volume from DVID        
+        # Request aligned volume from DVID
         aligned_volume = self._get_ndarray( *aligned_roi )
         
         # Extract the user's volume of interest from the aligned results.
-        extract_roi = numpy.array((start, stop)) - aligned_roi[0]        
+        extract_roi = numpy.array((start, stop)) - aligned_roi[0]
         return aligned_volume[ roi_to_slice( *extract_roi ) ]
         
 
@@ -240,16 +242,16 @@ class VoxelsAccessor(object):
         subvol_shape = numpy.array(stop) - start
 
         if self._access_type == "mask":
-            volume = self._node_service.get_roi3D(self.data_name, subvol_shape[1:], start[1:], self._throttle)
+            volume = self._node_service.get_roi3D(self.data_name, subvol_shape[:-1], start[:-1], self._throttle)
             volume = volume[None]
         elif self._access_type == "raw":
             typename = self.voxels_metadata.determine_dvid_typename()
             if typename == "grayscale8":
-                volume = self._node_service.get_gray3D(self.data_name, subvol_shape[1:], start[1:], self._throttle)
-                volume = volume[None]
+                volume = self._node_service.get_gray3D(self.data_name, subvol_shape[:-1], start[:-1], self._throttle)
+                volume = volume[..., None]
             elif typename == "labels64":
-                volume = self._node_service.get_labels3D(self.data_name, subvol_shape[1:], start[1:], self._throttle)
-                volume = volume[None]
+                volume = self._node_service.get_labels3D(self.data_name, subvol_shape[:-1], start[:-1], self._throttle)
+                volume = volume[..., None]
             else:
                 raise RuntimeError("Don't know how to get data of type '{}'".format(typename))
         else:
@@ -277,9 +279,9 @@ class VoxelsAccessor(object):
 
         typename = self.voxels_metadata.determine_dvid_typename()
         if typename == "grayscale8":
-            self._node_service.put_gray3D(self.data_name, new_data[0,...], start[1:], self._throttle) 
+            self._node_service.put_gray3D(self.data_name, new_data[...,0], start[:-1], self._throttle) 
         elif typename == "labels64":
-            self._node_service.put_labels3D(self.data_name, new_data[0,...], start[1:], self._throttle) 
+            self._node_service.put_labels3D(self.data_name, new_data[...,0], start[:-1], self._throttle) 
         else:
             raise RuntimeError("Don't know how to post data of type '{}'".format(typename))
 
@@ -294,8 +296,8 @@ class VoxelsAccessor(object):
         """
         shape = volume_shape
         start, stop, shape = map( numpy.array, (start, stop, shape) )
-        assert start[0] == 0, "Subvolume get/post must include all channels.  Invalid roi: {}, {}".format( start, stop )
-        assert stop[0] == shape[0], "Subvolume get/post must include all channels.  Invalid roi: {}, {}".format( start, stop )
+        assert start[-1] == 0, "Subvolume get/post must include all channels.  Invalid roi: {}, {}".format( start, stop )
+        assert stop[-1] == shape[-1], "Subvolume get/post must include all channels.  Invalid roi: {}, {}".format( start, stop )
         assert len(start) == len(stop) == len(shape), \
             "start/stop/shape mismatch: {}/{}/{}".format( start, stop, shape )
         assert (start < stop).all(), "Invalid start/stop: {}/{}".format( start, stop )
@@ -305,8 +307,8 @@ class VoxelsAccessor(object):
             assert (start < shape).all(), "Invalid start/shape: {}/{}".format( start, shape )
             assert (stop <= shape).all(), "Invalid stop/shape: {}/{}".format( stop, shape )
         else:
-            assert (start[0] < shape[0]).all(), "Invalid channel start/shape: {}/{}".format( start, shape )
-            assert (stop[0] <= shape[0]).all(), "Invalid channel stop/shape: {}/{}".format( stop, shape )
+            assert (start[-1] < shape[-1]).all(), "Invalid channel start/shape: {}/{}".format( start, shape )
+            assert (stop[-1] <= shape[-1]).all(), "Invalid channel stop/shape: {}/{}".format( stop, shape )
 
     def __getitem__(self, slicing):
         """
@@ -401,7 +403,7 @@ class VoxelsAccessor(object):
             if isinstance(s, slice):
                 assert s.step is None, \
                     "You can't use step-slicing when pushing data back to DVID."
-        assert result_slicing[0] == slice( 0, shape[0] ) or (shape[0] == 1 and result_slicing[0] == 0), \
+        assert result_slicing[-1] == slice( 0, shape[-1] ) or (shape[-1] == 1 and result_slicing[-1] == 0), \
             "When pushing a subvolume to DVID, you must include all channels, not a subset of them."
 
         start = map( lambda s: s.start, request_slicing )
@@ -448,9 +450,9 @@ class VoxelsAccessor(object):
                 request_slicing.append( slice(s, s+1) )
                 result_slicing.append(0)
 
-        # First dimension is channel, which we must request in full.
-        request_slicing[0] = slice(0, shape[0])
-        result_slicing[0] = full_slicing[0]
+        # Last dimension is channel, which we must request in full.
+        request_slicing[-1] = slice(0, shape[-1])
+        result_slicing[-1] = full_slicing[-1]
 
         return tuple(request_slicing), tuple(result_slicing)
         

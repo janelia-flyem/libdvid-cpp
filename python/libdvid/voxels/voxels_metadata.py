@@ -35,10 +35,10 @@ class VoxelsMetadata(dict):
 
     @shape.setter
     def shape(self, new_shape):
-        assert new_shape[0] == self.shape[0], "Can't change the number of channels."
+        assert new_shape[-1] == self.shape[-1], "Can't change the number of channels."
         
         # Update JSON data to match
-        for axisinfo, new_axis_max, axis_min in zip(self["Axes"], new_shape[1:], self.minindex[1:]):
+        for axisinfo, new_axis_max, axis_min in zip(self["Axes"], new_shape[:-1][::-1], self.minindex[:-1][::-1]):
             axisinfo["Size"] = new_axis_max - axis_min
 
         self._shape = new_shape
@@ -52,10 +52,10 @@ class VoxelsMetadata(dict):
 
     @minindex.setter
     def minindex(self, new_minindex):
-        assert new_minindex[0] == self.minindex[0], "Can't change the number of channels."
+        assert new_minindex[-1] == self.minindex[-1], "Can't change the number of channels."
 
         # Update JSON data to match
-        for axisinfo, new_axis_min, axis_shape in zip(self["Axes"], new_minindex[1:], self.shape[1:]):
+        for axisinfo, new_axis_min, axis_shape in zip(self["Axes"], new_minindex[:-1][::-1], self.shape[:-1][::-1]):
             axisinfo["Offset"] = int(new_axis_min)
             axisinfo["Size"] = int(axis_shape) - int(new_axis_min)
 
@@ -106,34 +106,36 @@ class VoxelsMetadata(dict):
             "Can't support heterogeneous channel types: {}".format( dtypes )
         self._dtype = dtypes[0]
         
-        # We always in include "channel" as the FIRST axis
-        # (DVID uses fortran-order notation.)
-        shape = []
-        minindex = []
-        minindex.append( 0 )
-        shape.append( len(metadata["Properties"]["Values"]) ) 
-        assert shape[0] is not None, \
+        # DVID uses fortran-order notation, so we'll have
+        # to reverse the shape before we're done
+        shape_fortran = []
+        minindex_fortran = []
+        minindex_fortran.append( 0 )
+        shape_fortran.append( len(metadata["Properties"]["Values"]) ) # channel 
+        assert shape_fortran[0] is not None, \
             "Volume metadata is not required to have a complete shape, "\
             "but must at least have a completely specified number of channels."
 
         for axisfields in metadata['Axes']:
             # If size is 0, then the offset should be ignored.
             if axisfields["Size"] is not None:
-                minindex.append( axisfields["Offset"] )
+                minindex_fortran.append( axisfields["Offset"] )
             else:
-                minindex.append( None )
+                minindex_fortran.append( None )
             if not axisfields["Size"]:
-                shape.append( None )
+                shape_fortran.append( None )
             else:
-                shape.append( axisfields["Size"] + axisfields["Offset"] )
+                shape_fortran.append( axisfields["Size"] + axisfields["Offset"] )
 
-        self._shape = tuple(shape)
-        self._minindex = tuple(minindex)
+        # Reverse from F-order to C-order
+        self._shape = tuple(reversed(shape_fortran))
+        self._minindex = tuple(reversed(minindex_fortran))
     
-        axiskeys = 'c'
+        axiskeys_fortran = 'c'
         for axisfields in metadata['Axes']:
-            axiskeys += str(axisfields["Label"]).lower()
-        self._axiskeys = axiskeys
+            axiskeys_fortran += str(axisfields["Label"]).lower()
+        
+        self._axiskeys = str(axiskeys_fortran[::-1])
 
     def to_json(self):
         """
@@ -152,9 +154,11 @@ class VoxelsMetadata(dict):
         
         .. code-block:: python
         
-           metadata = VoxelsMetadata.create_default_metadata( (3,100,200,300), numpy.uint8, 'cxyz', 1.5, "micrometers" )
+           metadata = VoxelsMetadata.create_default_metadata( (100,200,300,1), numpy.uint8, 'zyxc', 1.5, "micrometers" )
        
            # Customize: Adjust resolution for Z-axis
+           # Note that manual adjustments here must use Fortran-order conventions.
+           # Hence, Z is axis 2, not axis 0.
            assert metadata["Axes"][2]["Label"] == "Z"
            metadata["Axes"][2]["Resolution"] = 6.0
    
@@ -166,14 +170,14 @@ class VoxelsMetadata(dict):
            # Prepare for transmission: encode to json
            jsontext = metadata.to_json()        
         """
-        assert axiskeys[0] == 'c', "Channel axis must be first"
+        assert axiskeys == 'zyxc'[-len(axiskeys):], "Axiskeys must be in C-order, and must include the channel axis."
         assert len(axiskeys) == len(shape), "shape/axiskeys mismatch: {} doesn't match {}".format( axiskeys, shape )
         dtype = numpy.dtype(dtype)
         
         metadata = {}
         metadata["Axes"] = []
         metadata["Properties"] = {}
-        for key, size in zip(axiskeys, shape)[1:]: # skip channel
+        for key, size in zip(axiskeys, shape)[::-1][1:]: # skip channel
             axisdict = {}
             axisdict["Label"] = key.upper()
             axisdict["Resolution"] = resolution
@@ -183,7 +187,7 @@ class VoxelsMetadata(dict):
             metadata["Axes"].append( axisdict )
         
         metadata["Properties"]["Values"] = []
-        num_channels = shape[ 0 ]
+        num_channels = shape[-1]
         for _ in range( num_channels ):
             metadata["Properties"]["Values"].append( { "DataType" : dtype.name,
                                          "Label" : "" } )
@@ -203,8 +207,8 @@ class VoxelsMetadata(dict):
         For example, if this volume contains 1-channel uint8 data, 
         the DVID datatype is 'grayscale8'.
         """
-        # First axis is always channel
-        num_channels = self.shape[0]
+        # Last axis is always channel
+        num_channels = self.shape[-1]
         try:
             return self.TYPENAMES[(self.dtype.name, num_channels)]
         except KeyError:
@@ -227,8 +231,8 @@ class VoxelsMetadata(dict):
             Generate a vigra.AxisTags object corresponding to this VoxelsMetadata.
             (Requires vigra.)
             """
-            tags = vigra.AxisTags()
-            tags.insert( 0, vigra.AxisInfo('c', typeFlags=vigra.AxisType.Channels) )
+            tags_f = vigra.AxisTags()
+            tags_f.insert( 0, vigra.AxisInfo('c', typeFlags=vigra.AxisType.Channels) )
             dtypes = []
             channel_labels = []
             for channel_fields in self["Properties"]["Values"]:
@@ -236,20 +240,22 @@ class VoxelsMetadata(dict):
                 channel_labels.append( channel_fields["Label"] )
 
             # We monkey-patch the channel labels onto the axistags object as a new member
-            tags.channelLabels = channel_labels
+            tags_f.channelLabels = channel_labels
             for axisfields in self['Axes']:
                 key = str(axisfields["Label"]).lower()
                 res = axisfields["Resolution"]
                 tag = vigra.defaultAxistags(key)[0]
                 tag.resolution = res
-                tags.insert( len(tags), tag )
+                tags_f.insert( len(tags_f), tag )
                 # TODO: Check resolution units, because apparently 
                 #        they can be different from one axis to the next...
     
             assert all( map( lambda dtype: dtype == dtypes[0], dtypes ) ), \
                 "Can't support heterogeneous channel types: {}".format( dtypes )
 
-            return tags
+            # Reverse from F-order to C-order
+            tags_c = vigra.AxisTags(list(tags_f)[::-1])
+            return tags_c
         
         @classmethod
         def create_volumeinfo_from_axistags(cls, shape, dtype, axistags):
@@ -280,8 +286,6 @@ class VoxelsMetadata(dict):
                 return cls.create_volumeinfo_from_axistags( shape, dtype, axistags )
             else:
                 # Choose default axiskeys
-                default_keys = 'cxyzt'
-                axiskeys = default_keys[:len(shape)]
+                default_keys = 'tzyxc'
+                axiskeys = default_keys[-len(shape):]
                 return VoxelsMetadata.create_default_metadata( shape, dtype, axiskeys, 1.0, "" )
-    
-    
