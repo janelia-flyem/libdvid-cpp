@@ -14,6 +14,38 @@ def roi_blocks_for_box(start, stop):
     
     return blocks
 
+def get_dilated_roi_blocks( node_service, roi_name, radius ):
+    """
+    Dilate a ROI by the given radius.
+    (Radius is specified in blocks, not pixels.)
+    """
+    # Retrieve roi blocks
+    block_coords = np.array( node_service.get_roi( roi_name ) )
+
+    # Bounding box    
+    min_block = np.min(block_coords, axis=0)
+    max_block = np.max(block_coords, axis=0) + 1
+
+    # Expand BB for the radius
+    min_block_dilated = min_block - radius
+    max_block_dilated = max_block + radius
+
+    # Create an array to contain the roi mask (every pixel is one block)
+    dilated_shape = max_block_dilated - min_block_dilated
+    block_mask = np.zeros( dilated_shape, dtype=np.uint8 )
+
+    # Write the mask
+    offset_block_coords = block_coords - min_block_dilated
+    block_mask[tuple( offset_block_coords.transpose() )] = 1
+
+    import vigra
+    vigra.filters.multiBinaryDilation( block_mask, radius, out=block_mask )
+    
+    # Extract coordinates and un-offset
+    dilated_block_coords = np.transpose( block_mask.nonzero() ) + min_block_dilated
+    return dilated_block_coords
+    
+
 if __name__ == '__main__':
     blocks = roi_blocks_for_box( (0, 33, 66 ), (1, 34, 129) )
     assert (blocks == [[0,1,2], [0,1,3], [0,1,4]]).all()
