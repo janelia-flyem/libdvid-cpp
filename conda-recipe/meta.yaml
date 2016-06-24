@@ -9,8 +9,7 @@ package:
   {% endif %}
   
 source:
-  git_url: ../
-  git_tag: HEAD
+  path: ../
 
 # You can set BOOST_VER via an environment variable when building this recipe.
 {% if not BOOST_VER is defined %}
@@ -29,7 +28,7 @@ requirements:
   build:
     - gcc 4.8.5
     - boost {{BOOST_VER}}
-    - jsoncpp
+    - jsoncpp 1.6.2
     - lz4
     - jpeg
     - libpng 1.6.17
@@ -40,7 +39,7 @@ requirements:
   run:
     - libgcc
     - boost {{BOOST_VER}}
-    - jsoncpp
+    - jsoncpp 1.6.2
     - lz4
     - jpeg
     - libpng 1.6.17
