@@ -1,100 +1,177 @@
 #!/usr/bin/env python
 """
 Transfer voxels data from one DVID server to another.
-To avoid errors due to overly large requests, the data 
-will be requested in blocks according to the --request-shape-xyz parameter.
-
-NOTE: This script uses a few utility functions from ilastik's 'lazyflow' package,
-      so you need ilastik installed.
 
 Example usage:
 
     python transfer-between-dvids.py \
-                --request-shape-xyz='(512,512,512)' \
-                emdata2:7000 \
-                fe3791 \
-                grayscale \
-                http://bergs-ws1.janelia.priv:8000 \
-                9ace850166ee44f783aa9990f4edb926 \
-                grayscale \
-                '(10*1024, 5*1024, 10*1024)' \
-                '(12*1024, 7*1024, 12*1024)' \
+                --roi-name=my-region
+                emdata2:7000/api/node/fe3791/grayscale \
+                bergs-ws1.janelia.priv:8000/9ace850166ee44f783aa9990f4edb926/grayscale
     ##
 
+Note: The pixels within the ROI will be transferred in large blocks
+      (using the roi partition function from DVID), and ALL pixels in
+      those blocks will be overwritten, even those OUTSIDE of the roi!!
 """
+import re
 import argparse
+import collections
 import logging
 import numpy as np
-import libdvid
-from libdvid.voxels import VoxelsAccessor, DVID_BLOCK_WIDTH
-from lazyflow.roi import getIntersectingBlocks, getBlockBounds, roiFromShape
+from libdvid import DVIDNodeService
+from libdvid.voxels import DVID_BLOCK_WIDTH, VoxelsAccessor
 
 logger = logging.getLogger(__name__)
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--request-shape-xyz', default='(512, 512, 512)')
-    parser.add_argument('source_server')
-    parser.add_argument('source_uuid')
-    parser.add_argument('source_instance')
-    parser.add_argument('destination_server')
-    parser.add_argument('destination_uuid')
-    parser.add_argument('destination_instance')
-    parser.add_argument('region_start_xyz')
-    parser.add_argument('region_stop_xyz')
+    parser.add_argument('--transfer-cube-width-px', default=512, type=int)
+    parser.add_argument('--roi-url', help="URL of a roi instance")
+    parser.add_argument('--subvol-bounds-zyx', help="Instead of providing --roi-name, use these bounds of a subregion to copy,"
+                                                    " as a pair of tuples in ZYX order, in PIXEL COORDINATES,"
+                                                    " such as [(0,0,0), (1024, 512, 512)" )
+    parser.add_argument('source_instance_url', help='e.g. emdata1:7000/api/node/deadbeef/grayscale')
+    parser.add_argument('destination_instance_url', help='e.g. emdata2:8000/api/node/abc123/grayscale')
+
     args = parser.parse_args()
 
-    request_shape = eval(args.request_shape_xyz)
-    request_shape = np.array(request_shape)
-    if any(request_shape.flat[:] % DVID_BLOCK_WIDTH):
-        sys.exit("The request-shape dimensions must be multiples of {}".format(DVID_BLOCK_WIDTH))
+    assert (args.roi_url is not None) ^ (args.subvol_bounds_zyx is not None), \
+        "You must provide --roi_url OR --subvol_bounds-zyx (but not both)."
 
-    region_start = eval(args.region_start_xyz)
-    region_stop = eval(args.region_stop_xyz)
+    subvol_bounds = None
+    if args.subvol_bounds_zyx:
+        subvol_bounds = eval(args.subvol_bounds_zyx)
+        assert len(subvol_bounds) == 2, "Invalid value for --subvol_bounds_zyx"
+        assert map(len, subvol_bounds) == [3,3], "Invalid value for --subvol_bounds_zyx"
 
-    transfer(args.source_server,
-             args.source_uuid,
-             args.source_instance,
-             args.destination_server,
-             args.destination_uuid,
-             args.destination_instance,
-             (region_start, region_stop),
-             request_shape )
+    if args.transfer_cube_width_px % DVID_BLOCK_WIDTH != 0:
+        sys.exit("The --transfer-cube-width-px must be a multiple of {}".format(DVID_BLOCK_WIDTH))
 
-def transfer(source_server, source_uuid, source_instance,
-             destination_server, destination_uuid, destination_instance,
-             region_bounds_xyz, request_shape_xyz):
+    transfer(args.source_instance_url,
+             args.destination_instance_url,
+             args.transfer_cube_width_px,
+             args.roi_url,
+             subvol_bounds )
+
+
+def transfer(source_details,
+             destination_details,
+             transfer_cube_width_px=512,
+             roi=None,
+             subvol_bounds_zyx=None):
     """
     Transfer voxels data from one DVID server to another.
     
-    region_bounds_xyz: The region of data to transfer, as a tuple: (start,stop).
-                       Must be aligned to DVID block boundaries.
-                       For example: ((0,0,0), (1024, 1024, 512))
-
-    request_shape_xyz: The data will be transfered one block at a time.
-                       Each requeted block will have this shape 
-                       (except that blocks near the edge of the volume will be smaller).
+    source_details:
+        Either a tuple of (hostname, uuid, instance),
+        or a url of the form http://hostname/api/node/uuid/instance
     
+    destination_details:
+        Same format as source_details, or just an instance name
+        (in which case the destination is presumed to be in the same host/node as the source).
+    
+    transfer_cube_width_px:
+        The data will be transferred one 'substack' at a time, with the given substack width.
+    
+    NOTE: Exactly ONE of the following parameters should be provided.
+    
+    roi:
+        Same format as destination_details, but should point to a ROI instance.
+    
+    subvol_bounds_zyx:
+        A tuple (start_zyx, stop_zyx) indicating a rectangular region to copy (instead of a ROI).
+        Specified in pixel coordinates. Must be aligned to DVID block boundaries.
+        For example: ((0,0,0), (1024, 1024, 512))
     """
-    source_vol = VoxelsAccessor(source_server, source_uuid, source_instance)
-    destination_vol = VoxelsAccessor(destination_server, destination_uuid, destination_instance)
+    if isinstance(source_details, basestring):
+        source_details = parse_instance_url( source_details )
+    else:
+        source_details = InstanceDetails(*source_details)
+    src_accessor = VoxelsAccessor( *source_details )
+    
+    if isinstance(destination_details, basestring):
+        destination_details = str_to_details( destination_details, default=source_details )
+    else:
+        destination_details = InstanceDetails(*destination_details)
+    dest_accessor = VoxelsAccessor( *destination_details )
 
-    region_bounds_xyz = np.asarray(region_bounds_xyz)
-    region_shape = np.subtract(*region_bounds_xyz[::-1])
-    offset_block_starts = getIntersectingBlocks(request_shape_xyz, roiFromShape(region_shape))
+    assert (roi is not None) ^ (subvol_bounds_zyx is not None), \
+        "You must provide roi OR subvol_bounds-zyx (but not both)."
 
-    for offset_block_start in offset_block_starts:
-        offset_block_bounds = getBlockBounds(region_shape, request_shape_xyz, offset_block_start)
-        block_bounds = offset_block_bounds + region_bounds_xyz[0]
-        block_bounds = np.concatenate( ([[0],[1]], block_bounds), axis=1)
+    # Figure out what blocks ('substacks') we're copying
+    if subvol_bounds_zyx:
+        assert False, "User beware: The subvol_bounds_zyx option hasn't been tested yet." \
+                      "Now that you've been warned, comment out this assertion and give it a try."
 
-        logger.debug("Requesting block: {}".format(block_bounds[:,1:]) )
-        block = source_vol.get_ndarray( *block_bounds )
+        assert len(subvol_bounds_zyx) == 2, "Invalid value for subvol_bounds_zyx"
+        assert map(len, subvol_bounds_zyx) == [3,3], "Invalid value for subvol_bounds_zyx"
 
-        logger.debug("Writing block: {}".format(block_bounds[:,1:]) )
-        destination_vol.post_ndarray(*block_bounds, new_data=block)
+        subvol_bounds_zyx = np.array(subvol_bounds_zyx)
+        subvol_shape = subvol_bounds_zyx[1] - subvol_bounds_zyx[0]
+        np.array(subvol_bounds_zyx) / transfer_cube_width_px
+        assert (subvol_shape % transfer_cube_width_px).all(), \
+            "subvolume must be divisible by the transfer_cube_width_px"
+        
+        blocks_zyx = []
+        transfer_block_indexes = np.ndindex( *(subvol_shape / transfer_cube_width_px) )
+        for tbi in transfer_block_indexes:
+            start_zyx = tbi*transfer_cube_width_px + subvol_bounds_zyx[0]
+            blocks_zyx.append( SubstackZYX(transfer_cube_width_px, *start_zyx) )        
+    elif roi is not None:
+        if isinstance(roi, basestring):
+            roi_details = str_to_details( roi, default=source_details )
+        else:
+            roi_details = InstanceDetails(*roi)
+        roi_node = DVIDNodeService(roi_details.host, roi_details.uuid)
+        blocks_zyx = roi_node.get_roi_partition(roi_details.instance, transfer_cube_width_px/DVID_BLOCK_WIDTH)[0]
+    else:
+        assert False
 
+    # Fetch/write the blocks one at a time
+    # TODO: We could speed this up if we used a threadpool...
+    logger.debug( "Beginning Transfer of {} blocks ({} px each)".format( len(blocks_zyx), transfer_cube_width_px ) )
+    for block_index, block_zyx in enumerate(blocks_zyx, start=1):
+        start_zyxc = np.array(tuple(block_zyx[1:]) + (0,)) # skip item 0 ('size'), append channel
+        stop_zyxc = start_zyxc + transfer_cube_width_px
+        stop_zyxc[-1] = 1
+
+        logger.debug("Fetching block: {} ({}/{})".format(start_zyxc[:-1], block_index, len(blocks_zyx)) )
+        src_block_data = src_accessor.get_ndarray( start_zyxc, stop_zyxc )
+        
+        logger.debug("Writing block:  {} ({}/{})".format(start_zyxc[:-1], block_index, len(blocks_zyx)) )
+        dest_accessor.post_ndarray( start_zyxc, stop_zyxc, new_data=src_block_data )
+        
     logger.debug("DONE.")
+
+InstanceDetails = collections.namedtuple('InstanceDetails', 'host uuid instance')
+def str_to_details( url_or_name, default ):
+    """
+    Convert the given string into an InstanceDetails.
+    If it's a url, parse the details directly.
+    Otherwise, assume it's an instance name, and use the hostname/uuid provided in 'default'.
+    """
+    if '/api/node' in url_or_name:
+        return InstanceDetails(*parse_instance_url(url_or_name))
+    else:
+        # Assume it's just a name, but with the default details
+        return InstanceDetails(*(default[:-1] + (url_or_name,)))
+
+def parse_instance_url(instance_url):
+    """
+    Parse a url of the form http://hostname/api/node/uuid/instance
+    to an InstanceDetails tuple (host, uuid, instance)
+    """
+    url_format = "^(protocol://)?hostname/api/node/uuid/instance"
+    for field in ['protocol', 'hostname', 'uuid', 'instance']:
+        url_format = url_format.replace( field, '(?P<' + field + '>[^?]+)' )
+
+    match = re.match( url_format, instance_url )
+    if not match:
+        raise RuntimeError('Did not understand node url: {}'.format( instance_url ))
+
+    fields = match.groupdict()
+    return InstanceDetails(fields['hostname'], fields['uuid'], fields['instance'])
 
 if __name__ == "__main__":
     import sys
