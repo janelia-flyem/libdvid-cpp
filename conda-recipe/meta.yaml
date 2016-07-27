@@ -26,24 +26,24 @@ build:
   
 requirements:
   build:
-    - gcc 4.8.5
+    - gcc 4.8.5*
     - boost {{BOOST_VER}}
     - jsoncpp 1.6.2
-    - lz4
-    - jpeg
+    - lz4 128
+    - jpeg 8d
     - libpng 1.6.17
-    - curl
+    - curl 7.45*
     - python 2.7*
     - numpy >=1.9,{{NPY_VER}}*
     
   run:
-    - libgcc
+    - libgcc 4.8.5*
     - boost {{BOOST_VER}}
     - jsoncpp 1.6.2
-    - lz4
-    - jpeg
+    - lz4 128
+    - jpeg 8d
     - libpng 1.6.17
-    - curl
+    - curl 7.45*
     - python {{PY_VER}}*
     - numpy  {{NPY_VER}}*
 
