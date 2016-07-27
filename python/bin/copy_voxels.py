@@ -1,18 +1,31 @@
 #!/usr/bin/env python
 """
-Transfer voxels data from one DVID server to another.
+Copy voxels data within a ROI from one DVID instance to another
+instance, possibly on a different server.
 
 Example usage:
 
-    python transfer-between-dvids.py \
-                --roi-name=my-region
+    # Source must be provided as a URL.  Destination and ROI can optionally be URLs,
+    # or just instance names (which are assumed to live on the source server).
+
+    python copy_voxels.py \
+                --roi=my-region
                 emdata2:7000/api/node/fe3791/grayscale \
-                bergs-ws1.janelia.priv:8000/9ace850166ee44f783aa9990f4edb926/grayscale
+                grayscale_2
+
+    python copy_voxels.py \
+                --roi=emdata1:7000/api/node/fe3791/compartment-1
+                emdata2:8000/api/node/deadbeef/labels \
+                bergs-ws1.janelia.priv:8000/9ace850166ee44f783aa9990f4edb926/labels
     ##
 
 Note: The pixels within the ROI will be transferred in large blocks
       (using the roi partition function from DVID), and ALL pixels in
       those blocks will be overwritten, even those OUTSIDE of the roi!!
+
+TODO: Here we import a hard-coded DVID_BLOCK_WIDTH from libdvid.voxels instead of
+      reading it from the DVID Server.  That will be bad when we start using DVID
+      servers with 64-px blocks!
 """
 import re
 import argparse
@@ -20,15 +33,15 @@ import collections
 import logging
 import numpy as np
 from libdvid import DVIDNodeService
-from libdvid.voxels import DVID_BLOCK_WIDTH, VoxelsAccessor
+from libdvid.voxels import DVID_BLOCK_WIDTH, VoxelsAccessor # See TODO, above
 
 logger = logging.getLogger(__name__)
 
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--transfer-cube-width-px', default=512, type=int)
-    parser.add_argument('--roi-url', help="URL of a roi instance")
-    parser.add_argument('--subvol-bounds-zyx', help="Instead of providing --roi-name, use these bounds of a subregion to copy,"
+    parser.add_argument('--roi', help="Name or URL of a roi instance")
+    parser.add_argument('--subvol-bounds-zyx', help="Instead of providing --roi, use these bounds of a subregion to copy,"
                                                     " as a pair of tuples in ZYX order, in PIXEL COORDINATES,"
                                                     " such as [(0,0,0), (1024, 512, 512)" )
     parser.add_argument('source_instance_url', help='e.g. emdata1:7000/api/node/deadbeef/grayscale')
@@ -36,8 +49,8 @@ def main():
 
     args = parser.parse_args()
 
-    assert (args.roi_url is not None) ^ (args.subvol_bounds_zyx is not None), \
-        "You must provide --roi_url OR --subvol_bounds-zyx (but not both)."
+    assert (args.roi is not None) ^ (args.subvol_bounds_zyx is not None), \
+        "You must provide --roi OR --subvol_bounds-zyx (but not both)."
 
     subvol_bounds = None
     if args.subvol_bounds_zyx:
@@ -48,18 +61,18 @@ def main():
     if args.transfer_cube_width_px % DVID_BLOCK_WIDTH != 0:
         sys.exit("The --transfer-cube-width-px must be a multiple of {}".format(DVID_BLOCK_WIDTH))
 
-    transfer(args.source_instance_url,
-             args.destination_instance_url,
-             args.transfer_cube_width_px,
-             args.roi_url,
-             subvol_bounds )
+    copy_voxels( args.source_instance_url,
+                 args.destination_instance_url,
+                 args.transfer_cube_width_px,
+                 args.roi,
+                 subvol_bounds )
 
 
-def transfer(source_details,
-             destination_details,
-             transfer_cube_width_px=512,
-             roi=None,
-             subvol_bounds_zyx=None):
+def copy_voxels( source_details,
+                 destination_details,
+                 transfer_cube_width_px=512,
+                 roi=None,
+                 subvol_bounds_zyx=None ):
     """
     Transfer voxels data from one DVID server to another.
     
@@ -101,8 +114,9 @@ def transfer(source_details,
 
     # Figure out what blocks ('substacks') we're copying
     if subvol_bounds_zyx:
-        assert False, "User beware: The subvol_bounds_zyx option hasn't been tested yet." \
-                      "Now that you've been warned, comment out this assertion and give it a try."
+        assert False, "User beware: The subvol_bounds_zyx option hasn't been tested yet. " \
+                      "Now that you've been warned, comment out this assertion and give it a try. "\
+                      "(It *should* work...)"
 
         assert len(subvol_bounds_zyx) == 2, "Invalid value for subvol_bounds_zyx"
         assert map(len, subvol_bounds_zyx) == [3,3], "Invalid value for subvol_bounds_zyx"
