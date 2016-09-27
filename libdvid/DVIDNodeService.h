@@ -78,6 +78,14 @@ class DVIDNodeService {
             std::string app="libdvid");
 
     /*!
+     * Get uuid.
+     * \return string for uuid
+    */
+    std::string get_uuid() const {
+        return uuid;
+    }
+
+    /*!
      * Allow client to specify a custom http request with an
      * http endpoint for a given node and uuid.  A request
      * to /node/<uuid>/blah should provide the endpoint

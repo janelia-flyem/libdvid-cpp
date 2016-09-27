@@ -14,6 +14,7 @@
 #include "DVIDNodeService.h"
 #include <boost/thread/thread.hpp>
 #include <boost/asio/io_service.hpp>
+#include <tr1/unordered_map>
 
 namespace libdvid {
 
@@ -57,6 +58,23 @@ class DVIDThreadPool {
     boost::thread_group threads_;
     boost::asio::io_service::work *work_ctrl_;
 
+};
+
+/*!
+ * Singleton for DVIDNode resources.
+*/ 
+class DVIDNodePool {
+  public:
+    static DVIDNodePool* get_pool()
+    {
+        static DVIDNodePool pool;
+        return &pool;
+    }
+
+    std::tr1::unordered_map<std::string, std::vector<boost::shared_ptr<DVIDNodeService> > > dvidnodes; 
+
+  private:
+    DVIDNodePool()  { }
 };
 
 /*!

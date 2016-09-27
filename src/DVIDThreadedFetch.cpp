@@ -299,7 +299,7 @@ struct FetchTiles {
         m_condition.notify_one();
     }
 
-    DVIDNodeService service;
+    DVIDNodeService& service;
     Slice2D orientation;
     string instance;
     unsigned int scaling;
@@ -510,7 +510,20 @@ vector<BinaryDataPtr> get_tile_array_binary(DVIDNodeService& service,
     vector<BinaryDataPtr> results(tile_locs_array.size());
     
     DVIDThreadPool* pool = DVIDThreadPool::get_pool();
-    
+   
+    DVIDNodePool* nodepool = DVIDNodePool::get_pool();
+
+    int available_nodes = 0;
+    if (nodepool->dvidnodes.find(service.get_uuid()) != nodepool->dvidnodes.end()) {
+        available_nodes = nodepool->dvidnodes[service.get_uuid()].size();
+    }
+
+    while (available_nodes < num_threads) {
+        nodepool->dvidnodes[service.get_uuid()].push_back(boost::shared_ptr<DVIDNodeService>(new DVIDNodeService(service)));
+        ++available_nodes;
+    }
+
+
     // not an optimal partitioning
     int incr = tile_locs_array.size() / num_threads;
     int start = 0;
@@ -522,7 +535,8 @@ vector<BinaryDataPtr> get_tile_array_binary(DVIDNodeService& service,
         if (i == (num_threads-1)) {
             count = tile_locs_array.size() - start;
         }
-        pool->add_task(FetchTiles(service, orientation,
+        pool->add_task(FetchTiles(*(nodepool->dvidnodes[service.get_uuid()][i].get()),
+                    orientation,
                     datatype_instance, scaling, start, count,
                     tile_locs_array, results, threads_remaining));
         start += incr;
