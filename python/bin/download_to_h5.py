@@ -25,9 +25,9 @@ def download_to_h5( hostname, uuid, instance, roi, output_filepath, dset_name=No
     dset_name = dset_name or instance
 
     assert roi, "Must provide a ROI"
-    substacks, _packing_factor = ns.get_roi_partition('seven_column_roi', SUBSTACK_SIZE / DVID_BLOCK_SIZE)
-
     logger.info("Downloading {hostname}/api/node/{uuid}/{instance}?roi={roi} to {output_filepath}/{dset_name}".format(**locals()))
+
+    substacks, _packing_factor = ns.get_roi_partition(roi, SUBSTACK_SIZE / DVID_BLOCK_SIZE)
 
     # Substack tuples are (size, z, y, x)
     substacks_zyx = np.array(substacks)[:, 1:]
