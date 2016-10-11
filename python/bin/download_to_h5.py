@@ -20,7 +20,7 @@ def download_to_h5( hostname, uuid, instance, roi, output_filepath, dset_name=No
     """
     """
     ns = DVIDNodeService(hostname, uuid)
-    va = VoxelsAccessor(hostname, uuid, instance)
+    va = VoxelsAccessor(hostname, uuid, instance, throttle=True)
     
     dset_name = dset_name or instance
 
