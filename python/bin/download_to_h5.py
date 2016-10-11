@@ -110,6 +110,7 @@ def main():
 
     filepath, dset_name = args.output_location.split('.h5')
     filepath += '.h5'
+    dset_name = dset_name[1:] # drop leading '/'
     if not dset_name:
         sys.stderr.write("You must provide a dataset name, e.g. myfile.h5/mydataset\n")
         sys.exit(1)
