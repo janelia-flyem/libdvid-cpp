@@ -3,12 +3,15 @@
 #include "DVIDConnection.h"
 #include "DVIDException.h"
 #include <sstream>
+#include <json/json.h>
 
 extern "C" {
 #include <curl/curl.h>
+#include <zmq.h>
 }
 
 using std::string;
+using std::stringstream;
 
 /*!
  * Initializes libcurl libraries.  This could probably be a singleton
@@ -37,8 +40,10 @@ const int DVIDConnection::DEFAULT_TIMEOUT;
 //! Defines DVID prefix -- this might have a version ID eventually 
 const char* DVIDConnection::DVID_PREFIX = "/api";
 
-DVIDConnection::DVIDConnection(string addr_, string user, string app) : 
-    addr(addr_), username(user), appname(app)
+DVIDConnection::DVIDConnection(string addr_, string user, string app,
+        string resource_server_, int resource_port_) : 
+    addr(addr_), username(user), appname(app), resource_server(resource_server_),
+    resource_port(resource_port_)
 {
     // trim trailing slash, e.g. http://localhost:8000/
     while (*addr.rbegin() == '/')
@@ -47,6 +52,19 @@ DVIDConnection::DVIDConnection(string addr_, string user, string app) :
     }
 
     curl_connection = curl_easy_init();
+    
+    if (resource_server != "") {
+        setup_0mq();
+    }
+}
+
+void DVIDConnection::setup_0mq()
+{
+    zmq_context = zmq_ctx_new();
+    zmq_commsocket = zmq_socket(zmq_context, ZMQ_REQ);
+    stringstream addr0mq;
+    addr0mq << "tcp://" << resource_server << ":" << resource_port;
+    zmq_connect(zmq_commsocket, addr0mq.str().c_str()); 
 }
 
 DVIDConnection::DVIDConnection(const DVIDConnection& copy_connection)
@@ -55,12 +73,22 @@ DVIDConnection::DVIDConnection(const DVIDConnection& copy_connection)
     username = copy_connection.username;
     appname = copy_connection.appname;
     directaddress = copy_connection.directaddress;
+    resource_server = copy_connection.resource_server;
+    resource_port = copy_connection.resource_port;
     curl_connection = curl_easy_init();
+    if (resource_server != "") {
+        setup_0mq();
+    }
 }
 
 DVIDConnection::~DVIDConnection()
 {
     curl_easy_cleanup(curl_connection);
+
+    if (resource_server != "") {
+        zmq_close(zmq_commsocket);
+        zmq_ctx_destroy(zmq_context);
+    }
 }
 
 int DVIDConnection::make_head_request(string endpoint) {
@@ -70,9 +98,10 @@ int DVIDConnection::make_head_request(string endpoint) {
 
 int DVIDConnection::make_request(string endpoint, ConnectionMethod method,
         BinaryDataPtr payload, BinaryDataPtr results, string& error_msg,
-        ConnectionType type, int timeout)
+        ConnectionType type, int timeout, unsigned long long datasize)
 {
     CURLcode result;
+    char buffer[100];
 
     // pass the custom headers
     struct curl_slist *headers=0;
@@ -153,8 +182,81 @@ int DVIDConnection::make_request(string endpoint, ConnectionMethod method,
     memset(error_buf, 0, CURL_ERROR_SIZE);
     curl_easy_setopt(curl_connection, CURLOPT_ERRORBUFFER, error_buf);
 
+    // request resource if resource server is available 
+    int client_id; 
+    if (resource_server != "") {
+        Json::Value request;
+        request["type"] = "request"; 
+        if (directaddress == "") {
+            request["resource"] = addr; 
+        } else {
+            request["resource"] = directaddress; 
+        }
+        request["numopts"] = 1;
+        if ((method == POST) || (method == PUT)) {
+            unsigned long long payload_size = 0;
+            request["read"] = false;
+            if (payload) {
+                payload_size = (unsigned long long)(payload->length());
+            }
+            request["datasize"] = payload_size; 
+        } else {
+            request["read"] = true;
+            request["datasize"] = datasize; // need to pass if read unless really tiny 
+        }
+        stringstream ss;
+        ss << request;
+        string request_str = ss.str();
+   
+        // send request
+        zmq_send(zmq_commsocket, request_str.c_str(), request_str.length(), 0);
+    
+        // retrieve request
+        zmq_recv(zmq_commsocket, buffer, 100, 0);
+
+        // parse response
+        Json::Value response;
+        stringstream stream_buffer;
+        stream_buffer << string(buffer);
+        stream_buffer >> response;
+        client_id = response["id"].asInt();
+        bool resp_val = response["available"].asBool();
+        if (!resp_val) {
+            // if not availabe, create SUB, filter on port, wait for message
+            void* zmq_sub = zmq_socket(zmq_context, ZMQ_SUB);
+            stringstream addr0mq;
+            addr0mq << "tcp://" << resource_server << ":" << resource_port + 1;
+            stringstream cidstream;
+            cidstream << client_id;
+            zmq_setsockopt(zmq_sub, ZMQ_SUBSCRIBE, cidstream.str().c_str(), cidstream.str().length());
+            zmq_connect(zmq_sub, addr0mq.str().c_str());
+
+            // listen for events
+            zmq_recv(zmq_sub, buffer, 100, 0);
+            zmq_close(zmq_sub);
+
+            // when message is received, send reservation requst
+            stringstream holdstream;
+            holdstream << "{\"type\": \"hold\", \"id\": " << client_id << '}';
+            string holdstr = holdstream.str();
+            zmq_send(zmq_commsocket, holdstr.c_str(), holdstr.length(), 0);
+            zmq_recv(zmq_commsocket, buffer, 100, 0);
+        }
+    } 
+    
+    
+    
     // actually perform the request
     result = curl_easy_perform(curl_connection);
+
+    // release resource if resource server is available 
+    if (resource_server != "") {
+        stringstream cidstream;
+        cidstream << "{\"type\": \"release\", \"id\": " << client_id << '}';
+        string cidstr = cidstream.str();
+        zmq_send(zmq_commsocket, cidstr.c_str(), cidstr.length(), 0);
+        zmq_recv(zmq_commsocket, buffer, 100, 0);
+    } 
     
     // get the error code
     long http_code = 0;
@@ -164,7 +266,7 @@ int DVIDConnection::make_request(string endpoint, ConnectionMethod method,
         // get IP address to bypass dns on first invocation
         char *ipaddr = 0;
         curl_easy_getinfo (curl_connection, CURLINFO_PRIMARY_IP, &ipaddr);
-        std::stringstream tempstr;
+        stringstream tempstr;
         tempstr << ipaddr << ":";        
         long port = 0;
         curl_easy_getinfo (curl_connection, CURLINFO_PRIMARY_PORT, &port);

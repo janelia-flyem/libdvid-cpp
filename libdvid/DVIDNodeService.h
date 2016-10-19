@@ -72,11 +72,13 @@ class DVIDNodeService {
      * \param uuid_ uuid corresponding to a DVID node
      * \param user username used in DVID requests
      * \param app name of the application used in DVID requests 
+     * \param resource_server_ server for managing DVID requests
+     * \param resource_port_ port for the resource server
     */
     DVIDNodeService(std::string web_addr_, UUID uuid_,
             std::string user="anonymous",
-            std::string app="libdvid");
-
+            std::string app="libdvid",
+            std::string resource_server_ = "", int resource_port_ = 0);
     /*!
      * Get uuid.
      * \return string for uuid
@@ -94,10 +96,11 @@ class DVIDNodeService {
      * \param payload binary data to be sent in the request
      * \param method http verb (GET, PUT, POST, DELETE)
      * \param compress use lz4 compression if true
+     * \param datasize estimated datasize for GET (only useful if there is a resource manager)
      * \return http response as binary data
     */
     BinaryDataPtr custom_request(std::string endpoint, BinaryDataPtr payload,
-            ConnectionMethod method, bool compress = false);
+            ConnectionMethod method, bool compress = false, unsigned long long datasize = 1);
 
     /*!
      * Retrieves meta data for a given datatype instance

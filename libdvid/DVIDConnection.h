@@ -39,10 +39,12 @@ class DVIDConnection {
      * Starts curl connection.
      * \param addr_ dvid server address
      * \param user username used in DVID requests
-     * \param app name of the application used in DVID requests 
+     * \param app name of the application used in DVID requests
+     * \param resource_server_ server for managing DVID requests
+     * \param resource_port_ port for the resource server
     */
     explicit DVIDConnection(std::string addr_, std::string user,
-            std::string app);
+            std::string app, std::string resource_server_ = "", int resource_port_ = 0);
   
     /*!
      * Copy constructor to ensure that creation of curl connection
@@ -77,11 +79,12 @@ class DVIDConnection {
      * \param error_msg error message if there is an error
      * \param type connection type for request
      * \param timeout timeout for the request
+     * \param datasize expected size of the GET request (default 1)
      * \return html status code
     */ 
     int make_request(std::string endpoint, ConnectionMethod method, BinaryDataPtr payload,
             BinaryDataPtr results, std::string& error_msg, ConnectionType type=DEFAULT,
-            int timeout=DEFAULT_TIMEOUT);
+            int timeout=DEFAULT_TIMEOUT, unsigned long long datasize=1);
 
     /*!
      * Get the address for the DVID connection.
@@ -111,6 +114,11 @@ class DVIDConnection {
      * Assignment doesn't really make much sense -- just disable.
     */
     DVIDConnection& operator=(const DVIDConnection& connection);
+    
+    /*!
+     * Initialize 0mq connection to DVID resource server.
+    */
+    void setup_0mq();
 
     //! reuse curl connection -- eventually make this thread static and
     //! initialize once (CURL typedef is actually a void*)
@@ -127,6 +135,19 @@ class DVIDConnection {
 
     //! Name of application making request
     std::string appname;
+
+    //! Name of 0mq dvid resource server
+    std::string resource_server;
+
+    //! Port for 0mq dvid resource server
+    int resource_port;
+  
+    //! 0mq dvid resource context 
+    void *zmq_context;
+    
+    //! 0mq dvid resource main communication socket 
+    void *zmq_commsocket;
+
 
     //! prefix for all DVID calls (versioning may be added here in the future) 
     static const char* DVID_PREFIX;

@@ -21,8 +21,8 @@ static const unsigned int TransactionLimit = 1000;
 namespace libdvid {
 
 DVIDNodeService::DVIDNodeService(string web_addr_, UUID uuid_,
-        string user, string app) :
-    connection(web_addr_, user, app), uuid(uuid_) 
+        string user, string app, string resource_server_, int resource_port_) :
+    connection(web_addr_, user, app, resource_server_, resource_port_), uuid(uuid_) 
 {
     string endpoint = "/repo/" + uuid + "/info";
     string respdata;
@@ -35,7 +35,7 @@ DVIDNodeService::DVIDNodeService(string web_addr_, UUID uuid_,
 }
 
 BinaryDataPtr DVIDNodeService::custom_request(string endpoint,
-        BinaryDataPtr payload, ConnectionMethod method, bool compress)
+        BinaryDataPtr payload, ConnectionMethod method, bool compress, unsigned long long datasize)
 {
     // append '/' to the endpoint if it is not provided and there is no
     // query string at the end
@@ -59,7 +59,7 @@ BinaryDataPtr DVIDNodeService::custom_request(string endpoint,
     string node_endpoint = "/node/" + uuid + endpoint;
     BinaryDataPtr resp_binary = BinaryData::create_binary_data();
     int status_code = connection.make_request(node_endpoint, method, payload,
-            resp_binary, respdata, BINARY);
+            resp_binary, respdata, BINARY, DVIDConnection::DEFAULT_TIMEOUT, datasize);
 
     // FIXME: For some reason, DVID sometimes returns status 206 for ROI requests.
     //        For now, treat 206 as if it were 200.
@@ -1662,8 +1662,11 @@ BinaryDataPtr DVIDNodeService::get_volume3D(string datatype_inst, Dims_t sizes,
     // try get until DVID is available (no contention)
     while (waiting) {
         binary_result = BinaryData::create_binary_data();
+
+        // use total size as an estimate of server payload (it might be better to limit
+        // by the number of IOPs)
         status_code = connection.make_request(endpoint, GET, BinaryDataPtr(),
-                binary_result, respdata, BINARY);
+                binary_result, respdata, BINARY, DVIDConnection::DEFAULT_TIMEOUT, total_size);
        
         // wait if server is busy
         if (status_code == 503) {

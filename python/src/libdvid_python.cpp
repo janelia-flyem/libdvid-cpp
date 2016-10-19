@@ -26,14 +26,14 @@ namespace libdvid { namespace python {
                                        std::string endpoint,
                                        ConnectionMethod method,
                                        BinaryDataPtr payload_data,
-                                       int timeout )
+                                       int timeout, unsigned long long datasize )
     {
         using namespace boost::python;
 
         BinaryDataPtr results = BinaryData::create_binary_data();
         std::string err_msg ;
 
-        int status_code = connection.make_request(endpoint, method, payload_data, results, err_msg, DEFAULT, timeout);
+        int status_code = connection.make_request(endpoint, method, payload_data, results, err_msg, DEFAULT, timeout, datasize);
         return boost::python::make_tuple(status_code, object(results), err_msg);
     }
 
@@ -308,7 +308,7 @@ namespace libdvid { namespace python {
                 to access DVID rather than reusing the same one.  This problem will \
                 be fixed when the curl connection is given thread-level scope as \
                 available in C++11.",
-            init<std::string, std::string, std::string>( ( arg("server_address"), arg("user")=str("anonymous"), arg("app")=str("libdvid") )))
+            init<std::string, std::string, std::string, std::string, int>( ( arg("server_address"), arg("user")=str("anonymous"), arg("app")=str("libdvid"), arg("resource_server")=str(""), arg("resource_port")=int(0)  )))
             .def("make_head_request", &DVIDConnection::make_head_request,
                     ( arg("endpoint") ),
                     "Simple HEAD requests to DVID.  An exception is generated \
@@ -318,7 +318,7 @@ namespace libdvid { namespace python {
                     :returns: html status code \n\
                     ")
             .def("make_request", &make_request,
-                 ( arg("connection"), arg("endpoint"), arg("method"), arg("payload")=object(), arg("timeout")=DVIDConnection::DEFAULT_TIMEOUT ),
+                 ( arg("connection"), arg("endpoint"), arg("method"), arg("payload")=object(), arg("timeout")=DVIDConnection::DEFAULT_TIMEOUT, arg("datasize")=1 ),
                  "Main helper function retrieving data from DVID.  The function \
                  performs the action specified in method.  An exception is generated \
                  if curl cannot properly connect to the URL. \n\
@@ -327,6 +327,7 @@ namespace libdvid { namespace python {
                  :param method: ``libdvid.ConnectionMethod``, (``HEAD``, ``GET``, ``POST``, ``PUT``, ``DELETE``) \n\
                  :param payload: binary data containing data to be posted \n\
                  :param timeout: timeout for the request (seconds) \n\
+                 :param datasize: estimate payload if GET (only useful if there is a resource manager) \n\
                  :returns: tuple: (status_code, results (bytes), err_msg) \n\
                  ")
             .def("get_addr", &DVIDConnection::get_addr,
@@ -368,13 +369,13 @@ namespace libdvid { namespace python {
         void          (DVIDNodeService::*put_binary)(std::string, std::string, BinaryDataPtr)                = &DVIDNodeService::put;
         bool          (DVIDNodeService::*create_grayscale8)(std::string, size_t)                             = &DVIDNodeService::create_grayscale8;
         bool          (DVIDNodeService::*create_labelblk)(std::string, std::string, size_t)                  = &DVIDNodeService::create_labelblk;
-        BinaryDataPtr (DVIDNodeService::*custom_request)(std::string, BinaryDataPtr, ConnectionMethod, bool) = &DVIDNodeService::custom_request;
+        BinaryDataPtr (DVIDNodeService::*custom_request)(std::string, BinaryDataPtr, ConnectionMethod, bool, unsigned long long) = &DVIDNodeService::custom_request;
 
         // DVIDNodeService python class definition
         class_<DVIDNodeService>("DVIDNodeService",
                 "Class that helps access different DVID version node actions.",
-                init<std::string, UUID, std::string, std::string>(
-                    ( arg("web_addr"), arg("uuid"), arg("user")=str("anonymous"), arg("app")=str("libdvid") ),
+                init<std::string, UUID, std::string, std::string, std::string, int>(
+                    ( arg("web_addr"), arg("uuid"), arg("user")=str("anonymous"), arg("app")=str("libdvid"), arg("resource_server")=str(""), arg("resource_port")=int(0) ),
                     "Constructor sets up an http connection and checks\n"
                     "whether a node of the given uuid and web server exists.\n"
                     "\n"
@@ -382,6 +383,8 @@ namespace libdvid { namespace python {
                     ":param uuid: uuid corresponding to a DVID node\n"
                     ":param user: username used in DVID requests\n"
                     ":param app: name of the application used in DVID requests\n"
+                    ":param resource_server: name of the resource server\n"
+                    ":param resource_port: port for resource server\n"
                     ))
 
             //
@@ -407,7 +410,7 @@ namespace libdvid { namespace python {
                 ")
 
             .def("custom_request", custom_request,
-                ( arg("endpoint"), arg("payload"), arg("method"), arg("compress")=false ),
+                ( arg("endpoint"), arg("payload"), arg("method"), arg("compress")=false, arg("datasize")=int(1) ),
                 "Allow client to specify a custom http request with an \
                 http endpoint for a given node and uuid.  A request \
                 to ``/node/<uuid>/blah`` should provide the endpoint \
@@ -417,6 +420,7 @@ namespace libdvid { namespace python {
                 :param payload: binary data to be sent in the request \n\
                 :param method: ``libdvid.ConnectionMethod``, (``HEAD``, ``GET``, ``POST``, ``PUT``, ``DELETE``) \n\
                 :param compress: use lz4 compression if true \n\
+                :param datasize: estimate payload if GET (only useful if there is a resource manager) \n\
                 :returns: http response as binary data \n\
                 ")
 

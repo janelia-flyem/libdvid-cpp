@@ -30,6 +30,7 @@ requirements:
     - boost {{BOOST_VER}}
     - jsoncpp 1.6.2
     - lz4 128
+    - zeromq 4.1.3
     - jpeg 8d
     - libpng 1.6.17
     - curl 7.45*
@@ -41,6 +42,7 @@ requirements:
     - boost {{BOOST_VER}}
     - jsoncpp 1.6.2
     - lz4 128
+    - zeromq 4.1.3
     - jpeg 8d
     - libpng 1.6.17
     - curl 7.45*
