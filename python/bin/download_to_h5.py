@@ -16,7 +16,7 @@ DVID_BLOCK_SIZE = 32 # FIXME: This should be queried from the server, not hard-c
 
 logger = logging.getLogger(__name__)
 
-def download_to_h5( hostname, uuid, instance, roi, output_filepath, dset_name=None, compression='lzf'):
+def download_to_h5( hostname, uuid, instance, roi, output_filepath, dset_name=None, compression='lzf', overlap_px=0):
     """
     """
     ns = DVIDNodeService(hostname, uuid)
@@ -31,6 +31,13 @@ def download_to_h5( hostname, uuid, instance, roi, output_filepath, dset_name=No
 
     # Substack tuples are (size, z, y, x)
     substacks_zyx = np.array(substacks)[:, 1:]
+    
+    # If the user specified an 'overlap', we add it to all substacks.
+    # Technically, this isn't very efficient, because a lot of overlapping
+    # pixels on the interior of the ROI will be fetched twice.
+    substacks_zyx[:,0] -= overlap_px
+    substacks_zyx[:,1] += overlap_px
+
     roi_bb = ( np.min(substacks_zyx, axis=0),
                np.max(substacks_zyx, axis=0)+SUBSTACK_SIZE )
     
@@ -96,6 +103,7 @@ def main():
     parser.add_argument("--uuid", required=False, help="The node to download from.")
     parser.add_argument("--instance", required=False, help="The name of the data instance to modify. If it doesn't exist, it will be created first.")
     parser.add_argument("--roi", required=True)
+    parser.add_argument("--overlap-px", default=0, type=int)
     parser.add_argument("--compression", required=False)
     parser.add_argument("output_location", help="For example: /tmp/myfile.h5/dataset")
     args = parser.parse_args()
@@ -115,7 +123,7 @@ def main():
         sys.stderr.write("You must provide a dataset name, e.g. myfile.h5/mydataset\n")
         sys.exit(1)
 
-    download_to_h5(hostname, uuid, instance, args.roi, filepath, dset_name, args.compression)
+    download_to_h5(hostname, uuid, instance, args.roi, filepath, dset_name, args.compression, args.overlap_px)
 
 if __name__ == "__main__":
     # DEBUG
