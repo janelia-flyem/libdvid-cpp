@@ -31,15 +31,4 @@ if [ ! -e "${PREFIX}/bin/gcc" ]; then
     conda install -p "${PREFIX}" -c flyem gcc
 fi
 
-# Do you already have curl?
-curl --help > /dev/null
-if [[ $? == 0 ]]; then
-    CURL=curl
-else
-    # Install to conda prefix
-    conda install -p "${PREFIX}" curl
-    CURL="${PREFIX}/bin/curl"
-fi
-
-BUILD_SCRIPT_URL=https://raw.githubusercontent.com/janelia-flyem/flyem-build-conda/master/libdvid-cpp/build.sh
-"$CURL" "$BUILD_SCRIPT_URL" | BUILD_DIR="${BUILD_DIR}" NPY_VER=$NPY_VER bash -x -e -s - --configure-only
+BUILD_DIR="${BUILD_DIR}" NPY_VER=$NPY_VER bash -x -e - ./conda-recipe/build.sh --configure-only
