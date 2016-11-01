@@ -38,13 +38,46 @@ def get_dilated_roi_blocks( node_service, roi_name, radius ):
     offset_block_coords = block_coords - min_block_dilated
     block_mask[tuple( offset_block_coords.transpose() )] = 1
 
+    # Dilate
     import vigra
     vigra.filters.multiBinaryDilation( block_mask, radius, out=block_mask )
     
     # Extract coordinates and un-offset
     dilated_block_coords = np.transpose( block_mask.nonzero() ) + min_block_dilated
     return dilated_block_coords
+
+def get_eroded_roi_blocks( node_service, roi_name, radius ):
+    """
+    Erode a ROI by the given radius.
+    (Radius is specified in blocks, not pixels.)
+    """
+    # Retrieve roi blocks
+    block_coords = np.array( node_service.get_roi( roi_name ) )
+
+    # Bounding box
+    min_block = np.min(block_coords, axis=0)
+    max_block = np.max(block_coords, axis=0) + 1
+
+    # Expand BB by 1 because otherwise erosion has no zero
+    # pixels on the border to use as the erosion value
+    min_block_expanded = min_block - 1
+    max_block_expanded = max_block + 1
+
+    # Create an array to contain the roi mask (every pixel is one block)
+    expanded_shape = max_block_expanded - min_block_expanded
+    block_mask = np.zeros( expanded_shape, dtype=np.uint8 )
     
+    # Write the mask
+    offset_block_coords = block_coords - min_block_expanded
+    block_mask[tuple( offset_block_coords.transpose() )] = 1
+
+    # Erode
+    import vigra
+    vigra.filters.multiBinaryErosion( block_mask, radius, out=block_mask )
+    
+    # Extract coordinates and un-offset
+    eroded_block_coords = np.transpose( block_mask.nonzero() ) + min_block_expanded
+    return eroded_block_coords
 
 if __name__ == '__main__':
     blocks = roi_blocks_for_box( (0, 33, 66 ), (1, 34, 129) )
