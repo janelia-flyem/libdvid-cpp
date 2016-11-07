@@ -950,12 +950,12 @@ void DVIDNodeService::post_roi(std::string roi_name,
         const std::vector<BlockXYZ>& blockcoords)
 {
     // Do not assume the blocks are sorted, first
-    // sort and then encode as runlengths in X.
-    // This will also eliminate duplicate blocks
-    set<BlockXYZ> sorted_blocks;
-    for (unsigned int i = 0; i < blockcoords.size(); ++i) {
-        sorted_blocks.insert(blockcoords[i]);    
-    }
+    // sort, deduplicate, and then encode as runlengths in X.
+    // Note that comparison of BlockXYZ objects is in z-y-x order.
+    vector<BlockXYZ> sorted_blocks( blockcoords );
+    std::sort( sorted_blocks.begin(), sorted_blocks.end() );
+    sorted_blocks.erase( std::unique(sorted_blocks.begin(), sorted_blocks.end()),
+                         sorted_blocks.end() );
 
     // encode JSON as z,y,x0,x1 (inclusive)
     int z = INT_MAX;
@@ -963,7 +963,7 @@ void DVIDNodeService::post_roi(std::string roi_name,
     int xmin = 0; int xmax = 0;
     Json::Value blocks_data(Json::arrayValue);
     unsigned int blockrle_count = 0;
-    for (set<BlockXYZ>::iterator iter = sorted_blocks.begin();
+    for (vector<BlockXYZ>::iterator iter = sorted_blocks.begin();
             iter != sorted_blocks.end(); ++iter) {
         if (iter->z != z || iter->y != y || (iter->x != xmax+1)) {
             if (z != INT_MAX) {
