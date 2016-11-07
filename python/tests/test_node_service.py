@@ -135,6 +135,36 @@ class Test_DVIDNodeService(unittest.TestCase):
         roi_blocks = node_service.get_roi("test_roi")
         self.assertEqual(roi_blocks, [(1,2,3),(2,3,4),(4,5,6)])
 
+    def test_roi_2(self):
+        # Create X-shaped ROI
+        # This ensures that the x-run encoding within our ROI message works properly
+        # (There used to be a bug in post_roi() that would have broken this test.)
+
+        _ = 0
+        # 8x8 blocks = 256x256 px
+        roi_mask_yx = numpy.array( [[1,_,_,_,_,_,_,1],
+                                    [1,1,_,_,_,_,1,1],
+                                    [_,1,1,_,_,1,1,_],
+                                    [_,_,1,1,1,1,_,_],
+                                    [_,_,_,1,1,_,_,_],
+                                    [_,_,1,1,1,1,_,_],
+                                    [_,1,1,_,_,1,1,_],
+                                    [1,1,_,_,_,_,1,1] ])
+    
+        roi_mask_zyx = numpy.zeros( (8,8,8) )
+        roi_mask_zyx[:] = roi_mask_yx[None, :, :]
+        roi_block_indexes = numpy.transpose( roi_mask_zyx.nonzero() )
+    
+        ns = DVIDNodeService(TEST_DVID_SERVER, self.uuid, "foo@bar.com", "test_roi_2_app")
+        ns.create_roi('test-diagonal-256')
+        ns.post_roi('test-diagonal-256', roi_block_indexes)
+
+        fetched_blocks = ns.get_roi("test-diagonal-256")
+        fetched_blocks = numpy.array(fetched_blocks)
+
+        # Both arrays happen to be sorted already
+        assert ( fetched_blocks == roi_block_indexes ).all()
+
     def test_roi_3d(self):
         node_service = DVIDNodeService(TEST_DVID_SERVER, self.uuid, "foo@bar.com", "test_roi3d_app")
         node_service.create_roi("test_roi_3d")

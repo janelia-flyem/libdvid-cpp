@@ -965,7 +965,7 @@ void DVIDNodeService::post_roi(std::string roi_name,
     unsigned int blockrle_count = 0;
     for (set<BlockXYZ>::iterator iter = sorted_blocks.begin();
             iter != sorted_blocks.end(); ++iter) {
-        if (iter->z != z || iter->y != y) {
+        if (iter->z != z || iter->y != y || (iter->x != xmax+1)) {
             if (z != INT_MAX) {
                 // add run length
                 Json::Value block_data(Json::arrayValue);
