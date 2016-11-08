@@ -1,0 +1,975 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>DVIDNodeService &mdash; libdvid 0.1 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="genindex.html"/>
+        <link rel="search" title="Search" href="search.html"/>
+    <link rel="top" title="libdvid 0.1 documentation" href="index.html"/>
+        <link rel="next" title="DVIDConnection" href="DVIDConnection.html"/>
+        <link rel="prev" title="Installation" href="index.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> libdvid
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">DVIDNodeService</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#slice2d">Slice2D</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#graph-primitives">Graph Primitives</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="DVIDConnection.html">DVIDConnection</a></li>
+<li class="toctree-l1"><a class="reference internal" href="DVIDServerService.html">DVIDServerService</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="index.html">libdvid</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+ 
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="index.html">Docs</a> &raquo;</li>
+      
+    <li>DVIDNodeService</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="_sources/DVIDNodeService.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="dvidnodeservice">
+<h1>DVIDNodeService<a class="headerlink" href="#dvidnodeservice" title="Permalink to this headline">¶</a></h1>
+<span class="target" id="id1"></span><dl class="class">
+<dt id="libdvid._dvid_python.DVIDNodeService">
+<em class="property">class </em><code class="descname">DVIDNodeService</code><a class="headerlink" href="#libdvid._dvid_python.DVIDNodeService" title="Permalink to this definition">¶</a></dt>
+<dd><p>Class that helps access different DVID version node actions.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Numpy uses C-order array indexing by default, which means 3D arrays are typically
+indexed in the order <code class="docutils literal"><span class="pre">[z,y,x]</span></code>, not the other way around.
+These python bindings follow the same convention.  All functions accepting 3D
+arrays expect <strong>contiguous</strong> data, in z-y-x order.  The same goes for returned data.
+Similarly, tuple parameters such as <code class="docutils literal"><span class="pre">shape</span></code> and <code class="docutils literal"><span class="pre">offset</span></code> should be passed
+in <code class="docutils literal"><span class="pre">(z,y,x)</span></code> order.</p>
+</div>
+<p><strong>Methods List:</strong></p>
+<ul class="simple">
+<li><a class="reference internal" href="#libdvid._dvid_python.DVIDNodeService.__init__" title="libdvid._dvid_python.DVIDNodeService.__init__"><code class="xref py py-meth docutils literal"><span class="pre">__init__</span></code></a></li>
+<li>Key-value<ul>
+<li><a class="reference internal" href="#libdvid._dvid_python.DVIDNodeService.create_keyvalue" title="libdvid._dvid_python.DVIDNodeService.create_keyvalue"><code class="xref py py-meth docutils literal"><span class="pre">create_keyvalue</span></code></a></li>
+<li><a class="reference internal" href="#libdvid._dvid_python.DVIDNodeService.put" title="libdvid._dvid_python.DVIDNodeService.put"><code class="xref py py-meth docutils literal"><span class="pre">put</span></code></a></li>
+<li><a class="reference internal" href="#libdvid._dvid_python.DVIDNodeService.get" title="libdvid._dvid_python.DVIDNodeService.get"><code class="xref py py-meth docutils literal"><span class="pre">get</span></code></a></li>
+<li><a class="reference internal" href="#libdvid._dvid_python.DVIDNodeService.get_json" title="libdvid._dvid_python.DVIDNodeService.get_json"><code class="xref py py-meth docutils literal"><span class="pre">get_json</span></code></a></li>
+<li><a class="reference internal" href="#libdvid._dvid_python.DVIDNodeService.get_keys" title="libdvid._dvid_python.DVIDNodeService.get_keys"><code class="xref py py-meth docutils literal"><span class="pre">get_keys</span></code></a></li>
+</ul>
+</li>
+<li>Grayscale<ul>
+<li><a class="reference internal" href="#libdvid._dvid_python.DVIDNodeService.create_grayscale8" title="libdvid._dvid_python.DVIDNodeService.create_grayscale8"><code class="xref py py-meth docutils literal"><span class="pre">create_grayscale8</span></code></a></li>
+<li><a class="reference internal" href="#libdvid._dvid_python.DVIDNodeService.get_gray3D" title="libdvid._dvid_python.DVIDNodeService.get_gray3D"><code class="xref py py-meth docutils literal"><span class="pre">get_gray3D</span></code></a></li>
+<li><a class="reference internal" href="#libdvid._dvid_python.DVIDNodeService.put_gray3D" title="libdvid._dvid_python.DVIDNodeService.put_gray3D"><code class="xref py py-meth docutils literal"><span class="pre">put_gray3D</span></code></a></li>
+</ul>
+</li>
+<li>Labels<ul>
+<li><a class="reference internal" href="#libdvid._dvid_python.DVIDNodeService.create_labelblk" title="libdvid._dvid_python.DVIDNodeService.create_labelblk"><code class="xref py py-meth docutils literal"><span class="pre">create_labelblk</span></code></a></li>
+<li><a class="reference internal" href="#libdvid._dvid_python.DVIDNodeService.put_labels3D" title="libdvid._dvid_python.DVIDNodeService.put_labels3D"><code class="xref py py-meth docutils literal"><span class="pre">put_labels3D</span></code></a></li>
+<li><a class="reference internal" href="#libdvid._dvid_python.DVIDNodeService.get_labels3D" title="libdvid._dvid_python.DVIDNodeService.get_labels3D"><code class="xref py py-meth docutils literal"><span class="pre">get_labels3D</span></code></a></li>
+<li><a class="reference internal" href="#libdvid._dvid_python.DVIDNodeService.get_label_by_location" title="libdvid._dvid_python.DVIDNodeService.get_label_by_location"><code class="xref py py-meth docutils literal"><span class="pre">get_label_by_location</span></code></a></li>
+<li><a class="reference internal" href="#libdvid._dvid_python.DVIDNodeService.body_exists" title="libdvid._dvid_python.DVIDNodeService.body_exists"><code class="xref py py-meth docutils literal"><span class="pre">body_exists</span></code></a></li>
+</ul>
+</li>
+<li>Roi<ul>
+<li><a class="reference internal" href="#libdvid._dvid_python.DVIDNodeService.create_roi" title="libdvid._dvid_python.DVIDNodeService.create_roi"><code class="xref py py-meth docutils literal"><span class="pre">create_roi</span></code></a></li>
+<li><a class="reference internal" href="#libdvid._dvid_python.DVIDNodeService.get_roi" title="libdvid._dvid_python.DVIDNodeService.get_roi"><code class="xref py py-meth docutils literal"><span class="pre">get_roi</span></code></a></li>
+<li><a class="reference internal" href="#libdvid._dvid_python.DVIDNodeService.post_roi" title="libdvid._dvid_python.DVIDNodeService.post_roi"><code class="xref py py-meth docutils literal"><span class="pre">post_roi</span></code></a></li>
+<li><a class="reference internal" href="#libdvid._dvid_python.DVIDNodeService.get_roi_partition" title="libdvid._dvid_python.DVIDNodeService.get_roi_partition"><code class="xref py py-meth docutils literal"><span class="pre">get_roi_partition</span></code></a></li>
+<li><a class="reference internal" href="#libdvid._dvid_python.DVIDNodeService.roi_ptquery" title="libdvid._dvid_python.DVIDNodeService.roi_ptquery"><code class="xref py py-meth docutils literal"><span class="pre">roi_ptquery</span></code></a></li>
+<li><a class="reference internal" href="#libdvid._dvid_python.DVIDNodeService.get_roi3D" title="libdvid._dvid_python.DVIDNodeService.get_roi3D"><code class="xref py py-meth docutils literal"><span class="pre">get_roi3D</span></code></a></li>
+</ul>
+</li>
+<li>Tiles<ul>
+<li><a class="reference internal" href="#libdvid._dvid_python.DVIDNodeService.get_tile_slice" title="libdvid._dvid_python.DVIDNodeService.get_tile_slice"><code class="xref py py-meth docutils literal"><span class="pre">get_tile_slice</span></code></a></li>
+<li><a class="reference internal" href="#libdvid._dvid_python.DVIDNodeService.get_tile_slice_binary" title="libdvid._dvid_python.DVIDNodeService.get_tile_slice_binary"><code class="xref py py-meth docutils literal"><span class="pre">get_tile_slice_binary</span></code></a></li>
+</ul>
+</li>
+<li>Graph<ul>
+<li><a class="reference internal" href="#libdvid._dvid_python.DVIDNodeService.create_graph" title="libdvid._dvid_python.DVIDNodeService.create_graph"><code class="xref py py-meth docutils literal"><span class="pre">create_graph</span></code></a></li>
+<li><a class="reference internal" href="#libdvid._dvid_python.DVIDNodeService.update_vertices" title="libdvid._dvid_python.DVIDNodeService.update_vertices"><code class="xref py py-meth docutils literal"><span class="pre">update_vertices</span></code></a></li>
+<li><a class="reference internal" href="#libdvid._dvid_python.DVIDNodeService.update_edges" title="libdvid._dvid_python.DVIDNodeService.update_edges"><code class="xref py py-meth docutils literal"><span class="pre">update_edges</span></code></a></li>
+</ul>
+</li>
+<li>General<ul>
+<li><a class="reference internal" href="#libdvid._dvid_python.DVIDNodeService.get_typeinfo" title="libdvid._dvid_python.DVIDNodeService.get_typeinfo"><code class="xref py py-meth docutils literal"><span class="pre">get_typeinfo</span></code></a></li>
+<li><a class="reference internal" href="#libdvid._dvid_python.DVIDNodeService.custom_request" title="libdvid._dvid_python.DVIDNodeService.custom_request"><code class="xref py py-meth docutils literal"><span class="pre">custom_request</span></code></a></li>
+</ul>
+</li>
+</ul>
+<p><strong>Methods Reference:</strong></p>
+<blockquote>
+<div><dl class="method">
+<dt id="libdvid._dvid_python.DVIDNodeService.__init__">
+<code class="descname">__init__</code><span class="sig-paren">(</span><em>(object)arg1</em>, <em>(str)web_addr</em>, <em>(str)uuid</em><span class="optional">[</span>, <em>(str)user='anonymous'</em><span class="optional">[</span>, <em>(str)app='libdvid'</em><span class="optional">[</span>, <em>(str)resource_server=''</em><span class="optional">[</span>, <em>(int)resource_port=0</em><span class="optional">]</span><span class="optional">]</span><span class="optional">]</span><span class="optional">]</span><span class="sig-paren">)</span> &rarr; None :<a class="headerlink" href="#libdvid._dvid_python.DVIDNodeService.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Constructor sets up an http connection and checks
+whether a node of the given uuid and web server exists.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>web_addr</strong> &#8211; address of DVID server</li>
+<li><strong>uuid</strong> &#8211; uuid corresponding to a DVID node</li>
+<li><strong>user</strong> &#8211; username used in DVID requests</li>
+<li><strong>app</strong> &#8211; name of the application used in DVID requests</li>
+<li><strong>resource_server</strong> &#8211; name of the resource server</li>
+<li><strong>resource_port</strong> &#8211; port for resource server</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="libdvid._dvid_python.DVIDNodeService.create_keyvalue">
+<code class="descname">create_keyvalue</code><span class="sig-paren">(</span><em>(DVIDNodeService)arg1</em>, <em>(str)instance_name</em><span class="sig-paren">)</span> &rarr; bool :<a class="headerlink" href="#libdvid._dvid_python.DVIDNodeService.create_keyvalue" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create an instance of keyvalue datatype.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>instance_name</strong> &#8211; name of new keyvalue instance</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">True if created, False if already exists.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="libdvid._dvid_python.DVIDNodeService.put">
+<code class="descname">put</code><span class="sig-paren">(</span><em>(DVIDNodeService)arg1</em>, <em>(str)instance_name</em>, <em>(str)key</em>, <em>(object)value_bytes</em><span class="sig-paren">)</span> &rarr; None :<a class="headerlink" href="#libdvid._dvid_python.DVIDNodeService.put" title="Permalink to this definition">¶</a></dt>
+<dd><p>Put binary blob at a given key location.  It will overwrite data 
+that exists at the key for the given node version.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>instance_name</strong> &#8211; name of keyvalue instance</li>
+<li><strong>key</strong> &#8211; name of key to the keyvalue instance</li>
+<li><strong>value_bytes</strong> &#8211; binary blob to store at key (str or bytes)</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="libdvid._dvid_python.DVIDNodeService.get">
+<code class="descname">get</code><span class="sig-paren">(</span><em>(DVIDNodeService)arg1</em>, <em>(str)instance_name</em>, <em>(str)key</em><span class="sig-paren">)</span> &rarr; object :<a class="headerlink" href="#libdvid._dvid_python.DVIDNodeService.get" title="Permalink to this definition">¶</a></dt>
+<dd><p>Retrieve binary data at a given key location.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>instance_name</strong> &#8211; name of keyvalue instance</li>
+<li><strong>key</strong> &#8211; name of key within the keyvalue instance</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">binary data stored at key</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="libdvid._dvid_python.DVIDNodeService.get_json">
+<code class="descname">get_json</code><span class="sig-paren">(</span><em>(DVIDNodeService)arg1</em>, <em>(str)instance_name</em>, <em>(str)key</em><span class="sig-paren">)</span> &rarr; object :<a class="headerlink" href="#libdvid._dvid_python.DVIDNodeService.get_json" title="Permalink to this definition">¶</a></dt>
+<dd><p>Retrieve json data at a given key location, parsed into a dict.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>instance_name</strong> &#8211; name of keyvalue instance</li>
+<li><strong>key</strong> &#8211; name of key within the keyvalue instance</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">json stored at key</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="libdvid._dvid_python.DVIDNodeService.get_keys">
+<code class="descname">get_keys</code><span class="sig-paren">(</span><em>(DVIDNodeService)arg1</em>, <em>(str)instance_name</em><span class="sig-paren">)</span> &rarr; StringVec :<a class="headerlink" href="#libdvid._dvid_python.DVIDNodeService.get_keys" title="Permalink to this definition">¶</a></dt>
+<dd><p>Retrieve the list of all keys for a given keyvalue instance.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>instance_name</strong> &#8211; name of keyvalue instance</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">list of strings</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="libdvid._dvid_python.DVIDNodeService.create_grayscale8">
+<code class="descname">create_grayscale8</code><span class="sig-paren">(</span><em>(DVIDNodeService)arg1</em>, <em>(str)instance_name</em><span class="optional">[</span>, <em>(int)blocksize=32</em><span class="optional">]</span><span class="sig-paren">)</span> &rarr; bool :<a class="headerlink" href="#libdvid._dvid_python.DVIDNodeService.create_grayscale8" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create an instance of uint8 grayscale datatype.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>instance_name</strong> &#8211; name of new datatype instance</li>
+<li><strong>blocksize</strong> &#8211; size of block chunks</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">True if created, False if already exists</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="libdvid._dvid_python.DVIDNodeService.get_gray3D">
+<code class="descname">get_gray3D</code><span class="sig-paren">(</span><em>(DVIDNodeService)service</em>, <em>(str)instance_name</em>, <em>(object)shape_zyx</em>, <em>(object)offset_zyx</em><span class="optional">[</span>, <em>(bool)throttle=True</em><span class="optional">[</span>, <em>(bool)compress=False</em><span class="optional">[</span>, <em>(str)roi=None</em><span class="optional">]</span><span class="optional">]</span><span class="optional">]</span><span class="sig-paren">)</span> &rarr; object :<a class="headerlink" href="#libdvid._dvid_python.DVIDNodeService.get_gray3D" title="Permalink to this definition">¶</a></dt>
+<dd><p>Retrieve a 3D 1-byte grayscale volume with the specified 
+dimension size and spatial offset.  The dimension 
+sizes and offset default to X,Y,Z (the 
+DVID 0,1,2 axis order).  The data is returned so X corresponds 
+to the matrix column.  Because it is easy to overload a single 
+server implementation of DVID with hundreds of volume requests, 
+we support a throttle command that prevents multiple volume 
+GETs/PUTs from executing at the same time. 
+A 2D slice should be requested as X x Y x 1.  The requested 
+number of voxels cannot be larger than INT_MAX/8.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>instance_name</strong> &#8211; name of grayscale type instance</li>
+<li><strong>shape_zyx</strong> &#8211; volume dimensions in voxel coordinates</li>
+<li><strong>offset_zyx</strong> &#8211; volume location in voxel coordinates</li>
+<li><strong>throttle</strong> &#8211; allow only one request at time (default: true)</li>
+<li><strong>compress</strong> &#8211; enable lz4 compression</li>
+<li><strong>roi</strong> &#8211; specify DVID roi to mask GET operation (return 0s outside ROI)</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">3D <code class="docutils literal"><span class="pre">ndarray</span></code>, with dtype <code class="docutils literal"><span class="pre">uint8</span></code></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="libdvid._dvid_python.DVIDNodeService.put_gray3D">
+<code class="descname">put_gray3D</code><span class="sig-paren">(</span><em>(DVIDNodeService)service</em>, <em>(str)instance_name</em>, <em>(object)grayscale_vol</em>, <em>(object)offset_zyx</em><span class="optional">[</span>, <em>(bool)throttle=True</em><span class="optional">[</span>, <em>(bool)compress=False</em><span class="optional">]</span><span class="optional">]</span><span class="sig-paren">)</span> &rarr; None :<a class="headerlink" href="#libdvid._dvid_python.DVIDNodeService.put_gray3D" title="Permalink to this definition">¶</a></dt>
+<dd><p>Put a 3D 1-byte grayscale volume to DVID with the specified 
+dimension and spatial offset.  THE DIMENSION AND OFFSET ARE 
+IN VOXEL COORDINATS BUT MUST BE BLOCK ALIGNED.  The size 
+of DVID blocks are determined at repo creation and is 
+always 32x32x32 currently.  The axis order is always 
+X, Y, Z.  Because it is easy to overload a single server 
+implementation of DVID with hundreds 
+of volume PUTs, we support a throttle command that prevents 
+multiple volume GETs/PUTs from executing at the same time. 
+The number of voxels put cannot be larger than INT_MAX/8.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>instance_name</strong> &#8211; name of the grayscale type instance</li>
+<li><strong>grayscale_vol</strong> &#8211; <code class="docutils literal"><span class="pre">ndarray</span></code> with dtype <code class="docutils literal"><span class="pre">uint8</span></code></li>
+<li><strong>offset_zyx</strong> &#8211; offset in voxel coordinates</li>
+<li><strong>throttle</strong> &#8211; allow only one request at time (default: true)</li>
+<li><strong>compress</strong> &#8211; enable lz4 compression</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="libdvid._dvid_python.DVIDNodeService.create_labelblk">
+<code class="descname">create_labelblk</code><span class="sig-paren">(</span><em>(DVIDNodeService)arg1</em>, <em>(str)instance_name</em><span class="optional">[</span>, <em>(str)labelvol_name=None</em><span class="optional">[</span>, <em>(int)blocksize=32</em><span class="optional">]</span><span class="optional">]</span><span class="sig-paren">)</span> &rarr; bool :<a class="headerlink" href="#libdvid._dvid_python.DVIDNodeService.create_labelblk" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create an instance of uint64 labelblk datatype and optionally 
+create a label volume datatype.  WARNING: If the function returns false 
+and a label volume is requested it is possible that the two 
+datatypes created will not be synced together.  Currently, 
+the syncing configuration needs to be set on creation.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>instance_name</strong> &#8211; name of new datatype instance</li>
+<li><strong>labelvol_name</strong> &#8211; name of labelvolume to associate with labelblks</li>
+<li><strong>blocksize</strong> &#8211; size of block chunks</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">true if both created, false if one already exists</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="libdvid._dvid_python.DVIDNodeService.get_labels3D">
+<code class="descname">get_labels3D</code><span class="sig-paren">(</span><em>(DVIDNodeService)service</em>, <em>(str)instance_name</em>, <em>(object)shape_zyx</em>, <em>(object)offset_zyx</em><span class="optional">[</span>, <em>(bool)throttle=True</em><span class="optional">[</span>, <em>(bool)compress=True</em><span class="optional">[</span>, <em>(str)roi=None</em><span class="optional">]</span><span class="optional">]</span><span class="optional">]</span><span class="sig-paren">)</span> &rarr; object :<a class="headerlink" href="#libdvid._dvid_python.DVIDNodeService.get_labels3D" title="Permalink to this definition">¶</a></dt>
+<dd><p>Retrieve a 3D 8-byte label volume with the specified 
+dimension size and spatial offset.  The dimension 
+sizes and offset default to X,Y,Z (the 
+DVID 0,1,2 axis order).  The data is returned so X corresponds 
+to the matrix column.  Because it is easy to overload a single 
+server implementation of DVID with hundreds of volume requests, 
+we support a throttle command that prevents multiple volume 
+GETs/PUTs from executing at the same time. 
+A 2D slice should be requested as X x Y x 1.  The requested 
+number of voxels cannot be larger than INT_MAX/8.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>instance_name</strong> &#8211; name of the labelblk type instance</li>
+<li><strong>shape_zyx</strong> &#8211; size of X, Y, Z dimensions in voxel coordinates</li>
+<li><strong>offset_zyx</strong> &#8211; offset in voxel coordinates</li>
+<li><strong>throttle</strong> &#8211; allow only one request at time (default: true)</li>
+<li><strong>compress</strong> &#8211; enable lz4 compression</li>
+<li><strong>roi</strong> &#8211; specify DVID roi to mask GET operation (return 0s outside ROI)</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">3D <code class="docutils literal"><span class="pre">ndarray</span></code> with dtype <code class="docutils literal"><span class="pre">uint64</span></code></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="libdvid._dvid_python.DVIDNodeService.get_label_by_location">
+<code class="descname">get_label_by_location</code><span class="sig-paren">(</span><em>(DVIDNodeService)service</em>, <em>(str)instance_name</em>, <em>(object)point_zyx</em><span class="sig-paren">)</span> &rarr; long :<a class="headerlink" href="#libdvid._dvid_python.DVIDNodeService.get_label_by_location" title="Permalink to this definition">¶</a></dt>
+<dd><p>Retrieve label id at the specified point.  If no ID is found, return 0.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>datatype_instance</strong> &#8211; name of the labelblk type instance</li>
+<li><strong>point_zyx</strong> &#8211; tuple: <code class="docutils literal"><span class="pre">(z,y,x)</span></code> of the point to inspect</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">body id for given location (0 if none found)</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="libdvid._dvid_python.DVIDNodeService.put_labels3D">
+<code class="descname">put_labels3D</code><span class="sig-paren">(</span><em>(DVIDNodeService)service</em>, <em>(str)instance_name</em>, <em>(object)label_vol_zyx</em>, <em>(object)offset_zyx</em><span class="optional">[</span>, <em>(bool)throttle=True</em><span class="optional">[</span>, <em>(bool)compress=True</em><span class="optional">[</span>, <em>(str)roi=None</em><span class="optional">[</span>, <em>(bool)mutate=False</em><span class="optional">]</span><span class="optional">]</span><span class="optional">]</span><span class="optional">]</span><span class="sig-paren">)</span> &rarr; None :<a class="headerlink" href="#libdvid._dvid_python.DVIDNodeService.put_labels3D" title="Permalink to this definition">¶</a></dt>
+<dd><p>Put a 3D 8-byte label volume to DVID with the specified 
+dimension and spatial offset.  THE DIMENSION AND OFFSET ARE 
+IN VOXEL COORDINATS BUT MUST BE BLOCK ALIGNED.  The size 
+of DVID blocks are determined at instance creation and is 
+32x32x32 by default.  The axis order is always 
+X, Y, Z.  Because it is easy to overload a single server 
+implementation of DVID with hundreds 
+of volume PUTs, we support a throttle command that prevents 
+multiple volume GETs/PUTs from executing at the same time. 
+The number of voxels put cannot be larger than INT_MAX/8.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>instance_name</strong> &#8211; name of the grayscale type instance</li>
+<li><strong>volume</strong> &#8211; label 3D volume encodes dimension sizes and binary buffer</li>
+<li><strong>offset_zyx</strong> &#8211; offset in voxel coordinates</li>
+<li><strong>throttle</strong> &#8211; allow only one request at time (default: true)</li>
+<li><strong>roi</strong> &#8211; specify DVID roi to mask PUT operation (default: empty)</li>
+<li><strong>compress</strong> &#8211; enable lz4 compression</li>
+<li><strong>mutate</strong> &#8211; set to True if overwriting previous segmentation (default: False)</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="libdvid._dvid_python.DVIDNodeService.body_exists">
+<code class="descname">body_exists</code><span class="sig-paren">(</span><em>(DVIDNodeService)arg1</em>, <em>(str)labelvol_name</em>, <em>(long)bodyid</em><span class="sig-paren">)</span> &rarr; bool :<a class="headerlink" href="#libdvid._dvid_python.DVIDNodeService.body_exists" title="Permalink to this definition">¶</a></dt>
+<dd><p>Determine whether body exists in labelvolume.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>labelvol_name</strong> &#8211; name of label volume type</li>
+<li><strong>bodyid</strong> &#8211; body id being queried (int)</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">True if in label volume, False otherwise</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="libdvid._dvid_python.DVIDNodeService.create_roi">
+<code class="descname">create_roi</code><span class="sig-paren">(</span><em>(DVIDNodeService)arg1</em>, <em>(str)name</em><span class="sig-paren">)</span> &rarr; bool :<a class="headerlink" href="#libdvid._dvid_python.DVIDNodeService.create_roi" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create an instance of ROI datatype.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>name</strong> &#8211; name of new datatype instance</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">True if created, False if already exists</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="libdvid._dvid_python.DVIDNodeService.get_roi">
+<code class="descname">get_roi</code><span class="sig-paren">(</span><em>(DVIDNodeService)service</em>, <em>(str)roi</em><span class="sig-paren">)</span> &rarr; list :<a class="headerlink" href="#libdvid._dvid_python.DVIDNodeService.get_roi" title="Permalink to this definition">¶</a></dt>
+<dd><p>Retrieve an ROI and store in a vector of block coordinates. 
+The blocks returned will be ordered by Z then Y then X.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>roi</strong> &#8211; name of the roi instance</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">list of <code class="docutils literal"><span class="pre">BlockZYX</span></code> coordinate tuples</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="libdvid._dvid_python.DVIDNodeService.post_roi">
+<code class="descname">post_roi</code><span class="sig-paren">(</span><em>(DVIDNodeService)arg1</em>, <em>(str)roi_name</em>, <em>(object)blocks_zyx</em><span class="sig-paren">)</span> &rarr; None :<a class="headerlink" href="#libdvid._dvid_python.DVIDNodeService.post_roi" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load an ROI defined by a list of blocks.  This command 
+will extend the ROI if it defines blocks outside of the 
+currently defined ROI.  The blocks can be provided in 
+any order.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>roi_name</strong> &#8211; name of the roi instance</li>
+<li><strong>blocks_zyx</strong> &#8211; list of tuples <code class="docutils literal"><span class="pre">(z,y,x)</span></code></li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="libdvid._dvid_python.DVIDNodeService.get_roi_partition">
+<code class="descname">get_roi_partition</code><span class="sig-paren">(</span><em>(DVIDNodeService)service</em>, <em>(str)roi</em>, <em>(int)partition_size</em><span class="sig-paren">)</span> &rarr; tuple :<a class="headerlink" href="#libdvid._dvid_python.DVIDNodeService.get_roi_partition" title="Permalink to this definition">¶</a></dt>
+<dd><p>Retrieve a partition of the ROI covered by substacks 
+of the specified partition size.  The substacks will be ordered 
+by Z then Y then X.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>roi</strong> &#8211; name of the roi instance</li>
+<li><strong>substacks</strong> &#8211; list of <code class="docutils literal"><span class="pre">SubstackZYX</span></code> tuples, i.e. <code class="docutils literal"><span class="pre">(size,</span> <span class="pre">z,</span> <span class="pre">y,</span> <span class="pre">x)</span></code></li>
+<li><strong>partition_size</strong> &#8211; substack size as number of blocks in one dimension</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">tuple: <code class="docutils literal"><span class="pre">(substacks,</span> <span class="pre">packing_factor)</span></code> where <code class="docutils literal"><span class="pre">substacks</span></code> is a list of 
+<code class="docutils literal"><span class="pre">SubstackZYX</span></code> tuples, i.e. <code class="docutils literal"><span class="pre">(size,</span> <span class="pre">z,</span> <span class="pre">y,</span> <span class="pre">x)</span></code> and <code class="docutils literal"><span class="pre">packing_factor</span></code> is the 
+fraction of substack volumes that cover blocks</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="libdvid._dvid_python.DVIDNodeService.roi_ptquery">
+<code class="descname">roi_ptquery</code><span class="sig-paren">(</span><em>(DVIDNodeService)service</em>, <em>(str)roi</em>, <em>(object)point_list_zyx</em><span class="sig-paren">)</span> &rarr; list :<a class="headerlink" href="#libdvid._dvid_python.DVIDNodeService.roi_ptquery" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check whether a list of points (any order) exists in 
+the given ROI.  A vector of true and false has the same order 
+as the list of points.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>roi</strong> &#8211; name of the roi instance</li>
+<li><strong>point_list_zyx</strong> &#8211; list of tuples <code class="docutils literal"><span class="pre">(z,y,x)</span></code></li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">list of bool</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="libdvid._dvid_python.DVIDNodeService.get_roi3D">
+<code class="descname">get_roi3D</code><span class="sig-paren">(</span><em>(DVIDNodeService)service</em>, <em>(str)instance_name</em>, <em>(object)dims_zyx</em>, <em>(object)offset_zyx</em><span class="optional">[</span>, <em>(bool)throttle=True</em><span class="optional">[</span>, <em>(bool)compress=False</em><span class="optional">]</span><span class="optional">]</span><span class="sig-paren">)</span> &rarr; object :<a class="headerlink" href="#libdvid._dvid_python.DVIDNodeService.get_roi3D" title="Permalink to this definition">¶</a></dt>
+<dd><p>Retrieve a 3D 1-byte bool volume for a roi with the specified 
+dimension size and spatial offset.  The dimension 
+sizes and offset default to X,Y,Z (the 
+DVID 0,1,2 axis order).  The data is returned so X corresponds 
+to the matrix column.  Because it is easy to overload a single 
+server implementation of DVID with hundreds of volume requests, 
+we support a throttle command that prevents multiple volume 
+GETs/PUTs from executing at the same time. 
+A 2D slice should be requested as X x Y x 1.  The requested 
+number of voxels cannot be larger than INT_MAX/8.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>roi_name</strong> &#8211; name of roi mask instance</li>
+<li><strong>dims_zyx</strong> &#8211; requested shape in voxel coordinates</li>
+<li><strong>offset_zyx</strong> &#8211; requested starting location in voxel coordinates</li>
+<li><strong>throttle</strong> &#8211; allow only one request at time (default: true)</li>
+<li><strong>compress</strong> &#8211; enable lz4 compression</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">Roi3D object that wraps a byte buffer</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="libdvid._dvid_python.DVIDNodeService.get_tile_slice">
+<code class="descname">get_tile_slice</code><span class="sig-paren">(</span><em>(DVIDNodeService)arg1</em>, <em>(str)instance_name</em>, <em>(Slice2D)slice_type</em>, <em>(int)scaling</em>, <em>(object)tile_numbers</em><span class="sig-paren">)</span> &rarr; object :<a class="headerlink" href="#libdvid._dvid_python.DVIDNodeService.get_tile_slice" title="Permalink to this definition">¶</a></dt>
+<dd><p>Retrieve a pre-computed tile from DVID at the specified 
+location and zoom level.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>instance_name</strong> &#8211; name of tile type instance</li>
+<li><strong>slice_type</strong> &#8211; <code class="docutils literal"><span class="pre">Slice2D.XY</span></code>, <code class="docutils literal"><span class="pre">YZ</span></code>, or <code class="docutils literal"><span class="pre">XZ</span></code></li>
+<li><strong>scaling</strong> &#8211; specify zoom level (1=max res)</li>
+<li><strong>tile_loc</strong> &#8211; tuple: X,Y,Z location of tile (X and Y are in tile coordinates)</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">2D <code class="docutils literal"><span class="pre">ndarray</span></code> with dtype <code class="docutils literal"><span class="pre">uint8</span></code></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="libdvid._dvid_python.DVIDNodeService.get_tile_slice_binary">
+<code class="descname">get_tile_slice_binary</code><span class="sig-paren">(</span><em>(DVIDNodeService)arg1</em>, <em>(str)instance_name</em>, <em>(Slice2D)slice_type</em>, <em>(int)scaling</em>, <em>(object)tile_numbers</em><span class="sig-paren">)</span> &rarr; object :<a class="headerlink" href="#libdvid._dvid_python.DVIDNodeService.get_tile_slice_binary" title="Permalink to this definition">¶</a></dt>
+<dd><p>Retrive the raw pre-computed tile (no decompression) from 
+DVID at the specified location and zoom level.  In theory, this 
+could be applied to multi-scale label data, but DVID typically 
+only stores tiles for grayscale data since it is immutable.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>instance_name</strong> &#8211; name of tile type instance</li>
+<li><strong>slice_type</strong> &#8211; <code class="docutils literal"><span class="pre">Slice2D.XY</span></code>, <code class="docutils literal"><span class="pre">YZ</span></code>, or <code class="docutils literal"><span class="pre">XZ</span></code></li>
+<li><strong>scaling</strong> &#8211; specify zoom level (1=max res)</li>
+<li><strong>tile_loc</strong> &#8211; tuple: X,Y,Z location of tile (X and Y are in tile coordinates)</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">byte buffer (str) for the raw compressed data stored (e.g, JPEG or PNG)</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="libdvid._dvid_python.DVIDNodeService.create_graph">
+<code class="descname">create_graph</code><span class="sig-paren">(</span><em>(DVIDNodeService)arg1</em>, <em>(str)name</em><span class="sig-paren">)</span> &rarr; bool :<a class="headerlink" href="#libdvid._dvid_python.DVIDNodeService.create_graph" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create an instance of labelgraph datatype.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>name</strong> &#8211; name of new datatype instance</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">true if create, false if already exists</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="libdvid._dvid_python.DVIDNodeService.update_vertices">
+<code class="descname">update_vertices</code><span class="sig-paren">(</span><em>(DVIDNodeService)arg1</em>, <em>(str)graph_name</em>, <em>(object)vertices</em><span class="sig-paren">)</span> &rarr; None :<a class="headerlink" href="#libdvid._dvid_python.DVIDNodeService.update_vertices" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add the provided vertices to the labelgraph with the associated 
+vertex weights.  If the vertex already exists, it will increment 
+the vertex weight by the weight specified.  This function 
+can be used for creation and incrementing vertex weights in parallel.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>graph_name</strong> &#8211; name of labelgraph instance</li>
+<li><strong>vertices</strong> &#8211; list of vertices to create or update</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="libdvid._dvid_python.DVIDNodeService.update_edges">
+<code class="descname">update_edges</code><span class="sig-paren">(</span><em>(DVIDNodeService)arg1</em>, <em>(str)graph_name</em>, <em>(object)vertices</em><span class="sig-paren">)</span> &rarr; None :<a class="headerlink" href="#libdvid._dvid_python.DVIDNodeService.update_edges" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add the provided edges to the labelgraph with the associated 
+edge weights.  If the edge already exists, it will increment 
+the vertex weight by the weight specified.  This function 
+can be used for creation and incrementing edge weights in parallel. 
+The command will fail if the vertices for the given edges 
+were not created first.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>graph_name</strong> &#8211; name of labelgraph instance</li>
+<li><strong>vertices</strong> &#8211; list of vertices to create or update</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="libdvid._dvid_python.DVIDNodeService.get_typeinfo">
+<code class="descname">get_typeinfo</code><span class="sig-paren">(</span><em>(DVIDNodeService)arg1</em>, <em>(str)datatype_name</em><span class="sig-paren">)</span> &rarr; object :<a class="headerlink" href="#libdvid._dvid_python.DVIDNodeService.get_typeinfo" title="Permalink to this definition">¶</a></dt>
+<dd><p>Retrieves meta data for a given datatype instance</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>datatype_name</strong> &#8211; name of datatype instance</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">JSON describing instance meta data</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="libdvid._dvid_python.DVIDNodeService.custom_request">
+<code class="descname">custom_request</code><span class="sig-paren">(</span><em>(DVIDNodeService)arg1</em>, <em>(str)endpoint</em>, <em>(object)payload</em>, <em>(ConnectionMethod)method</em><span class="optional">[</span>, <em>(bool)compress=False</em><span class="optional">[</span>, <em>(long)datasize=1</em><span class="optional">]</span><span class="optional">]</span><span class="sig-paren">)</span> &rarr; object :<a class="headerlink" href="#libdvid._dvid_python.DVIDNodeService.custom_request" title="Permalink to this definition">¶</a></dt>
+<dd><p>Allow client to specify a custom http request with an 
+http endpoint for a given node and uuid.  A request 
+to <code class="docutils literal"><span class="pre">/node/&lt;uuid&gt;/blah</span></code> should provide the endpoint 
+as <code class="docutils literal"><span class="pre">/blah</span></code>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>endpoint</strong> &#8211; REST endpoint given the node&#8217;s uuid</li>
+<li><strong>payload</strong> &#8211; binary data to be sent in the request</li>
+<li><strong>method</strong> &#8211; <code class="docutils literal"><span class="pre">libdvid.ConnectionMethod</span></code>, (<code class="docutils literal"><span class="pre">HEAD</span></code>, <code class="docutils literal"><span class="pre">GET</span></code>, <code class="docutils literal"><span class="pre">POST</span></code>, <code class="docutils literal"><span class="pre">PUT</span></code>, <code class="docutils literal"><span class="pre">DELETE</span></code>)</li>
+<li><strong>compress</strong> &#8211; use lz4 compression if true</li>
+<li><strong>datasize</strong> &#8211; estimate payload if GET (only useful if there is a resource manager)</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">http response as binary data</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div></blockquote>
+</dd></dl>
+
+<div class="section" id="slice2d">
+<h2>Slice2D<a class="headerlink" href="#slice2d" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="libdvid._dvid_python.Slice2D">
+<em class="property">class </em><code class="descname">Slice2D</code><a class="headerlink" href="#libdvid._dvid_python.Slice2D" title="Permalink to this definition">¶</a></dt>
+<dd><p>Enum for tile orientations.</p>
+<p>Members:</p>
+<ul class="simple">
+<li>XY</li>
+<li>XZ</li>
+<li>YZ</li>
+</ul>
+</dd></dl>
+
+</div>
+<div class="section" id="graph-primitives">
+<h2>Graph Primitives<a class="headerlink" href="#graph-primitives" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="libdvid._dvid_python.Vertex">
+<em class="property">class </em><code class="descname">Vertex</code><a class="headerlink" href="#libdvid._dvid_python.Vertex" title="Permalink to this definition">¶</a></dt>
+<dd><p>Vertex is its unique ID and its weight 
+(typically representing the size of the vertex in voxels).</p>
+<dl class="method">
+<dt id="libdvid._dvid_python.Vertex.__init__">
+<code class="descname">__init__</code><span class="sig-paren">(</span><em>(object)arg1</em>, <em>(long)id_</em>, <em>(float)weight</em><span class="sig-paren">)</span> &rarr; None :<a class="headerlink" href="#libdvid._dvid_python.Vertex.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Constructor to explicitly set vertex information.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>id</strong> &#8211; vertex id</li>
+<li><strong>weight</strong> &#8211; weight for the vertex</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="libdvid._dvid_python.Edge">
+<em class="property">class </em><code class="descname">Edge</code><a class="headerlink" href="#libdvid._dvid_python.Edge" title="Permalink to this definition">¶</a></dt>
+<dd><p>Edge constitutes two vertex ids and a weight.</p>
+<p>For example, the weight could indicate the sizes 
+of the edge between two vertices in voxels.</p>
+<dl class="method">
+<dt id="libdvid._dvid_python.Edge.__init__">
+<code class="descname">__init__</code><span class="sig-paren">(</span><em>(object)arg1</em>, <em>(long)id1</em>, <em>(long)id2</em>, <em>(float)weight</em><span class="sig-paren">)</span> &rarr; None :<a class="headerlink" href="#libdvid._dvid_python.Edge.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Constructor using supplied vertex ids and weight.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>id1</strong> &#8211; vertex 1 of edge</li>
+<li><strong>id2</strong> &#8211; vertex 2 of edge</li>
+<li><strong>weight</strong> &#8211; weight of edge</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+
+
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="DVIDConnection.html" class="btn btn-neutral float-right" title="DVIDConnection" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="index.html" class="btn btn-neutral" title="Installation" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2016, FlyEM Project.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'0.1',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

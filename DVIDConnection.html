@@ -1,0 +1,301 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>DVIDConnection &mdash; libdvid 0.1 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="genindex.html"/>
+        <link rel="search" title="Search" href="search.html"/>
+    <link rel="top" title="libdvid 0.1 documentation" href="index.html"/>
+        <link rel="next" title="DVIDServerService" href="DVIDServerService.html"/>
+        <link rel="prev" title="DVIDNodeService" href="DVIDNodeService.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> libdvid
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="DVIDNodeService.html">DVIDNodeService</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">DVIDConnection</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#connectionmethod">ConnectionMethod</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="DVIDServerService.html">DVIDServerService</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="index.html">libdvid</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+ 
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="index.html">Docs</a> &raquo;</li>
+      
+    <li>DVIDConnection</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="_sources/DVIDConnection.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="dvidconnection">
+<h1>DVIDConnection<a class="headerlink" href="#dvidconnection" title="Permalink to this headline">¶</a></h1>
+<dl class="class">
+<dt id="libdvid._dvid_python.DVIDConnection">
+<em class="property">class </em><code class="descname">DVIDConnection</code><a class="headerlink" href="#libdvid._dvid_python.DVIDConnection" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates a <code class="docutils literal"><span class="pre">libcurl</span></code> connection and 
+provides utilities for transferring data between this library 
+and DVID.  Each service will call <code class="docutils literal"><span class="pre">DVIDConnection</span></code> independently 
+and does not need to be accessed very often by the end-user. 
+This class uses a static variable to set the curl context 
+and also sets a curl connection.</p>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p class="last">It is currently not possible to use a single <code class="docutils literal"><span class="pre">DVIDConnection</span></code> 
+for multiple threads.  Users should instantiate multiple services 
+to access DVID rather than reusing the same one.  This problem will 
+be fixed when the curl connection is given thread-level scope as 
+available in C++11.</p>
+</div>
+<dl class="method">
+<dt id="libdvid._dvid_python.DVIDConnection.get_addr">
+<code class="descname">get_addr</code><span class="sig-paren">(</span><em>(DVIDConnection)arg1</em><span class="sig-paren">)</span> &rarr; str :<a class="headerlink" href="#libdvid._dvid_python.DVIDConnection.get_addr" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the address for the DVID connection.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="libdvid._dvid_python.DVIDConnection.get_uri_root">
+<code class="descname">get_uri_root</code><span class="sig-paren">(</span><em>(DVIDConnection)arg1</em><span class="sig-paren">)</span> &rarr; str :<a class="headerlink" href="#libdvid._dvid_python.DVIDConnection.get_uri_root" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the prefix for all DVID API calls</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="libdvid._dvid_python.DVIDConnection.make_head_request">
+<code class="descname">make_head_request</code><span class="sig-paren">(</span><em>(DVIDConnection)arg1</em>, <em>(str)endpoint</em><span class="sig-paren">)</span> &rarr; int :<a class="headerlink" href="#libdvid._dvid_python.DVIDConnection.make_head_request" title="Permalink to this definition">¶</a></dt>
+<dd><p>Simple HEAD requests to DVID.  An exception is generated 
+if curl cannot properly connect to the URL.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>endpoint</strong> &#8211; endpoint where request is performed</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">html status code</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="libdvid._dvid_python.DVIDConnection.make_request">
+<code class="descname">make_request</code><span class="sig-paren">(</span><em>(DVIDConnection)connection</em>, <em>(str)endpoint</em>, <em>(ConnectionMethod)method</em><span class="optional">[</span>, <em>(object)payload=None</em><span class="optional">[</span>, <em>(int)timeout=120</em><span class="optional">[</span>, <em>(long)datasize=1</em><span class="optional">]</span><span class="optional">]</span><span class="optional">]</span><span class="sig-paren">)</span> &rarr; tuple :<a class="headerlink" href="#libdvid._dvid_python.DVIDConnection.make_request" title="Permalink to this definition">¶</a></dt>
+<dd><p>Main helper function retrieving data from DVID.  The function 
+performs the action specified in method.  An exception is generated 
+if curl cannot properly connect to the URL.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>endpoint</strong> &#8211; endpoint where request is performed</li>
+<li><strong>method</strong> &#8211; <code class="docutils literal"><span class="pre">libdvid.ConnectionMethod</span></code>, (<code class="docutils literal"><span class="pre">HEAD</span></code>, <code class="docutils literal"><span class="pre">GET</span></code>, <code class="docutils literal"><span class="pre">POST</span></code>, <code class="docutils literal"><span class="pre">PUT</span></code>, <code class="docutils literal"><span class="pre">DELETE</span></code>)</li>
+<li><strong>payload</strong> &#8211; binary data containing data to be posted</li>
+<li><strong>timeout</strong> &#8211; timeout for the request (seconds)</li>
+<li><strong>datasize</strong> &#8211; estimate payload if GET (only useful if there is a resource manager)</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">tuple: (status_code, results (bytes), err_msg)</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<div class="section" id="connectionmethod">
+<h2>ConnectionMethod<a class="headerlink" href="#connectionmethod" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="libdvid._dvid_python.ConnectionMethod">
+<em class="property">class </em><code class="descname">ConnectionMethod</code><a class="headerlink" href="#libdvid._dvid_python.ConnectionMethod" title="Permalink to this definition">¶</a></dt>
+<dd><p>Enum for Http Verbs.</p>
+<p>Members:</p>
+<ul class="simple">
+<li>HEAD</li>
+<li>GET</li>
+<li>POST</li>
+<li>PUT</li>
+<li>DELETE</li>
+</ul>
+</dd></dl>
+
+</div>
+</div>
+
+
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="DVIDServerService.html" class="btn btn-neutral float-right" title="DVIDServerService" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="DVIDNodeService.html" class="btn btn-neutral" title="DVIDNodeService" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2016, FlyEM Project.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'0.1',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>
