@@ -1,5 +1,13 @@
 This directory contains the Sphinx sources for the libdvid-cpp Python bindings.
-You must install sphinx to build them (conda install sphinx).
+
+REQUIREMENTS:
+
+In addition to libdvid-cpp's dependencies, you'll also
+need some extra stuff to build the docs.  These are
+available through conda:
+
+- sphinx
+- sphinx_rtd_theme
 
 BUILDING:
 
