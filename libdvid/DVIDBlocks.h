@@ -17,7 +17,7 @@
 namespace libdvid {
 
 /*!
- * Class holds reference to a compressed block (assume lzz compression).
+ * Class holds reference to a compressed block (assume lz4 or jpeg compression).
  * Assumes that the block size is less than INT_MAX.
  * TODO: create hash index function and add comparators
 */
@@ -26,9 +26,9 @@ class DVIDCompressedBlock {
     
     /*!
      * Constructor takes compressed data, offset, blocksize.
-     * \param data lz4 compressed data
+     * \param data lz4 or jpeg compressed data
      * \param offset offset in global coordinates
-     * \param blocksize size of block (needed for lz4 conversion)
+     * \param blocksize size of block (needed for lz4/jpeg conversion)
      * \param typesize size of data in bytes
     */
     DVIDCompressedBlock(BinaryDataPtr data, std::vector<int> offset_,
@@ -70,8 +70,13 @@ class DVIDCompressedBlock {
     BinaryDataPtr get_uncompressed_data()
     {
         // lz4 decompress
-        int decomp_size = blocksize*blocksize*blocksize*typesize;
-        return BinaryData::decompress_lz4(cdata, decomp_size);
+        try {
+            int decomp_size = blocksize*blocksize*blocksize*typesize;
+            return BinaryData::decompress_lz4(cdata, decomp_size);
+        } catch (ErrMsg& msg) {
+            unsigned int width, height;
+            return BinaryData::decompress_jpeg(cdata, width, height);
+        }
     }
 
     /*!

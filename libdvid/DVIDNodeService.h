@@ -409,6 +409,18 @@ class DVIDNodeService {
            Dims_t dims, std::vector<int> offset, bool throttle= false);
 
     /*!
+     * Fetch label blocks from DVID with teh specified dimension
+     * size and spatial offset.  The request must be block aligned.
+     * \param datatype instance name of labelblk type instance
+     * \param dims size of X, Y, Z dimensions in voxel coordinates
+     * \param offset X, Y, Z offset in voxel coordinates
+     * \param throttle allow only one request at time (default: false)
+     * \return array of jpeg compressed gray blocks
+    */
+    std::vector<DVIDCompressedBlock> get_grayblocks3D(std::string datatype_instance,
+           Dims_t dims, std::vector<int> offset, bool throttle= false);
+
+    /*!
      * Put grayscale blocks to DVID.   The call will put
      * a series of contiguous blocks along the first spatial dimension (X).
      * The number of blocks posted is encoded in GrayscaleBlocks.
@@ -810,6 +822,22 @@ class DVIDNodeService {
     BinaryDataPtr get_volume3D(std::string datatype_inst, Dims_t sizes,
         std::vector<int> offset, std::vector<unsigned int> axes,
         bool throttle, bool compress, std::string roi, bool is_mask=false);
+
+
+    /*!
+     * Fetch label or gray blocks from DVID with the specified dimension
+     * size and spatial offset.  The request must be block aligned.
+     * TODO: dynamically check type to figure out datasize
+     * \param datatype instance name of labelblk type instance
+     * \param dims size of X, Y, Z dimensions in voxel coordinates
+     * \param offset X, Y, Z offset in voxel coordinates
+     * \param throttle allow only one request at time (default: false)
+     * \param gray indicates whether a grayscale datatype is being accessed 
+     * \param c_blocks array of lz4/jpeg compressed label blocks
+    */
+    void get_subvolblocks3D(std::string datatype_instance, Dims_t sizes,
+        std::vector<int> offset, bool throttle, bool gray, 
+        std::vector<DVIDCompressedBlock>& c_blocks);
 
     /*!
      * Helper function to construct a REST endpoint string for

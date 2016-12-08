@@ -275,8 +275,25 @@ Labels3D DVIDNodeService::get_labels3D(string datatype_instance, Dims_t sizes,
     return labels; 
 }
 
+vector<DVIDCompressedBlock> DVIDNodeService::get_grayblocks3D(string datatype_instance, Dims_t sizes,
+        vector<int> offset, bool throttle)
+{
+    vector<DVIDCompressedBlock> c_blocks;
+    get_subvolblocks3D(datatype_instance, sizes, offset, throttle, true, c_blocks);
+    return c_blocks;
+}
+
 vector<DVIDCompressedBlock> DVIDNodeService::get_labelblocks3D(string datatype_instance, Dims_t sizes,
         vector<int> offset, bool throttle)
+{
+    vector<DVIDCompressedBlock> c_blocks;
+    get_subvolblocks3D(datatype_instance, sizes, offset, throttle, false, c_blocks);
+    return c_blocks;
+}
+
+
+void DVIDNodeService::get_subvolblocks3D(string datatype_instance, Dims_t sizes,
+        vector<int> offset, bool throttle, bool gray, vector<DVIDCompressedBlock>& c_blocks)
 {
     // make sure volume specified is legal and block aligned
     if ((sizes.size() != 3) || (offset.size() != 3)) {
@@ -295,10 +312,15 @@ vector<DVIDCompressedBlock> DVIDNodeService::get_labelblocks3D(string datatype_i
         throw ErrMsg("Label block GET error: Region is not a multiple of block size");
     }
 
-    // construct query string
+     // construct query string
     string uri = "/node/" + uuid + "/"
-                    + datatype_instance + "/blocks/";
-   
+                    + datatype_instance;
+    if (gray) {
+        uri += "/subvolblocks/";
+    } else {
+        uri += "/blocks/";
+    }
+
     stringstream sstr;
     sstr << uri;
     sstr << sizes[0];
@@ -343,8 +365,6 @@ vector<DVIDCompressedBlock> DVIDNodeService::get_labelblocks3D(string datatype_i
     const unsigned char * head = binary_result->get_raw();
     int buffer_size = binary_result->length();
 
-    vector<DVIDCompressedBlock> c_blocks;
-
     // it is possible to have less blocks than requested if they are blank
     while (buffer_size) {
         // retrieve offset
@@ -364,13 +384,17 @@ vector<DVIDCompressedBlock> DVIDNodeService::get_labelblocks3D(string datatype_i
 
         BinaryDataPtr blockdata = BinaryData::create_binary_data((const char*) head, lz4_bytes);
 
-        DVIDCompressedBlock c_block(blockdata, offset, blocksize, sizeof(uint64));
+        size_t datasize = sizeof(uint64);
+        if (gray) {
+            datasize = 1;
+        }
+
+        DVIDCompressedBlock c_block(blockdata, offset, blocksize, datasize);
+
         c_blocks.push_back(c_block);
         head += lz4_bytes;
         buffer_size -= lz4_bytes;
     }
-
-    return c_blocks;
 }
 
 
