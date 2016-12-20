@@ -23,7 +23,10 @@ namespace libdvid {
 */
 class DVIDCompressedBlock {
   public:
-    
+
+    //! Defines compression used by DVIDBlocks
+    enum CompressType { lz4, jpeg, uncompressed };
+
     /*!
      * Constructor takes compressed data, offset, blocksize.
      * \param data lz4 or jpeg compressed data
@@ -32,8 +35,8 @@ class DVIDCompressedBlock {
      * \param typesize size of data in bytes
     */
     DVIDCompressedBlock(BinaryDataPtr data, std::vector<int> offset_,
-            size_t blocksize_, size_t typesize_) : cdata(data),
-            offset(offset_), blocksize(blocksize_), typesize(typesize_) {}
+            size_t blocksize_, size_t typesize_, CompressType ctype_=lz4) : cdata(data),
+            offset(offset_), blocksize(blocksize_), typesize(typesize_), ctype(ctype_) {}
  
     DVIDCompressedBlock() {}
   
@@ -70,13 +73,23 @@ class DVIDCompressedBlock {
     BinaryDataPtr get_uncompressed_data()
     {
         // lz4 decompress
-        try {
-            int decomp_size = blocksize*blocksize*blocksize*typesize;
-            return BinaryData::decompress_lz4(cdata, decomp_size);
-        } catch (ErrMsg& msg) {
+        switch (ctype) {
+          case jpeg:
+          {
             unsigned int width, height;
             return BinaryData::decompress_jpeg(cdata, width, height);
+          }
+          case lz4:
+          {
+              int decomp_size = blocksize*blocksize*blocksize*typesize;
+              return BinaryData::decompress_lz4(cdata, decomp_size);
+          }
+          case uncompressed:
+          {
+            return cdata;
+          }
         }
+        throw ErrMsg("Unknown compression type");
     }
 
     /*!
@@ -88,9 +101,10 @@ class DVIDCompressedBlock {
   private:
     
     BinaryDataPtr cdata;
-    std::vector<int> offset; 
+    std::vector<int> offset;
     size_t blocksize;
     size_t typesize;
+    CompressType ctype;
 };
 
 

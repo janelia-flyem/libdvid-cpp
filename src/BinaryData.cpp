@@ -7,6 +7,9 @@ extern "C" {
 #include <lz4.h>
 #include <jpeglib.h>
 #include <setjmp.h>
+#if JPEGTURBO
+#include <turbojpeg.h>
+#endif
 }
 
 using std::string;
@@ -239,6 +242,34 @@ BinaryDataPtr BinaryData::decompress_png8(const BinaryDataPtr pngbinary,
 BinaryDataPtr BinaryData::decompress_jpeg(const BinaryDataPtr jpegbinary,
         unsigned int& width, unsigned int& height)
 {
+
+#if JPEGTURBO
+    long unsigned int _jpegSize = jpegbinary->length();
+    unsigned char* _compressedImage = (unsigned char*) jpegbinary->get_raw();
+
+
+    int jpegSubsamp, width2, height2;
+    tjhandle _jpegDecompressor = tjInitDecompress();
+    tjDecompressHeader2(_jpegDecompressor, _compressedImage, _jpegSize, &width2, &height2, &jpegSubsamp);
+
+    width = width2;
+    height = height2;
+    
+    BinaryDataPtr binary(new BinaryData());
+    // create a string buffer to fit the uncompressed result
+    binary->data.resize(width*height);
+
+    // dangerous write directly to string buffer
+    char* uncompressed_data = &(binary->data[0]);
+    unsigned char* buffer = (unsigned char*) uncompressed_data;
+
+    tjDecompress2(_jpegDecompressor, _compressedImage, _jpegSize, buffer, width2, 0/*pitch*/, height2, TJPF_GRAY, TJFLAG_FASTDCT);
+
+
+    tjDestroy(_jpegDecompressor);
+
+    return binary;
+#else
     struct jpeg_decompress_struct cinfo;
     struct my_error_mgr       jerr;
     cinfo.err = jpeg_std_error((jpeg_error_mgr*)&jerr);
@@ -295,6 +326,7 @@ BinaryDataPtr BinaryData::decompress_jpeg(const BinaryDataPtr jpegbinary,
     jpeg_destroy_decompress(&cinfo);
 
     return binary;
+#endif
 }
 
 }

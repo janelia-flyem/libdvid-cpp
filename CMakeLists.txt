@@ -110,6 +110,9 @@ else ()
 
 
     FIND_PACKAGE(PNG REQUIRED)
+    if (JPEGTURBO)
+        FIND_LIBRARY(JPEG2 turbojpeg)
+    endif()
     FIND_PACKAGE(JPEG REQUIRED)
     FIND_PACKAGE(CURL REQUIRED)
     FIND_LIBRARY(ZEROMQ_LIBRARIES zmq)
@@ -131,7 +134,11 @@ else ()
         endif()
     endif()
 
-    set (support_LIBS ${JSON_LIBRARIES} ${boost_LIBS} ${ZEROMQ_LIBRARIES} ${PNG_LIBRARIES} ${CURL_LIBRARIES} ${JPEG_LIBRARIES} ${LZ4_LIBRARY})
+    if (JPEGTURBO)
+        set (support_LIBS ${JSON_LIBRARIES} ${boost_LIBS} ${ZEROMQ_LIBRARIES} ${PNG_LIBRARIES} ${CURL_LIBRARIES} ${JPEG_LIBRARIES} ${LZ4_LIBRARY} ${JPEG2})
+    else()
+        set (support_LIBS ${JSON_LIBRARIES} ${boost_LIBS} ${ZEROMQ_LIBRARIES} ${PNG_LIBRARIES} ${CURL_LIBRARIES} ${JPEG_LIBRARIES} ${LZ4_LIBRARY})
+    endif()
 endif (NOT ${BUILDEM_DIR} STREQUAL "None")
 
 include_directories (BEFORE ${CMAKE_SOURCE_DIR}/libdvid ${CMAKE_SOURCE_DIR})
