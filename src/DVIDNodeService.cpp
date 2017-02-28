@@ -440,20 +440,20 @@ void DVIDNodeService::put_gray3D(string datatype_instance, Grayscale3D const & v
             offset, throttle, compress, "", false);
 }
 
-
 GrayscaleBlocks DVIDNodeService::get_grayblocks(string datatype_instance,
         vector<int> block_coords, unsigned int span)
 {
     int ret_span = span;
     BinaryDataPtr data = get_blocks(datatype_instance, block_coords, span);
+    size_t blocksize = get_blocksize(datatype_instance);
 
     // make sure this data encodes blocks of grayscale
     if (data->length() !=
-            (DEFBLOCKSIZE*DEFBLOCKSIZE*DEFBLOCKSIZE*sizeof(uint8)*span)) {
+            (blocksize*blocksize*blocksize*sizeof(uint8)*span)) {
         throw ErrMsg("Expected 1-byte values from " + datatype_instance);
     }
  
-    return GrayscaleBlocks(data, ret_span);
+    return GrayscaleBlocks(data, ret_span, blocksize);
 } 
 
 LabelBlocks DVIDNodeService::get_labelblocks(string datatype_instance,
@@ -461,14 +461,15 @@ LabelBlocks DVIDNodeService::get_labelblocks(string datatype_instance,
 {
     int ret_span = span;
     BinaryDataPtr data = get_blocks(datatype_instance, block_coords, span);
+    size_t blocksize = get_blocksize(datatype_instance);
 
     // make sure this data encodes blocks of grayscale
     if (data->length() !=
-            (DEFBLOCKSIZE*DEFBLOCKSIZE*DEFBLOCKSIZE*sizeof(uint64)*ret_span)) {
+            (blocksize*blocksize*blocksize*sizeof(uint64)*ret_span)) {
         throw ErrMsg("Expected 8-byte values from " + datatype_instance);
     }
  
-    return LabelBlocks(data, ret_span);
+    return LabelBlocks(data, ret_span, blocksize);
 }
     
 void DVIDNodeService::put_grayblocks(string datatype_instance,

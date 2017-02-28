@@ -115,11 +115,8 @@ class DVIDCompressedBlock {
  * user can define a specific blocksize in case DVID is initialized
  * with a different blocksize.  The blocks object contains a buffer
  * to a contiguous chunk of memory.
- *
- * TODO: refactor by adding a generic base class to allow
- * a common interface to blocks with different sizes.
 */
-template <typename T, unsigned int N = DEFBLOCKSIZE>
+template <typename T>
 class DVIDBlocks {
   public:
     /*!
@@ -128,8 +125,9 @@ class DVIDBlocks {
      * so that block one is before block two, etc.
      * \param array_ buffer to be copied
      * \param num_blocks_ number of blocks in buffer
+     * \param N block size (DEFAULT=32)
     */
-    DVIDBlocks(const T* array_, int num_blocks_) : num_blocks(num_blocks_)
+    DVIDBlocks(const T* array_, int num_blocks_, size_t N_=DEFBLOCKSIZE) : num_blocks(num_blocks_), N(N_)
     {
         uint64 total_size = uint64(N)*uint64(N)*uint64(N)*
             uint64(sizeof(T))*uint64(num_blocks); 
@@ -142,7 +140,7 @@ class DVIDBlocks {
     /*!
      * Empty constructor.
     */
-    DVIDBlocks() : num_blocks(0)
+    DVIDBlocks() : num_blocks(0), N(DEFBLOCKSIZE)
     {
         data = BinaryData::create_binary_data();
     }
@@ -154,9 +152,10 @@ class DVIDBlocks {
      * blob is referenced, not copied.
      * \param ptr_ binary buffer to be stored
      * \param num_blocks_ number of blocks in buffer
+     * \param N block size (DEFAULT=32)
     */
-    DVIDBlocks(BinaryDataPtr ptr_, int num_blocks_) : data(ptr_),
-            num_blocks(num_blocks_) {}
+    DVIDBlocks(BinaryDataPtr ptr_, int num_blocks_, size_t N_=DEFBLOCKSIZE) : data(ptr_),
+            num_blocks(num_blocks_), N(N_) {}
 
     /*!
      * Returns number of blocks in structure.
@@ -232,13 +231,16 @@ class DVIDBlocks {
 
     //! Number of blocks
     int num_blocks;
+
+    //! Block size
+    size_t N;
 };
 
 //! Label blocks
-typedef DVIDBlocks<uint64, DEFBLOCKSIZE> LabelBlocks;
+typedef DVIDBlocks<uint64> LabelBlocks;
 
 //! Grayscale blocks
-typedef DVIDBlocks<uint8, DEFBLOCKSIZE> GrayscaleBlocks;
+typedef DVIDBlocks<uint8> GrayscaleBlocks;
 
 }
 

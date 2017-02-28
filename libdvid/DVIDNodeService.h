@@ -373,11 +373,10 @@ class DVIDNodeService {
      * The number of blocks fetched is encoded in the GrayscaleBlocks
      * returned structure.
      *
-     * DEPRECATED.  Only supports 32x32x32 blocks.
      * \param datatype instance name of grayscale type instance
      * \param block_coords location of first block in span (block coordinates) (X,Y,Z)
      * \param span number of blocks to attemp to read
-     * \return grayscale blocks
+     * \return grayscale blocks of proper block size
     */
     GrayscaleBlocks get_grayblocks(std::string datatype_instance,
            std::vector<int> block_coords, unsigned int span); 
@@ -387,11 +386,10 @@ class DVIDNodeService {
      * a series of contiguous blocks along the first dimension (X).
      * The number of blocks fetched is encoded in the LabelBlocks
      * returned structure.
-     * DEPRECATED.  Only supports 32x32x32 blocks.
      * \param datatype instance name of labelblk type instance
      * \param block_coords location of first block in span (block coordinates) (X,Y,Z)
      * \param span number of blocks to attemp to read
-     * \return grayscale blocks
+     * \return grayscale blocks of proper block size
     */
     LabelBlocks get_labelblocks(std::string datatype_instance,
            std::vector<int> block_coords, unsigned int span);
