@@ -48,7 +48,7 @@ void init_source (j_decompress_ptr cinfo)
 /*!
  * Handle memory copying.
 */
-int fill_mem_input_buffer (j_decompress_ptr cinfo)
+boolean fill_mem_input_buffer (j_decompress_ptr cinfo)
 {
     static const JOCTET mybuffer[4] = {
         (JOCTET) 0xFF, (JOCTET) JPEG_EOI, 0, 0
@@ -59,7 +59,7 @@ int fill_mem_input_buffer (j_decompress_ptr cinfo)
     cinfo->src->next_input_byte = mybuffer;
     cinfo->src->bytes_in_buffer = 2;
 
-    return true;
+    return TRUE;
 }
 
 /*!

@@ -108,7 +108,7 @@ else ()
         set(boostpython_LIB ${Boost_LIBRARY_DIR_RELEASE}/libboost_python.${PLATFORM_DYLIB_EXTENSION})
     endif()
 
-
+    #set(JPEGTURBO ON)
     FIND_PACKAGE(PNG REQUIRED)
     if (JPEGTURBO)
         FIND_LIBRARY(JPEG2 turbojpeg)
@@ -159,6 +159,7 @@ add_library (dvidcpp SHARED
              src/DVIDThreadedFetch.cpp 
              src/Algorithms.cpp 
              src/DVIDCache.cpp)
+#target_compile_definitions(dvidcpp PRIVATE JPEGTURBO=1)
 
 target_link_libraries (dvidcpp ${support_LIBS})
 
