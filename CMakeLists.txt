@@ -122,12 +122,14 @@ else ()
         message(FATAL_ERROR "*** Could not find lz4 library ***")
     endif()
 
-    if (UNIX AND NOT APPLE)
+    FIND_LIBRARY(JSON_LIBRARIES jsoncpp)
+    if (NOT JSON_LIBRARIES AND UNIX AND NOT APPLE)
+        # Try again with pkg-config
+        # Explanation can be found here:
+        # https://github.com/janelia-flyem/libdvid-cpp/pull/19
         include (FindPkgConfig)
         PKG_SEARCH_MODULE(JSON REQUIRED jsoncpp)
         include_directories(BEFORE ${JSON_INCLUDE_DIRS})
-    else()
-        FIND_LIBRARY(JSON_LIBRARIES jsoncpp)
 
         if (NOT JSON_LIBRARIES)
             message(FATAL_ERROR "*** Could not find jsoncpp library ***")
