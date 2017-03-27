@@ -268,6 +268,8 @@ namespace libdvid { namespace python {
     //!*********************************************************************************************
     template <typename T> struct numpy_typenums {};
     template <> struct numpy_typenums<uint8> { static const int typenum = NPY_UINT8; };
+    template <> struct numpy_typenums<uint16> { static const int typenum = NPY_UINT16; };
+    template <> struct numpy_typenums<uint32> { static const int typenum = NPY_UINT32; };
     template <> struct numpy_typenums<uint64> { static const int typenum = NPY_UINT64; };
 
     //!*********************************************************************************************
@@ -276,6 +278,8 @@ namespace libdvid { namespace python {
     static boost::unordered_map<int, std::string> dtype_names =
         boost::assign::map_list_of
         (NPY_UINT8, "uint8")
+        (NPY_UINT16, "uint16")
+        (NPY_UINT32, "uint32")
         (NPY_UINT64, "uint64");
 
     //!*********************************************************************************************

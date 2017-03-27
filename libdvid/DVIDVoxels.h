@@ -150,6 +150,12 @@ class DVIDVoxels {
 //! 3D label volume
 typedef DVIDVoxels<uint64, 3> Labels3D;
 
+//! 3D array types
+typedef DVIDVoxels<uint8, 3> Array8bit3D;
+typedef DVIDVoxels<uint16, 3> Array16bit3D;
+typedef DVIDVoxels<uint32, 3> Array32bit3D;
+typedef DVIDVoxels<uint64, 3> Array64bit3D;
+
 //! 3D 8-bit volume (corresponding to grayscale)
 typedef DVIDVoxels<uint8, 3> Grayscale3D;
 

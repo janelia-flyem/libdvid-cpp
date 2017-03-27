@@ -230,6 +230,122 @@ BinaryDataPtr DVIDNodeService::get_tile_slice_binary(string datatype_instance,
     return cachedata;
 }
 
+
+Array8bit3D DVIDNodeService::get_array8bit3D(string datatype_instance, Dims_t sizes,
+        vector<int> offset, bool islabels)
+{
+    BinaryDataPtr data = get_array3D(datatype_instance, sizes, offset, islabels); 
+
+    if (islabels) {
+        // determined number of returned bytes
+        int decomp_size = sizes[0]*sizes[1]*sizes[2];
+        data = BinaryData::decompress_lz4(data, decomp_size);
+    }
+
+    Array8bit3D vol(data, sizes);
+    return vol; 
+}
+
+Array16bit3D DVIDNodeService::get_array16bit3D(string datatype_instance, Dims_t sizes,
+        vector<int> offset, bool islabels)
+{
+    BinaryDataPtr data = get_array3D(datatype_instance, sizes, offset, islabels);
+
+    if (islabels) {
+        // determined number of returned bytes
+        int decomp_size = sizes[0]*sizes[1]*sizes[2]*2;
+        data = BinaryData::decompress_lz4(data, decomp_size);
+    }
+
+    Array16bit3D vol(data, sizes);
+    return vol; 
+}
+
+Array32bit3D DVIDNodeService::get_array32bit3D(string datatype_instance, Dims_t sizes,
+        vector<int> offset, bool islabels)
+{
+    BinaryDataPtr data = get_array3D(datatype_instance, sizes, offset, islabels);
+
+    if (islabels) {
+        // determined number of returned bytes
+        int decomp_size = sizes[0]*sizes[1]*sizes[2]*4;
+        data = BinaryData::decompress_lz4(data, decomp_size);
+    }
+
+    Array32bit3D vol(data, sizes);
+    return vol; 
+}
+
+Array64bit3D DVIDNodeService::get_array64bit3D(string datatype_instance, Dims_t sizes,
+        vector<int> offset, bool islabels)
+{
+    BinaryDataPtr data = get_array3D(datatype_instance, sizes, offset, islabels);
+
+    if (islabels) {
+        // determined number of returned bytes
+        int decomp_size = sizes[0]*sizes[1]*sizes[2]*8;
+        data = BinaryData::decompress_lz4(data, decomp_size);
+    } 
+
+    Array64bit3D vol(data, sizes);
+    return vol; 
+}
+
+void DVIDNodeService::put_array8bit3D(string datatype_instance,
+        Array8bit3D const & volume, vector<int> offset, bool islabels)
+{
+    Dims_t sizes = volume.get_dims();
+
+    // compression only enabled for labels and default lz4
+    put_volume(datatype_instance, volume.get_binary(), sizes,
+            offset, false, islabels, "", false, false);
+}
+
+void DVIDNodeService::put_array16bit3D(string datatype_instance,
+        Array16bit3D const & volume, vector<int> offset, bool islabels)
+{
+    Dims_t sizes = volume.get_dims();
+
+    // compression only enabled for labels and default lz4
+    put_volume(datatype_instance, volume.get_binary(), sizes,
+            offset, false, islabels, "", false, false);
+}
+
+void DVIDNodeService::put_array32bit3D(string datatype_instance,
+        Array32bit3D const & volume, vector<int> offset, bool islabels)
+{
+    Dims_t sizes = volume.get_dims();
+
+    // compression only enabled for labels and default lz4
+    put_volume(datatype_instance, volume.get_binary(), sizes,
+            offset, false, islabels, "", false, false);
+}
+
+void DVIDNodeService::put_array64bit3D(string datatype_instance,
+        Array64bit3D const & volume, vector<int> offset, bool islabels)
+{
+    Dims_t sizes = volume.get_dims();
+
+    // compression only enabled for labels and default lz4
+    put_volume(datatype_instance, volume.get_binary(), sizes,
+            offset, false, islabels, "", false, false);
+}
+
+
+BinaryDataPtr DVIDNodeService::get_array3D(string datatype_instance, Dims_t sizes,
+        vector<int> offset, bool islabels)
+{
+    vector<unsigned int> axes;
+    axes.push_back(0); axes.push_back(1); axes.push_back(2);
+    // turn compression on just lz4 for now
+    // TODO: support new compression for labels
+    BinaryDataPtr data = get_volume3D(datatype_instance,
+            sizes, offset, axes, false, islabels, "");
+   
+    return data; 
+}
+
+
 Grayscale3D DVIDNodeService::get_gray3D(string datatype_instance, Dims_t sizes,
         vector<int> offset, vector<unsigned int> axes,
         bool throttle, bool compress, string roi)
@@ -429,7 +545,7 @@ void DVIDNodeService::put_labels3D(string datatype_instance, Labels3D const & vo
 {
     Dims_t sizes = volume.get_dims();
     put_volume(datatype_instance, volume.get_binary(), sizes,
-            offset, throttle, compress, roi, mutate);
+            offset, throttle, compress, roi, mutate, true);
 }
 
 void DVIDNodeService::put_gray3D(string datatype_instance, Grayscale3D const & volume,
@@ -437,7 +553,7 @@ void DVIDNodeService::put_gray3D(string datatype_instance, Grayscale3D const & v
 {
     Dims_t sizes = volume.get_dims();
     put_volume(datatype_instance, volume.get_binary(), sizes,
-            offset, throttle, compress, "", false);
+            offset, throttle, compress, "", false, true);
 }
 
 GrayscaleBlocks DVIDNodeService::get_grayblocks(string datatype_instance,
@@ -1462,36 +1578,36 @@ bool DVIDNodeService::get_coarse_body(string labelvol_name, uint64 bodyid,
     return true;
 }
 
-
-
 // ******************** PRIVATE HELPER FUNCTIONS *******************************
 
 void DVIDNodeService::put_volume(string datatype_instance, BinaryDataPtr volume,
             vector<unsigned int> sizes, vector<int> offset,
-            bool throttle, bool compress, string roi, bool mutate)
+            bool throttle, bool compress, string roi, bool mutate, bool enableblockcheck)
 {
     // make sure volume specified is legal and block aligned
     if ((sizes.size() != 3) || (offset.size() != 3)) {
         throw ErrMsg("Did not correctly specify 3D volume");
     }
-   
-    size_t blocksize = get_blocksize(datatype_instance);
+  
+    if (enableblockcheck) {
+        size_t blocksize = get_blocksize(datatype_instance);
 
-    if ((offset[0] % blocksize != 0) || (offset[1] % blocksize != 0)
-            || (offset[2] % blocksize != 0)) {
-        throw ErrMsg("Label POST error: Not block aligned");
-    }
+        if ((offset[0] % blocksize != 0) || (offset[1] % blocksize != 0)
+                || (offset[2] % blocksize != 0)) {
+            throw ErrMsg("Label POST error: Not block aligned");
+        }
 
-    if ((sizes[0] % blocksize != 0) || (sizes[1] % blocksize != 0)
-            || (sizes[2] % blocksize != 0)) {
-        throw ErrMsg("Label POST error: Region is not a multiple of block size");
-    }
+        if ((sizes[0] % blocksize != 0) || (sizes[1] % blocksize != 0)
+                || (sizes[2] % blocksize != 0)) {
+            throw ErrMsg("Label POST error: Region is not a multiple of block size");
+        }
 
-    // make sure requests do not involve more bytes than fit in an int
-    // (use 8-byte label to create this bound)
-    uint64 total_size = uint64(sizes[0]) * uint64(sizes[1]) * uint64(sizes[2]);
-    if (total_size > INT_MAX) {
-        throw ErrMsg("Trying to post too large of a volume");
+        // make sure requests do not involve more bytes than fit in an int
+        // (use 8-byte label to create this bound)
+        uint64 total_size = uint64(sizes[0]) * uint64(sizes[1]) * uint64(sizes[2]);
+        if (total_size > INT_MAX) {
+            throw ErrMsg("Trying to post too large of a volume");
+        }
     }
 
     bool waiting = true;

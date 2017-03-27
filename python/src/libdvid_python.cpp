@@ -123,6 +123,94 @@ namespace libdvid { namespace python {
         return nodeService.get_gray3D(datatype_instance, sizes, offset, throttle, compress, roi);
     }
 
+    Array8bit3D get_array8bit3D_zyx( DVIDNodeService & nodeService,
+                                std::string datatype_instance,
+                                Dims_t sizes,
+                                std::vector<int> offset, bool islabels)
+    {
+        // Reverse offset and sizes
+        std::reverse(offset.begin(), offset.end());
+        std::reverse(sizes.begin(), sizes.end());
+        return nodeService.get_array8bit3D(datatype_instance, sizes, offset, islabels);
+    }
+
+    Array16bit3D get_array16bit3D_zyx( DVIDNodeService & nodeService,
+                                std::string datatype_instance,
+                                Dims_t sizes,
+                                std::vector<int> offset, bool islabels)
+    {
+        // Reverse offset and sizes
+        std::reverse(offset.begin(), offset.end());
+        std::reverse(sizes.begin(), sizes.end());
+        return nodeService.get_array16bit3D(datatype_instance, sizes, offset, islabels);
+    }
+
+    Array32bit3D get_array32bit3D_zyx( DVIDNodeService & nodeService,
+                                std::string datatype_instance,
+                                Dims_t sizes,
+                                std::vector<int> offset, bool islabels)
+    {
+        // Reverse offset and sizes
+        std::reverse(offset.begin(), offset.end());
+        std::reverse(sizes.begin(), sizes.end());
+        return nodeService.get_array32bit3D(datatype_instance, sizes, offset, islabels);
+    }
+
+    Array64bit3D get_array64bit3D_zyx( DVIDNodeService & nodeService,
+                                std::string datatype_instance,
+                                Dims_t sizes,
+                                std::vector<int> offset, bool islabels)
+    {
+        // Reverse offset and sizes
+        std::reverse(offset.begin(), offset.end());
+        std::reverse(sizes.begin(), sizes.end());
+        return nodeService.get_array64bit3D(datatype_instance, sizes, offset, islabels);
+    }
+
+    void put_array8bit3D_zyx( DVIDNodeService & nodeService,
+                         std::string datatype_instance,
+                         Array8bit3D const & volume,
+                         std::vector<int> offset,
+                         bool islabels )
+    {
+        // Reverse offset
+        std::reverse(offset.begin(), offset.end());
+        nodeService.put_array8bit3D(datatype_instance, volume, offset, islabels);
+    }
+
+    void put_array16bit3D_zyx( DVIDNodeService & nodeService,
+                         std::string datatype_instance,
+                         Array16bit3D const & volume,
+                         std::vector<int> offset,
+                         bool islabels )
+    {
+        // Reverse offset
+        std::reverse(offset.begin(), offset.end());
+        nodeService.put_array16bit3D(datatype_instance, volume, offset, islabels);
+    }
+
+    void put_array32bit3D_zyx( DVIDNodeService & nodeService,
+                         std::string datatype_instance,
+                         Array32bit3D const & volume,
+                         std::vector<int> offset,
+                         bool islabels )
+    {
+        // Reverse offset
+        std::reverse(offset.begin(), offset.end());
+        nodeService.put_array32bit3D(datatype_instance, volume, offset, islabels);
+    }
+
+    void put_array64bit3D_zyx( DVIDNodeService & nodeService,
+                         std::string datatype_instance,
+                         Array64bit3D const & volume,
+                         std::vector<int> offset,
+                         bool islabels )
+    {
+        // Reverse offset
+        std::reverse(offset.begin(), offset.end());
+        nodeService.put_array64bit3D(datatype_instance, volume, offset, islabels);
+    }
+
     void put_gray3D_zyx( DVIDNodeService & nodeService,
                          std::string datatype_instance,
                          Grayscale3D const & volume,
@@ -262,6 +350,10 @@ namespace libdvid { namespace python {
         std_vector_from_python_iterable<Edge>();
 
         ndarray_to_volume<Grayscale3D>();
+        //ndarray_to_volume<Array8bit3D>(); // avoid double registration
+        ndarray_to_volume<Array16bit3D>();
+        ndarray_to_volume<Array32bit3D>();
+        //ndarray_to_volume<Array64bit3D>(); // avoid double registration
         ndarray_to_volume<Labels3D>();
         ndarray_to_volume<Grayscale2D>();
         ndarray_to_volume<Labels2D>();
@@ -501,6 +593,41 @@ namespace libdvid { namespace python {
                 ":param offset_zyx: offset in voxel coordinates \n"
                 ":param throttle: allow only one request at time (default: true) \n"
                 ":param compress: enable lz4 compression \n")
+
+            //
+            // Array interface (no type checking)
+            //
+             .def("get_array8bit3D", &get_array8bit3D_zyx,
+                ( arg("service"), arg("instance_name"), arg("shape_zyx"), arg("offset_zyx"), arg("islabels")=false),
+                "Retrieve a 3D array")
+             
+             .def("get_array16bit3D", &get_array16bit3D_zyx,
+                ( arg("service"), arg("instance_name"), arg("shape_zyx"), arg("offset_zyx"), arg("islabels")=false),
+                "Retrieve a 3D array")
+
+             .def("get_array32bit3D", &get_array32bit3D_zyx,
+                ( arg("service"), arg("instance_name"), arg("shape_zyx"), arg("offset_zyx"), arg("islabels")=false),
+                "Retrieve a 3D array")
+    
+             .def("get_array64bit3D", &get_array64bit3D_zyx,
+                ( arg("service"), arg("instance_name"), arg("shape_zyx"), arg("offset_zyx"), arg("islabels")=false),
+                "Retrieve a 3D array")
+            
+             .def("put_array8bit3D", &put_array8bit3D_zyx,
+                ( arg("service"), arg("instance_name"), arg("volume"), arg("offset_zyx"), arg("islabels")=false),
+                "Put a 3D array")
+
+            .def("put_array16bit3D", &put_array16bit3D_zyx,
+                ( arg("service"), arg("instance_name"), arg("volume"), arg("offset_zyx"), arg("islabels")=false),
+                "Put a 3D array")
+
+            .def("put_array32bit3D", &put_array32bit3D_zyx,
+                ( arg("service"), arg("instance_name"), arg("volume"), arg("offset_zyx"), arg("islabels")=false),
+                "Put a 3D array")
+            
+            .def("put_array64bit3D", &put_array64bit3D_zyx,
+                ( arg("service"), arg("instance_name"), arg("volume"), arg("offset_zyx"), arg("islabels")=false),
+                "Put a 3D array")
 
             //
             // LABELS

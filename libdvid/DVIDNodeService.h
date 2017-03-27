@@ -183,7 +183,7 @@ class DVIDNodeService {
     // TODO: maybe support custom byte buffers for getting and putting 
 
     /*!
-     * Retrive a pre-computed tile from DVID at the specified
+     * Retrieve a pre-computed tile from DVID at the specified
      * location and zoom level.
      * \param datatype_instance name of tile type instance
      * \param slice specify XY, YZ, or XZ
@@ -195,7 +195,7 @@ class DVIDNodeService {
             unsigned int scaling, std::vector<int> tile_loc);
 
     /*!
-     * Retrive the raw pre-computed tile (no decompression) from
+     * Retrieve the raw pre-computed tile (no decompression) from
      * DVID at the specified location and zoom level.  In theory, this
      * could be applied to multi-scale label data, but DVID typically
      * only stores tiles for grayscale data since it is immutable.
@@ -209,7 +209,7 @@ class DVIDNodeService {
             unsigned int scaling, std::vector<int> tile_loc);
 
     /*!
-     * Retrive a 3D 1-byte grayscale volume with the specified
+     * Retrieve a 3D 1-byte grayscale volume with the specified
      * dimension size and spatial offset.  The dimension
      * sizes and offset default to X,Y,Z (the
      * DVID 0,1,2 axis order).  The data is returned so X corresponds
@@ -232,7 +232,7 @@ class DVIDNodeService {
             bool compress=false, std::string roi="");
 
     /*!
-     * Retrive a 3D 1-byte grayscale volume with the specified
+     * Retrieve a 3D 1-byte grayscale volume with the specified
      * dimension size and spatial offset.  However, the user
      * can also specify the axis order
      * of the retrieved volume.  The default is X, Y, Z (or 0, 1, 2).
@@ -256,9 +256,35 @@ class DVIDNodeService {
             std::vector<int> offset,
             std::vector<unsigned int> axes, bool throttle=true,
             bool compress=false, std::string roi="");
+   
+
+    /*!
+     * (for all get_array*3D) Retrieve a 3D X-byte data 1-byte array
+     * with the specified dimension size and spatial offset. The requested
+     * number of voxels cannot be larger than INT_MAX/8.  This function
+     * does not check the DVID type size so the user must call the proper
+     * array function.
+     * \param datatype_instance name of grayscale type instance
+     * \param dims size of dimensions (order given by axes)
+     * \param offset offset in voxel coordinates (order given by axes)
+     * \param islabels TODO: use special compression if label dataype 
+     * \return 3D grayscale object that wraps a byte buffer
+    */
+    Array8bit3D get_array8bit3D(std::string datatype_instance, Dims_t sizes,
+        std::vector<int> offset, bool islabels=false);
     
+    Array16bit3D get_array16bit3D(std::string datatype_instance, Dims_t sizes,
+        std::vector<int> offset, bool islabels=false);
+    
+    Array32bit3D get_array32bit3D(std::string datatype_instance, Dims_t sizes,
+        std::vector<int> offset, bool islabels=false);
+    
+    Array64bit3D get_array64bit3D(std::string datatype_instance, Dims_t sizes,
+        std::vector<int> offset, bool islabels=false);
+
+
      /*!
-     * Retrive a 3D 8-byte label volume with the specified
+     * Retrieve a 3D 8-byte label volume with the specified
      * dimension size and spatial offset.  The dimension
      * sizes and offset default to X,Y,Z (the
      * DVID 0,1,2 axis order).  The data is returned so X corresponds
@@ -281,7 +307,7 @@ class DVIDNodeService {
             bool compress=true, std::string roi="");
    
     /*!
-     * Retrive a 3D 8-byte label volume with the specified
+     * Retrieve a 3D 8-byte label volume with the specified
      * dimension size and spatial offset.  However, the user
      * can also specify the axis order
      * of the retrieved volume.  The default is X, Y, Z (or 0, 1, 2).
@@ -362,6 +388,31 @@ class DVIDNodeService {
     void put_labels3D(std::string datatype_instance, Labels3D const & volume,
             std::vector<int> offset, bool throttle=true,
             bool compress=true, std::string roi="", bool mutate=false);
+
+
+    /*!
+     * Put array of label or raw data.  THE DIMENSION AND OFFSET ARE
+     * IN VOXEL COORDINATS BUT MUST BE BLOCK ALIGNED.  The size
+     * of DVID blocks are determined at instance creation and is
+     * 32x32x32 by default.  
+     * \param datatype_instance name of the grayscale type instance
+     * \param volume ArrayXbit3D volume encodes dimension sizes and binary buffer 
+     * \param offset offset in voxel coordinates (order given by axes)
+     * \param islabels TODO: use special compression if label dataype 
+    */
+    void put_array8bit3D(std::string datatype_instance, Array8bit3D const & volume,
+            std::vector<int> offset, bool islabels = false);
+
+    void put_array16bit3D(std::string datatype_instance, Array16bit3D const & volume,
+            std::vector<int> offset, bool islabels = false);
+    
+    void put_array32bit3D(std::string datatype_instance, Array32bit3D const & volume,
+            std::vector<int> offset, bool islabels = false);
+
+    void put_array64bit3D(std::string datatype_instance, Array64bit3D const & volume,
+            std::vector<int> offset, bool islabels = false);
+
+
 
     /************** API to access DVID blocks directly **************/
     // This API is probably most relevant for bulk transfers to and
@@ -473,7 +524,7 @@ class DVIDNodeService {
     void put(std::string keyvalue, std::string key, Json::Value& data);
 
     /*!
-     * Retrive binary data at a given key location.
+     * Retrieve binary data at a given key location.
      * \param keyvalue name of keyvalue instance
      * \param key name of key to the keyvalue instance
      * \return binary data stored at key
@@ -766,7 +817,7 @@ class DVIDNodeService {
     */
     void put_volume(std::string datatype_instance, BinaryDataPtr volume,
             std::vector<unsigned int> sizes, std::vector<int> offset,
-            bool throttle, bool compress, std::string roi, bool mutate);
+            bool throttle, bool compress, std::string roi, bool mutate, bool enableblockcheck);
 
     /*!
      * Helper to retrieve blocks from DVID for labels and grayscale.
@@ -777,6 +828,22 @@ class DVIDNodeService {
     */
     BinaryDataPtr get_blocks(std::string datatype_instance,
         std::vector<int> block_coords, int span);
+
+    /*!
+     * Retrieve a 3D X-byte data 1-byte array
+     * with the specified dimension size and spatial offset. The requested
+     * number of voxels cannot be larger than INT_MAX/8.  This function
+     * does not check the DVID type size so the user must call the proper
+     * array function.
+     * \param datatype_instance name of grayscale type instance
+     * \param dims size of dimensions (order given by axes)
+     * \param offset offset in voxel coordinates (order given by axes)
+     * \param islabels TODO: use special compression if label dataype 
+     * \return byte buffer 
+    */
+    BinaryDataPtr get_array3D(std::string datatype_instance, Dims_t sizes,
+        std::vector<int> offset, bool islabels=false);
+ 
 
     /*!
      * Helper to put blocks from DVID for labels and grayscale.
