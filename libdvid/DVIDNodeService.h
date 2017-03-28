@@ -790,6 +790,23 @@ class DVIDNodeService {
     bool get_coarse_body(std::string labelvol_name, uint64 bodyid,
             std::vector<BlockXYZ>& blockcoords);
 
+    /*!
+     * Fetch specific blocks from DVID.
+     * \param datatype instance name of labelblk type instance
+     * \param blockcoords vector of x,y,z,x,y,z ...
+     * \param gray indicates whether a grayscale datatype is being accessed 
+     * \param c_blocks array of lz4/jpeg compressed label blocks
+    */
+    void get_specificblocks3D(std::string datatype_instance, std::vector<int>& blockcoords, bool gray, 
+        std::vector<DVIDCompressedBlock>& c_blocks);
+
+    /*!
+     * Prefetch specific blocks from DVID (non-blocking)
+     * \param datatype instance name of labelblk type instance
+     * \param blockcoords vector of x,y,z,x,y,z ...
+    */
+    void prefetch_specificblocks3D(std::string datatype_instance, std::vector<int>& blockcoords);
+
   private:
     //! HTTP connection with DVID
     DVIDConnection connection;

@@ -161,7 +161,7 @@ add_library (dvidcpp SHARED
              src/DVIDThreadedFetch.cpp 
              src/Algorithms.cpp 
              src/DVIDCache.cpp)
-#target_compile_definitions(dvidcpp PRIVATE JPEGTURBO=1)
+         #target_compile_definitions(dvidcpp PRIVATE JPEGTURBO=1)
 
 target_link_libraries (dvidcpp ${support_LIBS})
 

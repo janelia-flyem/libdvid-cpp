@@ -406,6 +406,101 @@ vector<DVIDCompressedBlock> DVIDNodeService::get_labelblocks3D(string datatype_i
     get_subvolblocks3D(datatype_instance, sizes, offset, throttle, false, c_blocks);
     return c_blocks;
 }
+    
+void DVIDNodeService::prefetch_specificblocks3D(string datatype_instance,
+        vector<int>& blockcoords)
+{
+    if ((blockcoords.size() % 3) != 0) {
+        throw ErrMsg("Did not specify a multiple of 3 block coords");
+    }
+
+    if (blockcoords.size() == 0) {
+        return;
+    }
+    
+    // construct query string
+    stringstream resloc;
+    resloc << "/" + datatype_instance + "/specificblocks?prefetch=on&blocks=";
+
+    for (int i = 0; i < blockcoords.size(); i+=3) {
+        if (i != 0) {
+            resloc << ",";
+        }
+        resloc << blockcoords[i] << ",";
+        resloc << blockcoords[i+1] << ",";
+        resloc << blockcoords[i+2]; 
+    }
+ 
+    BinaryDataPtr binary_result = custom_request(resloc.str(), BinaryDataPtr(), GET);
+    return;
+}
+
+void DVIDNodeService::get_specificblocks3D(string datatype_instance,
+        vector<int>& blockcoords, bool gray, vector<DVIDCompressedBlock>& c_blocks)
+{
+    size_t blocksize = get_blocksize(datatype_instance);
+    if ((blockcoords.size() % 3) != 0) {
+        throw ErrMsg("Did not specify a multiple of 3 block coords");
+    }
+
+    if (blockcoords.size() == 0) {
+        return;
+    }
+    
+    // construct query string
+    stringstream resloc;
+    resloc << "/" + datatype_instance + "/specificblocks?blocks=";
+
+    for (int i = 0; i < blockcoords.size(); i+=3) {
+        if (i != 0) {
+            resloc << ",";
+        }
+        resloc << blockcoords[i] << ",";
+        resloc << blockcoords[i+1] << ",";
+        resloc << blockcoords[i+2]; 
+    }
+ 
+    BinaryDataPtr binary_result = custom_request(resloc.str(), BinaryDataPtr(), GET);
+
+    const unsigned char * head = binary_result->get_raw();
+    int buffer_size = binary_result->length();
+
+    DVIDCompressedBlock::CompressType ctype = DVIDCompressedBlock::lz4;
+    if (gray) {
+        ctype = DVIDCompressedBlock::jpeg;
+    }
+
+    // it is possible to have less blocks than requested if they are blank
+    while (buffer_size) {
+        // retrieve offset
+        vector<int> offset;
+        offset.push_back(*((int*)head) * blocksize);
+        head += 4;
+        buffer_size -= 4;
+        offset.push_back(*((int*)head) * blocksize);
+        head += 4;
+        buffer_size -= 4;
+        offset.push_back(*((int*)head) * blocksize);
+        head += 4;
+        buffer_size -= 4;
+        int lz4_bytes = *((int*)head);
+        head += 4;
+        buffer_size -= 4;
+
+        BinaryDataPtr blockdata = BinaryData::create_binary_data((const char*) head, lz4_bytes);
+
+        size_t datasize = sizeof(uint64);
+        if (gray) {
+            datasize = 1;
+        }
+
+        DVIDCompressedBlock c_block(blockdata, offset, blocksize, datasize, ctype);
+
+        c_blocks.push_back(c_block);
+        head += lz4_bytes;
+        buffer_size -= lz4_bytes;
+    }
+}
 
 
 void DVIDNodeService::get_subvolblocks3D(string datatype_instance, Dims_t sizes,
