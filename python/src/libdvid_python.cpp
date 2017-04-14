@@ -26,14 +26,16 @@ namespace libdvid { namespace python {
                                        std::string endpoint,
                                        ConnectionMethod method,
                                        BinaryDataPtr payload_data,
-                                       int timeout, unsigned long long datasize )
+                                       int timeout,
+                                       unsigned long long datasize,
+                                       bool checkHttpErrors)
     {
         using namespace boost::python;
 
         BinaryDataPtr results = BinaryData::create_binary_data();
         std::string err_msg ;
 
-        int status_code = connection.make_request(endpoint, method, payload_data, results, err_msg, DEFAULT, timeout, datasize);
+        int status_code = connection.make_request(endpoint, method, payload_data, results, err_msg, DEFAULT, timeout, datasize, checkHttpErrors);
         return boost::python::make_tuple(status_code, object(results), err_msg);
     }
 
@@ -408,7 +410,7 @@ namespace libdvid { namespace python {
                     ":param endpoint: endpoint where request is performed \n"
                     ":returns: html status code \n")
             .def("make_request", &make_request,
-                 ( arg("connection"), arg("endpoint"), arg("method"), arg("payload")=object(), arg("timeout")=DVIDConnection::DEFAULT_TIMEOUT, arg("datasize")=1 ),
+                 ( arg("connection"), arg("endpoint"), arg("method"), arg("payload")=object(), arg("timeout")=DVIDConnection::DEFAULT_TIMEOUT, arg("datasize")=1, arg("checkHttpErrors")=true ),
                  "Main helper function retrieving data from DVID.  The function \n"
                  "performs the action specified in method.  An exception is generated \n"
                  "if curl cannot properly connect to the URL. \n"
@@ -418,6 +420,7 @@ namespace libdvid { namespace python {
                  ":param payload: binary data containing data to be posted \n"
                  ":param timeout: timeout for the request (seconds) \n"
                  ":param datasize: estimate payload if GET (only useful if there is a resource manager) \n"
+                 ":param checkHttpErrors: If True, raise a DVIDException if DVID returns a non-200 status code.\n"
                  ":returns: tuple: (status_code, results (bytes), err_msg) \n")
             .def("get_addr", &DVIDConnection::get_addr,
                 "Get the address for the DVID connection.")

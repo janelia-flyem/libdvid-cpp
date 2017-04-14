@@ -279,7 +279,7 @@ class TestVoxelsAccessor(unittest.TestCase):
         connection = DVIDConnection( "localhost:8000" )
           
         # Get detailed dataset info: /api/repos/info (note: /api is prepended automatically)
-        status, body, error_message = connection.make_request( "/repos/info", ConnectionMethod.GET)
+        status, body, _error_message = connection.make_request( "/repos/info", ConnectionMethod.GET)
         dataset_details = json.loads(body)
         # print json.dumps( dataset_details, indent=4 )
           

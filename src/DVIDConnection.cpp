@@ -98,7 +98,7 @@ int DVIDConnection::make_head_request(string endpoint) {
 
 int DVIDConnection::make_request(string endpoint, ConnectionMethod method,
         BinaryDataPtr payload, BinaryDataPtr results, string& error_msg,
-        ConnectionType type, int timeout, unsigned long long datasize)
+        ConnectionType type, int timeout, unsigned long long datasize, bool checkHttpErrors)
 {
     CURLcode result;
     char buffer[100];
@@ -288,6 +288,10 @@ int DVIDConnection::make_request(string endpoint, ConnectionMethod method,
     // free allocated string 
     curl_free(user_enc);
     curl_free(app_enc);
+
+    if (checkHttpErrors && int(http_code) != 200) {
+        throw DVIDException("DVIDException for " + endpoint + "\n" + error_msg + "\n" + raw_data, http_code);
+    }
 
     // return status
     return int(http_code);

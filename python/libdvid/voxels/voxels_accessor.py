@@ -37,9 +37,7 @@ class VoxelsAccessor(object):
         """
         connection = DVIDConnection(hostname)
         rest_query = "/node/{uuid}/{data_name}/metadata".format( uuid=uuid, data_name=data_name )
-        status, response_body, error_message = connection.make_request( rest_query, ConnectionMethod.GET )
-        if status != httplib.OK:
-            raise DVIDException(status, error_message)
+        status, response_body, _err_msg = connection.make_request( rest_query, ConnectionMethod.GET )
         try:
             json_data = json.loads(response_body)
         except ValueError:

@@ -275,17 +275,13 @@ class ContentsBrowser(QDialog):
         
     @classmethod
     def _get_server_info(cls, connection):
-        status, body, error_message = connection.make_request( "/server/info", ConnectionMethod.GET);
-        assert status == httplib.OK, "Request for /server/info returned status {}".format( status )
-        assert error_message == ""
+        status, body, _error_message = connection.make_request( "/server/info", ConnectionMethod.GET);
         server_info = json.loads(body)
         return server_info
 
     @classmethod
     def _get_repos_info(cls, connection):
-        status, body, error_message = connection.make_request( "/repos/info", ConnectionMethod.GET)
-        assert status == httplib.OK, "Request for /repos/info returned status {}".format( status )
-        assert error_message == ""
+        status, body, _error_message = connection.make_request( "/repos/info", ConnectionMethod.GET)
         repos_info = json.loads(body)
         
         # Discard uuids with 'null' content (I don't know why they sometimes exist...)

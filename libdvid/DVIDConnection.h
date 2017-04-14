@@ -84,7 +84,7 @@ class DVIDConnection {
     */ 
     int make_request(std::string endpoint, ConnectionMethod method, BinaryDataPtr payload,
             BinaryDataPtr results, std::string& error_msg, ConnectionType type=DEFAULT,
-            int timeout=DEFAULT_TIMEOUT, unsigned long long datasize=1);
+            int timeout=DEFAULT_TIMEOUT, unsigned long long datasize=1, bool checkHttpErrors=true);
 
     /*!
      * Get the address for the DVID connection.

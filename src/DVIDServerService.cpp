@@ -16,10 +16,6 @@ DVIDServerService::DVIDServerService(std::string addr_, string user, string app)
     BinaryDataPtr binary = BinaryData::create_binary_data();
     int status_code = connection.make_request(endpoint, GET, BinaryDataPtr(),
             binary, respdata, DEFAULT);
-
-    if (status_code != 200) {
-        throw DVIDException("DVIDException for " + endpoint + "\n" + respdata + "\n" + binary->get_data(), status_code);
-    }
 }
 
 std::string DVIDServerService::create_new_repo(std::string alias, std::string description)
@@ -37,10 +33,6 @@ std::string DVIDServerService::create_new_repo(std::string alias, std::string de
     string endpoint = string("/repos");
     int status_code = connection.make_request(endpoint, POST, payload, result,
             respdata, JSON);
-   
-    if (status_code != 200) {
-        throw DVIDException("DVIDException for " + endpoint + "\n" + respdata + "\n" + result->get_data(), status_code);
-    }
 
     // parse return binary
     Json::Reader json_reader;

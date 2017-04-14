@@ -1,6 +1,6 @@
 import unittest
 import json
-from libdvid import DVIDConnection, ConnectionMethod
+from libdvid import DVIDConnection, ConnectionMethod, DVIDException
 from _test_utils import TEST_DVID_SERVER
 
 class Test_DVIDConnection(unittest.TestCase):
@@ -21,14 +21,23 @@ class Test_DVIDConnection(unittest.TestCase):
 
     def test_garbage_request(self):
         connection = DVIDConnection(TEST_DVID_SERVER, "me2@bar.com", "myapp2")
-        status, body, error_message = connection.make_request( "/does/not/exist", ConnectionMethod.GET);
+        status, body, error_message = connection.make_request( "/does/not/exist", ConnectionMethod.GET, checkHttpErrors=False);
         
         # No connection errors, just missing data.
         self.assertEqual(error_message, "")
 
         self.assertEqual(status, 404)
         self.assertNotEqual(body, "")
+
+    def test_garbage_request_throws(self):
+        connection = DVIDConnection(TEST_DVID_SERVER, "me2@bar.com", "myapp2")
         
+        try:
+            status, body, error_message = connection.make_request( "/does/not/exist", ConnectionMethod.GET);
+        except DVIDException as ex:
+            assert ex.status == 404
+        else:
+            assert False, "Bad requests are supposed to throw exceptions!"
 
 if __name__ == "__main__":
     unittest.main()
