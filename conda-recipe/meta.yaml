@@ -24,6 +24,9 @@ build:
   #
   string: np{{CONDA_NPY}}py{{CONDA_PY}}boost{{BOOST_VER}}_{{PKG_BUILDNUM}}_g{{GIT_FULL_HASH[:7]}}
   
+  script_env:
+    - SKIP_BUILD_TESTS
+  
 requirements:
   build:
     - gcc 4.8.5*

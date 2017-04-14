@@ -46,4 +46,25 @@ if [[ $CONFIGURE_ONLY == 0 ]]; then
     
     # For debug builds, this symlink can be useful...
     #cd ${PREFIX}/lib && ln -s libdvidcpp-g.${DYLIB_EXT} libdvidcpp.${DYLIB_EXT} && cd -
+
+    if [ -z "${SKIP_BUILD_TESTS}" ]; then
+        echo "Running build tests.  To skip, set SKIP_BUILD_TESTS=1"
+    
+        # This script runs 'make test', which uses the build artifacts in the build directory, not the installed files.
+        # Therefore, they haven't been post-processed by conda to automatically locate their dependencies.
+        # We'll set LD_LIBRARY_PATH to avoid errors from ld
+        if [[ $(uname) == Darwin ]]; then
+            export DYLD_FALLBACK_LIBRARY_PATH="${PREFIX}/lib":"${DYLD_FALLBACK_LIBRARY_PATH}"
+        else
+            export LD_LIBRARY_PATH="${PREFIX}/lib":"${LD_LIBRARY_PATH}"
+        fi
+
+        if ! make test; then
+            cat Testing/Temporary/LastTest.log
+            1>&2 echo "****************************************"
+            1>&2 echo "Post-build tests FAILED.  See log above."
+            1>&2 echo "****************************************"
+            exit 1
+        fi
+    fi
 fi
