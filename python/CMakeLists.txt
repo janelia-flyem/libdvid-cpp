@@ -220,3 +220,9 @@ add_test(
     ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/tests/test_node_service.py
 )
         
+add_test(
+    test_roi_utils
+    ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/tests/test_roi_utils.py
+)
+        
+        

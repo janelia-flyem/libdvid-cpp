@@ -1,5 +1,7 @@
+import collections
 import numpy as np
 
+from libdvid import DVIDNodeService, DVIDException
 from libdvid.voxels import DVID_BLOCK_WIDTH
 
 def roi_blocks_for_box(start, stop):
@@ -14,6 +16,45 @@ def roi_blocks_for_box(start, stop):
     
     return blocks
 
+def create_roi_for_box( server, uuid, roi_name, box ):
+    blocks = roi_blocks_for_box( *box )
+    node_service = DVIDNodeService(server, uuid)
+    node_service.create_roi(roi_name)
+    node_service.post_roi(roi_name, blocks)
+
+
+def is_datainstance(dvid_server, uuid, name):
+    """Checks if datainstance name exists.
+
+    Args:
+        dvid_server (str): location of dvid server
+        uuid (str): version id
+        name (str): data instance name
+    """
+    try:
+        ns = DVIDNodeService(str(dvid_server), str(uuid))
+        info = ns.get_typeinfo(name)
+    except DVIDException:
+        # returns exception if it does not exist
+        return False
+    return True
+
+RoiInfo = collections.namedtuple("RoiInfo", "server uuid name")
+def copy_roi( src_info, dest_info ):
+    src_service = DVIDNodeService(src_info.server, src_info.uuid)
+    dest_service = DVIDNodeService(dest_info.server, dest_info.uuid)
+
+    # If necessary, create the ROI on the destination server
+    try:
+        info = dest_service.get_typeinfo(dest_info.name)
+    except DVIDException:
+        dest_service.create_roi(dest_info.name)
+    
+    
+    roi_blocks = src_service.get_roi(src_info.name)
+    dest_service.post_roi(dest_info.name, roi_blocks)
+
+ 
 def get_dilated_roi_blocks( node_service, roi_name, radius ):
     """
     Dilate a ROI by the given radius.
@@ -78,6 +119,8 @@ def get_eroded_roi_blocks( node_service, roi_name, radius ):
     # Extract coordinates and un-offset
     eroded_block_coords = np.transpose( block_mask.nonzero() ) + min_block_expanded
     return eroded_block_coords
+
+
 
 if __name__ == '__main__':
     blocks = roi_blocks_for_box( (0, 33, 66 ), (1, 34, 129) )
