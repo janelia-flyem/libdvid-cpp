@@ -874,7 +874,7 @@ void DVIDNodeService::get_properties(string graph_name,
     #ifdef __clang__
     std::unordered_map<VertexID, BinaryDataPtr> properties_map;
     #else
-    std::tr1::unordered_map<VertexID, BinaryDataPtr> properties_map;
+    std::unordered_map<VertexID, BinaryDataPtr> properties_map;
     #endif
     
     int num_verts = vertices.size();
@@ -958,7 +958,7 @@ void DVIDNodeService::get_properties(string graph_name, std::vector<Edge> edges,
     #ifdef __clang__
     std::unordered_map<Edge, BinaryDataPtr, Edge> properties_map;
     #else
-    std::tr1::unordered_map<Edge, BinaryDataPtr, Edge> properties_map;
+    std::unordered_map<Edge, BinaryDataPtr, Edge> properties_map;
     #endif
     int num_edges = edges.size();
 

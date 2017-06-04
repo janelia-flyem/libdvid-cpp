@@ -18,8 +18,8 @@
 #include <boost/functional/hash.hpp>
 #include <boost/static_assert.hpp>
 
-#include <tr1/unordered_map>
-#include <tr1/unordered_set>
+#include <unordered_map>
+#include <unordered_set>
 
 namespace libdvid {
 
@@ -160,9 +160,9 @@ struct Edge {
  * act on the last known state of the data.  An ID of 0 means
  * there is no current transaction ID.
  */
-typedef std::tr1::unordered_map<VertexID, TransactionID> VertexTransactions;
+typedef std::unordered_map<VertexID, TransactionID> VertexTransactions;
 //! A collection of vertex IDs for processing
-typedef std::tr1::unordered_set<VertexID> VertexSet;
+typedef std::unordered_set<VertexID> VertexSet;
 
 /*! 
  * Retrieve transactions map from binary data.

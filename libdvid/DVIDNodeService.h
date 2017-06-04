@@ -818,7 +818,7 @@ class DVIDNodeService {
     NodeBuffer glb_buffer;
 
     //! a map containing instance block sizes
-    std::tr1::unordered_map<std::string, size_t> instance_blocksize_map; 
+    std::unordered_map<std::string, size_t> instance_blocksize_map; 
 
     /*!
      * Helper function to put a 3D volume to DVID with the specified

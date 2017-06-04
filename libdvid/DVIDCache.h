@@ -5,7 +5,7 @@
 #ifndef DVIDCACHE
 #define DVIDCACHE
 
-#include <tr1/unordered_map>
+#include <unordered_map>
 #include <boost/thread/mutex.hpp>
 #include "BinaryData.h"
 
@@ -25,8 +25,8 @@ class DVIDCache {
 
     static boost::mutex mutex;
 
-    std::tr1::unordered_map<std::string, BinaryDataPtr> cache;
-    std::tr1::unordered_map<std::string, unsigned long long> cache_stamps;
+    std::unordered_map<std::string, BinaryDataPtr> cache;
+    std::unordered_map<std::string, unsigned long long> cache_stamps;
     unsigned long long cache_stamp;
     unsigned long long max_size;
     unsigned long long curr_size;

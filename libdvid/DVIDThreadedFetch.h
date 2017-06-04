@@ -14,7 +14,7 @@
 #include "DVIDNodeService.h"
 #include <boost/thread/thread.hpp>
 #include <boost/asio/io_service.hpp>
-#include <tr1/unordered_map>
+#include <unordered_map>
 
 namespace libdvid {
 
@@ -71,7 +71,7 @@ class DVIDNodePool {
         return &pool;
     }
 
-    std::tr1::unordered_map<std::string, std::vector<boost::shared_ptr<DVIDNodeService> > > dvidnodes; 
+    std::unordered_map<std::string, std::vector<boost::shared_ptr<DVIDNodeService> > > dvidnodes; 
 
   private:
     DVIDNodePool()  { }

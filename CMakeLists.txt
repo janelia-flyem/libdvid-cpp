@@ -11,8 +11,10 @@ if (NOT CMAKE_BUILD_TYPE)
 endif ()
 
 set (CMAKE_CXX_LINK_FLAGS "-O3")
+set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 set (CMAKE_CXX_FLAGS_RELEASE "-O3")
-set (CMAKE_CXX_FLAGS_DEBUG "-ggdb")
+
+set (CMAKE_CXX_FLAGS_DEBUG "-g")
 set (CMAKE_DEBUG_POSTFIX "-g")
 
 

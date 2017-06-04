@@ -2,7 +2,7 @@
 #include <map>
 
 using std::map; using std::string;
-using std::tr1::unordered_map;
+using std::unordered_map;
 
 namespace libdvid {
 
