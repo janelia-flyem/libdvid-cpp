@@ -17,6 +17,13 @@ set (CMAKE_CXX_FLAGS_RELEASE "-O3")
 set (CMAKE_CXX_FLAGS_DEBUG "-g")
 set (CMAKE_DEBUG_POSTFIX "-g")
 
+# Enable bounds-checking in std::vector, etc for when we use -stdlib=libstdc++ 
+set (CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -D_GLIBCXX_DEBUG")
+
+# Also enable bounds-checking if using -stdlib=libc++
+# (Note: 0 means "most checks" and 1 means "even more". Leave it undefined to disable it entirely.)
+set (CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -D_LIBCPP_DEBUG=0")
+
 ################################################################################
 ## RPATH settings
 ## https://cmake.org/Wiki/CMake_RPATH_handling
