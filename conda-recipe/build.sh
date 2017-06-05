@@ -17,6 +17,7 @@ if [[ $1 != "" ]]; then
     fi
 fi
 
+
 # CONFIGURE
 mkdir -p "${BUILD_DIR}" # Using -p here is convenient for calling this script outside of conda.
 cd "${BUILD_DIR}"
@@ -31,6 +32,7 @@ cmake ..\
         -DCMAKE_EXE_LINKER_FLAGS="-Wl,-rpath,${PREFIX}/lib -L${PREFIX}/lib" \
         -DBoost_LIBRARY_DIR="${PREFIX}/lib" \
         -DBoost_INCLUDE_DIR="${PREFIX}/include" \
+        -DCMAKE_MACOSX_RPATH=ON \
         -DPYTHON_EXECUTABLE="${PYTHON}" \
         -DPYTHON_LIBRARY="${PREFIX}/lib/libpython2.7.${DYLIB_EXT}" \
         -DPYTHON_INCLUDE_DIR="${PREFIX}/include/python2.7" \
