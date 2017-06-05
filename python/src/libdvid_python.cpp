@@ -13,6 +13,7 @@
 #include "DVIDConnection.h"
 #include "DVIDServerService.h"
 #include "DVIDNodeService.h"
+#include "DVIDLabelCodec.h"
 #include "DVIDException.h"
 
 #include "converters.hpp"
@@ -267,6 +268,13 @@ namespace libdvid { namespace python {
         return nodeService.get_label_by_location( datatype_instance, point.x, point.y, point.z );
     }
 
+    BinaryDataPtr py_encode_label_block(Labels3D const & label_block)
+    {
+        EncodedData encoded_block = encode_label_block(label_block);
+        return BinaryData::create_binary_data( reinterpret_cast<char *>(&encoded_block[0]), encoded_block.size() );
+    }
+
+
     Roi3D get_roi3D_zyx( DVIDNodeService & nodeService,
                         std::string roi_name,
                         Dims_t dims,
@@ -385,6 +393,12 @@ namespace libdvid { namespace python {
         typedef std::vector<std::string> StringVec;
         class_<StringVec>("StringVec")
                 .def(vector_indexing_suite<StringVec>() );
+
+        // Label codec
+        def("encode_label_block", &py_encode_label_block,
+           ( arg("label_vol_zyx") ),
+           "Encode the given (64,64,64) block using DVID's label encoding\n"
+           "scheme, and return the encoded bytes.\n");
 
         // DVIDConnection python class definition
         class_<DVIDConnection>("DVIDConnection",
@@ -705,6 +719,7 @@ namespace libdvid { namespace python {
                 ":param labelvol_name: name of label volume type \n"
                 ":param bodyid: body id being queried (int) \n"
                 ":returns: True if in label volume, False otherwise \n")
+
 
             //
             // TILES
