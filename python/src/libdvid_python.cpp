@@ -274,6 +274,10 @@ namespace libdvid { namespace python {
         return BinaryData::create_binary_data( reinterpret_cast<char *>(&encoded_block[0]), encoded_block.size() );
     }
 
+    Labels3D py_decode_label_block(BinaryDataPtr encoded_data)
+    {
+        return decode_label_block( reinterpret_cast<char const *>(encoded_data->get_raw()), encoded_data->length() );
+    }
 
     Roi3D get_roi3D_zyx( DVIDNodeService & nodeService,
                         std::string roi_name,
@@ -399,6 +403,11 @@ namespace libdvid { namespace python {
            ( arg("label_vol_zyx") ),
            "Encode the given (64,64,64) block using DVID's label encoding\n"
            "scheme, and return the encoded bytes.\n");
+
+        def("decode_label_block", &py_decode_label_block,
+           ( arg("label_vol_zyx") ),
+           "Decode the given buffer into a (64,64,64) label block using DVID's\n"
+           "label decoding scheme.\n");
 
         // DVIDConnection python class definition
         class_<DVIDConnection>("DVIDConnection",

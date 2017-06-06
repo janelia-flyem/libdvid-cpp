@@ -23,6 +23,8 @@ namespace libdvid {
 
 const size_t BLOCK_WIDTH = 64;
 const size_t SUBBLOCK_WIDTH = 8;
+Dims_t BLOCK_DIMS = {BLOCK_WIDTH, BLOCK_WIDTH, BLOCK_WIDTH};
+Dims_t SUBBLOCK_DIMS = {SUBBLOCK_WIDTH, SUBBLOCK_WIDTH, SUBBLOCK_WIDTH};
 
 // grid dimensions
 const uint32_t GZ = BLOCK_WIDTH / SUBBLOCK_WIDTH;
@@ -185,6 +187,25 @@ LabelVec extract_subblock(uint64_t const * block, int gz, int gy, int gx)
     return subblock;
 }
 
+void write_subblock(uint64_t * block, uint64_t const * subblock_flat, int gz, int gy, int gx)
+{
+    auto SBW = SUBBLOCK_WIDTH;
+
+    size_t subblock_index = 0;
+    for_indices(SBW, SBW, SBW, [&](size_t z, size_t y, size_t x) {
+        int z_slice = gz * SBW + z;
+        int y_row   = gy * SBW + y;
+        int x_col   = gx * SBW + x;
+
+        int z_offset = z_slice * BLOCK_WIDTH * BLOCK_WIDTH;
+        int y_offset = y_row   * BLOCK_WIDTH;
+        int x_offset = x_col;
+
+        block[z_offset + y_offset + x_offset] = subblock_flat[subblock_index];
+        subblock_index += 1;
+    });
+}
+
 //
 // Alternate signature for extract_subblock(), above.
 //
@@ -291,7 +312,7 @@ EncodedData encode_label_block(uint64_t const * label_block)
         size_t bit_length = ceil( log2( table.size() ) );
         if (bit_length == 0)
         {
-            // No data necessary for solid blocks
+            // No data necessary for solid sub-blocks
             return;
         }
 
@@ -358,8 +379,7 @@ EncodedData encode_label_block(LabelVec const & label_block)
 EncodedData encode_label_block(Labels3D const & label_block)
 {
     Dims_t block_dims = label_block.get_dims();
-    Dims_t expected_dims = {BLOCK_WIDTH, BLOCK_WIDTH, BLOCK_WIDTH};
-    if (block_dims != expected_dims)
+    if (block_dims != BLOCK_DIMS)
     {
         std::ostringstream ss;
         ss << "Can't encode block: Bad dimensions: "
@@ -369,6 +389,183 @@ EncodedData encode_label_block(Labels3D const & label_block)
     return encode_label_block(label_block.get_raw());
 }
 
+class BufferDecoder
+{
+public:
+    BufferDecoder(char const * buf, size_t num_bytes)
+    : m_start(buf)
+    , m_end(buf + num_bytes)
+    , m_current(buf)
+    {
+    }
+
+    template <typename T>
+    T decode_int()
+    {
+        T result = peek_int<T>();
+        m_current += sizeof(T);
+        return result;
+    }
+
+    template <typename T>
+    T peek_int(size_t byte_pos=0)
+    {
+        assert(m_current <= m_end - sizeof(T) && "Can't decode int: Buffer exhausted");
+        T result = *(reinterpret_cast<T const *>(m_current+byte_pos));
+        return result;
+    }
+
+    template <typename T>
+    std::vector<T> decode_vector(size_t num_items )
+    {
+        assert(m_current <= m_end - num_items * sizeof(T) && "Can't decode vector: Buffer exhausted");
+
+        std::vector<T> result;
+        auto buf = reinterpret_cast<T const *>(m_current);
+        result.assign(buf, buf + num_items);
+        m_current += num_items * sizeof(T);
+        return result;
+    }
+
+    char const * pos() const
+    {
+        return m_current;
+    }
+
+    size_t bytes_consumed() const
+    {
+        return m_current - m_start;
+    }
+
+    size_t bytes_remaining() const
+    {
+        return m_end - m_current;
+    }
+    
+private:
+    char const * const m_start;
+    char const * const m_end;
+    char const * m_current;
+};
+
+Labels3D decode_label_block(char const * encoded_data, size_t num_bytes)
+{
+    const size_t BLOCK_VOXELS = BLOCK_WIDTH * BLOCK_WIDTH * BLOCK_WIDTH;
+    const size_t NUM_SUBBLOCKS = GZ * GY * GX;
+    const size_t SUBBLOCK_VOXELS = SUBBLOCK_WIDTH * SUBBLOCK_WIDTH * SUBBLOCK_WIDTH;
+
+    BufferDecoder decoder(encoded_data, num_bytes);
+
+    uint32_t read_GX = decoder.decode_int<uint32_t>();
+    uint32_t read_GY = decoder.decode_int<uint32_t>();
+    uint32_t read_GZ = decoder.decode_int<uint32_t>();
+
+    if (read_GX != GX || read_GY != GY || read_GZ != GZ)
+    {
+        // This file assumes hard-coded values for BLOCK_WIDTH, SUBBLOCK_WIDTH, GX, etc.
+        std::ostringstream ss;
+        ss << "Invalid grid dimensions: ("
+           << read_GX << ", " << read_GY << ", " << read_GZ << ")";
+        throw ErrMsg(ss.str());
+    }
+
+    uint32_t num_labels = decoder.decode_int<uint32_t>();
+
+    std::vector<uint64_t> label_list = decoder.decode_vector<uint64_t>(num_labels);
+
+    if (num_labels == 1)
+    {
+        std::vector<uint64_t> solid_labels(BLOCK_VOXELS, label_list[0]);
+        return Labels3D(&solid_labels[0], BLOCK_VOXELS, BLOCK_DIMS);
+    }
+
+    typedef boost::multi_array<std::vector<uint32_t>, 3> IndexTableArray;
+    IndexTableArray subblock_label_indexes(boost::extents[GZ][GY][GX]);
+
+    auto subblock_label_counts = decoder.decode_vector<uint16_t>(NUM_SUBBLOCKS);
+    
+    size_t sb_index = 0;
+    for_indices(GZ, GY, GX, [&](size_t gz, size_t gy, size_t gx) {
+        uint16_t sb_label_count = subblock_label_counts[sb_index];
+        subblock_label_indexes[gz][gy][gx] = decoder.decode_vector<uint32_t>(sb_label_count);
+        sb_index += 1;
+    });
+
+    // Decode bit stream of encoded voxels into subblocks
+    typedef boost::multi_array<LabelVec, 3> SubblockArray;
+    SubblockArray subblock_dense_labels(boost::extents[GZ][GY][GX]);
+    for_indices(GZ, GY, GX, [&](size_t gz, size_t gy, size_t gx) {
+        auto const & index_table = subblock_label_indexes[gz][gy][gx];
+        auto & dense_labels = subblock_dense_labels[gz][gy][gx];
+        dense_labels = LabelVec(SUBBLOCK_VOXELS, 0);
+
+        size_t bit_counter = 0;
+        size_t bit_length = ceil( log2( index_table.size() ) );
+
+        if (bit_length == 0)
+        {
+            // No encoded voxels to read if the subblock is uniform
+            uint64_t solid_label = label_list[index_table[0]];
+            for (auto & voxel : dense_labels)
+            {
+                voxel = solid_label;
+            }
+            return;
+        }
+
+        for (auto & voxel : dense_labels)
+        {
+            uint16_t next_bytes = decoder.peek_int<uint8_t>(0) << 8;
+            if (decoder.bytes_remaining() >= 2)
+            {
+                next_bytes |= decoder.peek_int<uint8_t>(1);
+            }
+
+            // Mask out previous bits
+            next_bytes &= (0xFFFF >> bit_counter);
+
+            // Shift the bits we want into place.
+            uint16_t index = next_bytes >> (16-bit_length-bit_counter);
+
+            assert(index < pow(2, bit_length));
+            assert(index < index_table.size());
+
+            uint32_t global_label_index = index_table[index];
+            assert(global_label_index < label_list.size());
+
+            voxel = label_list[global_label_index];
+
+            bit_counter += bit_length;
+            if (bit_counter >= 8)
+            {
+                bit_counter -= 8;
+                if (decoder.bytes_remaining() > 0)
+                {
+                    // Consume a byte
+                    decoder.decode_int<uint8_t>();
+                }
+            }
+        }
+
+        // Skip to the next byte-boundary before starting the next subblock
+        if (bit_counter > 0 && decoder.bytes_remaining() > 0)
+        {
+            // Consume a byte
+            decoder.decode_int<uint8_t>();
+        }
+    });
+
+    // Assemble all of the subblocks into the full block.
+    std::vector<uint64_t> full_block(BLOCK_VOXELS, 0);
+    for_indices(GZ, GY, GX, [&](size_t gz, size_t gy, size_t gx) {
+        auto dense_subblock = subblock_dense_labels[gz][gy][gx];
+        write_subblock( &full_block[0], &dense_subblock[0], gz, gy, gx );
+    });
+
+    // Copy into Labels3D
+    return Labels3D(&full_block[0], BLOCK_VOXELS, BLOCK_DIMS);
+}
+
+
 
 } // namespace libdvid
-
