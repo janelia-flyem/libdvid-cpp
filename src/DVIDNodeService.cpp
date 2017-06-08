@@ -573,7 +573,7 @@ void DVIDNodeService::get_subvolblocks3D(string datatype_instance, Dims_t sizes,
     const unsigned char * head = binary_result->get_raw();
     int buffer_size = binary_result->length();
 
-    DVIDCompressedBlock::CompressType ctype = DVIDCompressedBlock::lz4;
+    DVIDCompressedBlock::CompressType ctype = DVIDCompressedBlock::gzip_labelarray;
     if (gray) {
         ctype = DVIDCompressedBlock::jpeg;
     }
