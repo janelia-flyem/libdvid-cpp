@@ -889,6 +889,20 @@ namespace libdvid { namespace python {
             .value("YZ", YZ)
         ;
 
+        // Register conversion for all scalar types.
+        NumpyScalarConverter<signed char>();
+        NumpyScalarConverter<short>();
+        NumpyScalarConverter<int>();
+        NumpyScalarConverter<long>();
+        NumpyScalarConverter<long long>();
+        NumpyScalarConverter<unsigned char>();
+        NumpyScalarConverter<unsigned short>();
+        NumpyScalarConverter<unsigned int>();
+        NumpyScalarConverter<unsigned long>();
+        NumpyScalarConverter<unsigned long long>();
+        NumpyScalarConverter<float>();
+        NumpyScalarConverter<double>();
+
     }
 
 }} // namespace libdvid::python

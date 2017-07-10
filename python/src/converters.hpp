@@ -16,6 +16,7 @@
 // http://docs.scipy.org/doc/numpy/reference/c-api.array.html#importing-the-api
 // Therefore, we assume the cpp file that included converters.hpp has already included numpy/arrayobject.h
 // #include <numpy/arrayobject.h>
+#include <numpy/arrayscalars.h>
 
 #include "BinaryData.h"
 #include "DVIDException.h"
@@ -211,7 +212,7 @@ namespace libdvid { namespace python {
     //*********************************************************************************************
 
     //!*********************************************************************************************
-    //! This converts BinaryDataPtr objects into Python strings.
+    //! This converts BinaryDataPtr objects into Python bytes.
     //! NOTE: It copies the data.
     //!*********************************************************************************************
     struct binary_data_ptr_to_python_str
@@ -668,5 +669,85 @@ namespace libdvid { namespace python {
 
     template <class T, typename E, int N>
     bool namedtuple_converter<T,E,N>::reverse_constructor_order;
+
+
+
+    /*
+     * Boost python converter for numpy scalars, e.g. numpy.uint32(123).
+     * Enables automatic conversion from numpy.intXX, floatXX
+     * in python to C++ char, short, int, float, etc.
+     * When casting from float to int (or wide int to narrow int),
+     * normal C++ casting rules apply.
+     *
+     * Like all boost::python converters, this enables automatic conversion for function args
+     * exposed via boost::python::def(), as well as values converted via boost::python::extract<>().
+     *
+     * Copied from the VIGRA C++ library source code (MIT license).
+     * http://ukoethe.github.io/vigra
+     * https://github.com/ukoethe/vigra
+     */
+    template <typename ScalarType>
+    struct NumpyScalarConverter
+    {
+        NumpyScalarConverter()
+        {
+            using namespace boost::python;
+            converter::registry::push_back( &convertible, &construct, type_id<ScalarType>());
+        }
+
+        // Determine if obj_ptr is a supported numpy.number
+        static void* convertible(PyObject* obj_ptr)
+        {
+            if (PyArray_IsScalar(obj_ptr, Float32) ||
+                PyArray_IsScalar(obj_ptr, Float64) ||
+                PyArray_IsScalar(obj_ptr, Int8)    ||
+                PyArray_IsScalar(obj_ptr, Int16)   ||
+                PyArray_IsScalar(obj_ptr, Int32)   ||
+                PyArray_IsScalar(obj_ptr, Int64)   ||
+                PyArray_IsScalar(obj_ptr, UInt8)   ||
+                PyArray_IsScalar(obj_ptr, UInt16)  ||
+                PyArray_IsScalar(obj_ptr, UInt32)  ||
+                PyArray_IsScalar(obj_ptr, UInt64))
+            {
+                return obj_ptr;
+            }
+            return 0;
+        }
+
+        static void construct( PyObject* obj_ptr, boost::python::converter::rvalue_from_python_stage1_data* data)
+        {
+            using namespace boost::python;
+
+            // Grab pointer to memory into which to construct the C++ scalar
+            void* storage = ((converter::rvalue_from_python_storage<ScalarType>*) data)->storage.bytes;
+
+            // in-place construct the new scalar value
+            ScalarType * scalar = new (storage) ScalarType;
+
+            if (PyArray_IsScalar(obj_ptr, Float32))
+                (*scalar) = PyArrayScalar_VAL(obj_ptr, Float32);
+            else if (PyArray_IsScalar(obj_ptr, Float64))
+                (*scalar) = PyArrayScalar_VAL(obj_ptr, Float64);
+            else if (PyArray_IsScalar(obj_ptr, Int8))
+                (*scalar) = PyArrayScalar_VAL(obj_ptr, Int8);
+            else if (PyArray_IsScalar(obj_ptr, Int16))
+                (*scalar) = PyArrayScalar_VAL(obj_ptr, Int16);
+            else if (PyArray_IsScalar(obj_ptr, Int32))
+                (*scalar) = PyArrayScalar_VAL(obj_ptr, Int32);
+            else if (PyArray_IsScalar(obj_ptr, Int64))
+                (*scalar) = PyArrayScalar_VAL(obj_ptr, Int64);
+            else if (PyArray_IsScalar(obj_ptr, UInt8))
+                (*scalar) = PyArrayScalar_VAL(obj_ptr, UInt8);
+            else if (PyArray_IsScalar(obj_ptr, UInt16))
+                (*scalar) = PyArrayScalar_VAL(obj_ptr, UInt16);
+            else if (PyArray_IsScalar(obj_ptr, UInt32))
+                (*scalar) = PyArrayScalar_VAL(obj_ptr, UInt32);
+            else if (PyArray_IsScalar(obj_ptr, UInt64))
+                (*scalar) = PyArrayScalar_VAL(obj_ptr, UInt64);
+
+            // Stash the memory chunk pointer for later use by boost.python
+            data->convertible = storage;
+        }
+    };
 
 }} // namespace libdvid::python
