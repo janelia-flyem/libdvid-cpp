@@ -224,8 +224,15 @@ namespace libdvid { namespace python {
 
     	static PyObject* convert(BinaryDataPtr const& binary_data)
         {
+
+#if PY_MAJOR_VERSION >= 3
+            return PyBytes_FromStringAndSize( binary_data->get_data().c_str(),
+            								  binary_data->get_data().size() );
+#else
             return PyString_FromStringAndSize( binary_data->get_data().c_str(),
-            								   binary_data->get_data().size() );
+                                               binary_data->get_data().size() );
+#endif
+
         }
     };
 
