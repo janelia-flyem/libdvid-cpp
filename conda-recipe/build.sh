@@ -1,8 +1,14 @@
 # Depending on our platform, shared libraries end with either .so or .dylib
-if [[ `uname` == 'Darwin' ]]; then
+if [[ $(uname) == 'Darwin' ]]; then
     DYLIB_EXT=dylib
+    CC=clang
+    CXX=clang++
+    CXXFLAGS="-I${PREFIX}/include -stdlib=libc++"
 else
     DYLIB_EXT=so
+    CC=gcc
+    CXX=g++
+    CXXFLAGS="-I${PREFIX}/include"
 fi
 
 BUILD_DIR=${BUILD_DIR-build}
@@ -22,12 +28,12 @@ fi
 mkdir -p "${BUILD_DIR}" # Using -p here is convenient for calling this script outside of conda.
 cd "${BUILD_DIR}"
 cmake ..\
-        -DCMAKE_C_COMPILER="${PREFIX}/bin/gcc" \
-        -DCMAKE_CXX_COMPILER="${PREFIX}/bin/g++" \
+        -DCMAKE_C_COMPILER=${CC} \
+        -DCMAKE_CXX_COMPILER=${CXX} \
         -DCMAKE_BUILD_TYPE=Release \
         -DCMAKE_INSTALL_PREFIX="${PREFIX}" \
         -DCMAKE_PREFIX_PATH="${PREFIX}" \
-        -DCMAKE_CXX_FLAGS=-I"${PREFIX}/include" \
+        -DCMAKE_CXX_FLAGS="${CXXFLAGS}" \
         -DCMAKE_SHARED_LINKER_FLAGS="-Wl,-rpath,${PREFIX}/lib -L${PREFIX}/lib" \
         -DCMAKE_EXE_LINKER_FLAGS="-Wl,-rpath,${PREFIX}/lib -L${PREFIX}/lib" \
         -DBOOST_ROOT="${PREFIX}" \
@@ -42,12 +48,7 @@ cmake ..\
 
 if [[ $CONFIGURE_ONLY == 0 ]]; then
     # BUILD
-    if [[ $(uname) == 'Darwin' ]]; then
-        make -j${CPU_COUNT} 2> >(python "${RECIPE_DIR}"/filter-macos-linker-warnings.py)
-    else
-        make -j${CPU_COUNT}
-    fi
-
+    make -j${CPU_COUNT}
 
     # "install" to the build prefix (conda will relocate these files afterwards)
     make install

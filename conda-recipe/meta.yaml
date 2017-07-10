@@ -11,26 +11,20 @@ package:
 source:
   path: ../
 
-# You can set BOOST_VER via an environment variable when building this recipe.
-{% if not BOOST_VER is defined %}
-  {% set BOOST_VER = "1.55.0" %}
-{% endif %}
-
 build:
   number: 0
 
   #
   # You must build this recipe using 'conda build --numpy=X.Y'
   #
-  string: np{{CONDA_NPY}}py{{CONDA_PY}}boost{{BOOST_VER}}_{{PKG_BUILDNUM}}_g{{GIT_FULL_HASH[:7]}}
+  string: np{{CONDA_NPY}}py{{CONDA_PY}}_{{PKG_BUILDNUM}}_g{{GIT_FULL_HASH[:7]}}
   
   script_env:
     - SKIP_BUILD_TESTS
   
 requirements:
   build:
-    - gcc 4.8.5*
-    - boost {{BOOST_VER}}
+    - boost 1.63.0
     - jsoncpp 1.6.2
     - lz4 128
     - zeromq 4.1.3
@@ -41,8 +35,7 @@ requirements:
     - numpy >=1.9,{{NPY_VER}}*
     
   run:
-    - libgcc 4.8.5*
-    - boost {{BOOST_VER}}
+    - boost 1.63.0
     - jsoncpp 1.6.2
     - lz4 128
     - zeromq 4.1.3
