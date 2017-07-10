@@ -56,7 +56,7 @@ def main():
     if args.subvol_bounds_zyx:
         subvol_bounds = eval(args.subvol_bounds_zyx)
         assert len(subvol_bounds) == 2, "Invalid value for --subvol_bounds_zyx"
-        assert map(len, subvol_bounds) == [3,3], "Invalid value for --subvol_bounds_zyx"
+        assert list(map(len, subvol_bounds)) == [3,3], "Invalid value for --subvol_bounds_zyx"
 
     if args.transfer_cube_width_px % DVID_BLOCK_WIDTH != 0:
         sys.exit("The --transfer-cube-width-px must be a multiple of {}".format(DVID_BLOCK_WIDTH))
@@ -97,13 +97,13 @@ def copy_voxels( source_details,
         Specified in pixel coordinates. Must be aligned to DVID block boundaries.
         For example: ((0,0,0), (1024, 1024, 512))
     """
-    if isinstance(source_details, basestring):
+    if isinstance(source_details, str):
         source_details = parse_instance_url( source_details )
     else:
         source_details = InstanceDetails(*source_details)
     src_accessor = VoxelsAccessor( *source_details )
     
-    if isinstance(destination_details, basestring):
+    if isinstance(destination_details, str):
         destination_details = str_to_details( destination_details, default=source_details )
     else:
         destination_details = InstanceDetails(*destination_details)
@@ -119,7 +119,7 @@ def copy_voxels( source_details,
                       "(It *should* work...)"
 
         assert len(subvol_bounds_zyx) == 2, "Invalid value for subvol_bounds_zyx"
-        assert map(len, subvol_bounds_zyx) == [3,3], "Invalid value for subvol_bounds_zyx"
+        assert list(map(len, subvol_bounds_zyx)) == [3,3], "Invalid value for subvol_bounds_zyx"
 
         subvol_bounds_zyx = np.array(subvol_bounds_zyx)
         subvol_shape = subvol_bounds_zyx[1] - subvol_bounds_zyx[0]
@@ -133,7 +133,7 @@ def copy_voxels( source_details,
             start_zyx = tbi*transfer_cube_width_px + subvol_bounds_zyx[0]
             blocks_zyx.append( SubstackZYX(transfer_cube_width_px, *start_zyx) )        
     elif roi is not None:
-        if isinstance(roi, basestring):
+        if isinstance(roi, str):
             roi_details = str_to_details( roi, default=source_details )
         else:
             roi_details = InstanceDetails(*roi)

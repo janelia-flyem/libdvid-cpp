@@ -89,7 +89,7 @@ class Test_DVIDNodeService(unittest.TestCase):
 
         retrieved_data = node_service.get_gray3D( "test_memoryleak_grayscale_3d", (128,128,128), (0,0,0) )
 
-        weak_bases = map(weakref.ref, get_bases(retrieved_data))
+        weak_bases = list(map(weakref.ref, get_bases(retrieved_data)))
         del retrieved_data
         assert all([w() is None for w in weak_bases]), \
             "Data retuned by get_gray3D() wasn't released after we deleted our reference to it!"

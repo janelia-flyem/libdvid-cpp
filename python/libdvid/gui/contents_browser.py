@@ -5,7 +5,6 @@ Requires PyQt4.  To see a demo of it in action, start up your dvid server run th
 $ python contents_browser.py
 """
 import json
-import httplib
 import collections
 
 from PyQt4.QtCore import Qt, QStringList, QSize, QEvent
@@ -285,7 +284,7 @@ class ContentsBrowser(QDialog):
         repos_info = json.loads(body)
         
         # Discard uuids with 'null' content (I don't know why they sometimes exist...)
-        repos_info = filter( lambda (uuid, repo_info): repo_info, repos_info.items() )
+        repos_info = [uuid_repo_info for uuid_repo_info in list(repos_info.items()) if uuid_repo_info[1]]
         return collections.OrderedDict(sorted(repos_info))
     
     def _populate_hostinfo_table(self):
@@ -491,9 +490,9 @@ def main():
                               selectable_type=('labelblk', 'uint8blk', 'roi', 'keyvalue'))
 
     if browser.exec_() == QDialog.Accepted:
-        print "The dialog was accepted with result: ", browser.get_selection()
+        print("The dialog was accepted with result: ", browser.get_selection())
     else:
-        print "The dialog was rejected."
+        print("The dialog was rejected.")
 
     return browser.get_selection()
 

@@ -11,6 +11,10 @@ else
     CXXFLAGS="-I${PREFIX}/include"
 fi
 
+PY_VER=$(python -c "import sys; print('{}.{}'.format(*sys.version_info[:2]))")
+PY_ABIFLAGS=$(python -c "import sys; print('' if sys.version_info.major == 2 else sys.abiflags)")
+PY_ABI=${PY_VER}${PY_ABIFLAGS}
+
 BUILD_DIR=${BUILD_DIR-build}
 
 CONFIGURE_ONLY=0
@@ -41,8 +45,8 @@ cmake ..\
         -DBoost_INCLUDE_DIR="${PREFIX}/include" \
         -DCMAKE_MACOSX_RPATH=ON \
         -DPYTHON_EXECUTABLE="${PYTHON}" \
-        -DPYTHON_LIBRARY="${PREFIX}/lib/libpython2.7.${DYLIB_EXT}" \
-        -DPYTHON_INCLUDE_DIR="${PREFIX}/include/python2.7" \
+        -DPYTHON_LIBRARY="${PREFIX}/lib/libpython${PY_ABI}.${DYLIB_EXT}" \
+        -DPYTHON_INCLUDE_DIR="${PREFIX}/include/python${PY_ABI}" \
         -DLIBDVID_WRAP_PYTHON=1 \
 ##
 

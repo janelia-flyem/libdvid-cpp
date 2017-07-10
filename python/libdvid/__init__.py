@@ -1,4 +1,5 @@
-from _dvid_python import *
+from __future__ import absolute_import
+from ._dvid_python import *
 
 # There seems to be no easy way to attach
 #  these member on the C++ side, and it's easy to just do it here.

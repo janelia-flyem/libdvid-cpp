@@ -135,8 +135,8 @@ if __name__ == '__main__':
     # Kazunori's 1k x 1k x 4k test region
     medulla_test_roi_blocks = roi_blocks_for_box( (4704,      4320,      7008),
                                                   (4704+1024, 4320+1024, 7008+4*1024) )
-    blocks = map(tuple, medulla_test_roi_blocks)
-    print blocks
+    blocks = list(map(tuple, medulla_test_roi_blocks))
+    print(blocks)
 
 #     blocks = roi_blocks_for_box( (10*1024, 5*1024, 10*1024),
 #                                  (12*1024, 7*1024, 12*1024) )
@@ -144,13 +144,13 @@ if __name__ == '__main__':
 #     # For testing purposes, remove the last GB from the roi
 #     blocks = filter(lambda (x,y,z): not (x > 11*1024/32 and y > 6*1024/32 and z > 11*1024/32), blocks )
 #     blocks = map(tuple, blocks)
-#     print len(blocks)
+#     print(len(blocks))
 # 
 #     import libdvid
 # 
-#     print "Posting ROI..."    
+#     print("Posting ROI...")    
 #     node_service = libdvid.DVIDNodeService("localhost:8000", '9ace850166ee44f783aa9990f4edb926')
 #     node_service.create_roi("perf_test_7gb")
 #     node_service.post_roi("perf_test_7gb", blocks)
     
-    print "DONE"
+    print("DONE")

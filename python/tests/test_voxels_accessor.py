@@ -281,7 +281,7 @@ class TestVoxelsAccessor(unittest.TestCase):
         # Get detailed dataset info: /api/repos/info (note: /api is prepended automatically)
         status, body, _error_message = connection.make_request( "/repos/info", ConnectionMethod.GET)
         dataset_details = json.loads(body)
-        # print json.dumps( dataset_details, indent=4 )
+        # print(json.dumps( dataset_details, indent=4 ))
           
         # Create a new remote volume (assuming you already know the uuid of the node)
         uuid = UUID
@@ -290,7 +290,7 @@ class TestVoxelsAccessor(unittest.TestCase):
   
         # Use the VoxelsAccessor convenience class to manipulate a particular data volume     
         accessor = VoxelsAccessor( "localhost:8000", uuid, "my_volume" )
-        # print dvid_volume.axiskeys, dvid_volume.dtype, dvid_volume.minindex, dvid_volume.shape
+        # print(dvid_volume.axiskeys, dvid_volume.dtype, dvid_volume.minindex, dvid_volume.shape)
            
         # Add some data (must be block-aligned)
         # Must include all channels.

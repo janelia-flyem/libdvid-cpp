@@ -1,10 +1,14 @@
 import copy
 import time
-import httplib
 import functools
 import warnings
 import json
 from itertools import starmap
+
+try:
+    import http.client as httplib
+except ImportError:
+    import httplib
 
 import numpy
 
@@ -359,8 +363,8 @@ class VoxelsAccessor(object):
         explicit_slicing = VoxelsAccessor._explicit_slicing(expanded_slicing, shape)
         request_slicing, result_slicing = self._determine_request_slicings(explicit_slicing, shape)
 
-        start = map( lambda s: s.start, request_slicing )
-        stop = map( lambda s: s.stop, request_slicing )
+        start = [s.start for s in request_slicing]
+        stop = [s.stop for s in request_slicing]
 
         retrieved_volume = self.get_ndarray(start, stop)
         return retrieved_volume[result_slicing]
@@ -404,8 +408,8 @@ class VoxelsAccessor(object):
         assert result_slicing[-1] == slice( 0, shape[-1] ) or (shape[-1] == 1 and result_slicing[-1] == 0), \
             "When pushing a subvolume to DVID, you must include all channels, not a subset of them."
 
-        start = map( lambda s: s.start, request_slicing )
-        stop = map( lambda s: s.stop, request_slicing )
+        start = [s.start for s in request_slicing]
+        stop = [s.stop for s in request_slicing]
 
         ## This assertion is omitted because users are allowed to expand the size of 
         ##   the remote volume implicitly by simply giving it more data
