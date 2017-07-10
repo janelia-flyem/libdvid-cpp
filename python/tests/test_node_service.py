@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import unittest
 import collections
 import weakref
@@ -25,7 +26,7 @@ class Test_DVIDNodeService(unittest.TestCase):
 
     def test_custom_request(self):
         node_service = DVIDNodeService(TEST_DVID_SERVER, self.uuid, "foo@bar.com", "test_custom_app")
-        response_body = node_service.custom_request( "log", "", ConnectionMethod.GET )
+        response_body = node_service.custom_request( "log", b"", ConnectionMethod.GET )
          
         # This shouldn't raise an exception
         json_data = json.loads(response_body)
@@ -33,13 +34,13 @@ class Test_DVIDNodeService(unittest.TestCase):
     def test_keyvalue(self):
         node_service = DVIDNodeService(TEST_DVID_SERVER, self.uuid, "foo@bar.com", "test_keyvalue_app")
         node_service.create_keyvalue("keyvalue_test")
-        node_service.put("keyvalue_test", "key1", "val1")
+        node_service.put("keyvalue_test", "key1", b"val1")
         readback_value = node_service.get("keyvalue_test", "key1")
-        self.assertEqual(readback_value, "val1")
+        self.assertEqual(readback_value, b"val1")
 
-        node_service.put("keyvalue_test", "key2", "val2")
+        node_service.put("keyvalue_test", "key2", b"val2")
         readback_value = node_service.get("keyvalue_test", "key2")
-        self.assertEqual(readback_value, "val2")
+        self.assertEqual(readback_value, b"val2")
 
         keys = node_service.get_keys("keyvalue_test")
         assert isinstance(keys, collections.Iterable)
