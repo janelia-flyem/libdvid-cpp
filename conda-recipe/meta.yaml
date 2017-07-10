@@ -24,6 +24,7 @@ build:
   
 requirements:
   build:
+    - cmake
     - boost 1.63.0
     - jsoncpp 1.6.2
     - lz4-c >=1.7.5,<100 # Old versions of lz4 used a different versioning scheme, e.g. 'r116'
