@@ -29,7 +29,7 @@ requirements:
     - jsoncpp 1.6.2
     - lz4-c >=1.7.5,<100 # Old versions of lz4 used a different versioning scheme, e.g. 'r116'
     - zeromq 4.1.3
-    - jpeg 8d
+    - jpeg 9*
     - libpng 1.6*
     - curl 7.45*
     - python >=2.7
@@ -41,7 +41,7 @@ requirements:
     - jsoncpp 1.6.2
     - lz4-c >=1.7.5,<2 # Old versions of lz4 used a different versioning scheme, e.g. 'r116'
     - zeromq 4.1.3
-    - jpeg 8d
+    - jpeg 9*
     - libpng 1.6*
     - curl 7.45*
     - python {{PY_VER}}*
