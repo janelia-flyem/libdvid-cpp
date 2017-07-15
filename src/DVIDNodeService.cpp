@@ -1,6 +1,8 @@
 #include "DVIDNodeService.h"
 #include "DVIDException.h"
 #include "DVIDCache.h"
+#include "DVIDLabelCodec.h"
+#include "BinaryData.h"
 
 #include <set>
 #include <algorithm>
@@ -152,6 +154,12 @@ bool DVIDNodeService::create_labelblk(string datatype_name,
     }
 
     return is_created && is_created2;
+}
+
+bool DVIDNodeService::create_labelarray(string datatype_name, size_t blocksize)
+{
+    bool is_created = create_datatype("labelarray", datatype_name, blocksize);
+    return is_created;
 }
 
 bool DVIDNodeService::create_keyvalue(string keyvalue)
@@ -403,7 +411,7 @@ vector<DVIDCompressedBlock> DVIDNodeService::get_labelblocks3D(string datatype_i
     get_subvolblocks3D(datatype_instance, sizes, offset, throttle, false, c_blocks);
     return c_blocks;
 }
-    
+
 void DVIDNodeService::prefetch_specificblocks3D(string datatype_instance,
         vector<int>& blockcoords)
 {
@@ -496,6 +504,166 @@ void DVIDNodeService::get_specificblocks3D(string datatype_instance,
         c_blocks.push_back(c_block);
         head += lz4_bytes;
         buffer_size -= lz4_bytes;
+    }
+}
+
+Labels3D extract_label_subvol( Labels3D const & vol,
+                               Dims_t const & subvol_dims_xyz,
+                               std::vector<int> const & subvol_offset_xyz )
+{
+    int vol_Z = vol.get_dims()[2];
+    int vol_Y = vol.get_dims()[1];
+    int vol_X = vol.get_dims()[0];
+
+    int sv_Z = subvol_dims_xyz[2];
+    int sv_Y = subvol_dims_xyz[1];
+    int sv_X = subvol_dims_xyz[0];
+
+    int off_z = subvol_offset_xyz[2];
+    int off_y = subvol_offset_xyz[1];
+    int off_x = subvol_offset_xyz[0];
+
+    // Unfortunately, the design of BinaryData doesn't allow us to avoid a copy here.
+    std::vector<uint64_t> subvol_data(sv_Z * sv_Y * sv_X, 0);
+
+    size_t sv_offset = 0;
+    for (size_t sv_z = 0; sv_z < sv_Z; ++sv_z)
+    {
+        for (size_t sv_y = 0; sv_y < sv_Y; ++sv_y)
+        {
+            for (size_t sv_x = 0; sv_x < sv_X; ++sv_x)
+            {
+                // Convert from subvol coords to volume coords
+                int z = off_z + sv_z;
+                int y = off_y + sv_y;
+                int x = off_x + sv_x;
+
+                // Convert to buffer position
+                int z_offset = z * vol_X * vol_Y;
+                int y_offset = y * vol_X;
+                int x_offset = x;
+
+                subvol_data[sv_offset] = vol.get_raw()[z_offset + y_offset + x_offset];
+                sv_offset += 1;
+            }
+        }
+    }
+
+    BinaryDataPtr subvol_binary = BinaryData::create_binary_data(reinterpret_cast<uint8_t const*>(&subvol_data[0]), subvol_data.size() * sizeof(uint64_t));
+    Labels3D subvol(subvol_binary, subvol_dims_xyz);
+    return subvol;
+}
+
+
+void DVIDNodeService::put_labelblocks3D(string datatype_instance, Labels3D const & volume, vector<int> volume_offset_xyz, bool throttle)
+{
+    unsigned int blocksize = (unsigned int)get_blocksize(datatype_instance);
+
+    int vol_Z = volume.get_dims()[2];
+    int vol_Y = volume.get_dims()[1];
+    int vol_X = volume.get_dims()[0];
+
+    // make sure volume specified is legal and block aligned
+    if (volume_offset_xyz.size() != 3) {
+        throw ErrMsg("Did not correctly specify 3D volume");
+    }
+
+    if (   (volume_offset_xyz[0] % blocksize != 0)
+        || (volume_offset_xyz[1] % blocksize != 0)
+        || (volume_offset_xyz[2] % blocksize != 0) )
+    {
+        throw ErrMsg("Label block POST error: Not block aligned");
+    }
+
+    if ((vol_Z % blocksize != 0) || (vol_Y % blocksize != 0) || (vol_X % blocksize != 0)) {
+        throw ErrMsg("Label block POST error: Region is not a multiple of block size");
+    }
+
+    EncodedData full_data;
+
+    for (int z_block = 0; z_block < vol_Z / blocksize; ++z_block)
+    {
+        for (int y_block = 0; y_block < vol_Y / blocksize; ++y_block)
+        {
+            for (int x_block = 0; x_block < vol_X / blocksize; ++x_block)
+            {
+                std::vector<int> subvol_offset_xyz = { x_block * (int)blocksize,
+                                                       y_block * (int)blocksize,
+                                                       z_block * (int)blocksize };
+
+                const Dims_t subvol_dims = { blocksize, blocksize, blocksize };
+                Labels3D subvol = extract_label_subvol(volume, subvol_dims, subvol_offset_xyz);
+                BinaryDataPtr encoded_block = BinaryData::compress_gzip_labelarray_block(subvol.get_binary(), blocksize);
+
+                encode_int<int32_t>(full_data, (volume_offset_xyz[0] + subvol_offset_xyz[0]) / blocksize);
+                encode_int<int32_t>(full_data, (volume_offset_xyz[1] + subvol_offset_xyz[1]) / blocksize);
+                encode_int<int32_t>(full_data, (volume_offset_xyz[2] + subvol_offset_xyz[2]) / blocksize);
+                encode_int<int32_t>(full_data, static_cast<int32_t>(encoded_block->length()));
+
+                encode_binary_data(full_data, encoded_block);
+            }
+        }
+    }
+
+    BinaryDataPtr payload = BinaryData::create_binary_data( &full_data[0], full_data.size() );
+
+    if (throttle) {
+        // set random number
+        timeval t1;
+        gettimeofday(&t1, NULL);
+        srand(t1.tv_usec * t1.tv_sec);
+    }
+
+    bool waiting = true;
+    int status_code;
+    string respdata;
+    vector<unsigned int> axes;
+    axes.push_back(0); axes.push_back(1); axes.push_back(2);
+
+
+     // construct query string
+    std::ostringstream ss_uri;
+    ss_uri << "/node/" << uuid << "/" << datatype_instance << "/blocks";
+    if (throttle)
+    {
+        ss_uri << "?throttle=on";
+    }
+    std::string endpoint = ss_uri.str();
+
+    // make instance random (create random seed based on time of day)
+    int timeout = 20;
+    int timeout_max = 600;
+
+    if (throttle) {
+        // set random number
+        timeval t1;
+        gettimeofday(&t1, NULL);
+        srand(t1.tv_usec * t1.tv_sec);
+    }
+
+    // try posting until DVID is available (no contention)
+    BinaryDataPtr binary_response;
+    while (waiting) {
+        binary_response = BinaryData::create_binary_data();
+        status_code = connection.make_request(endpoint, POST, payload,
+                binary_response, respdata, BINARY, DVIDConnection::DEFAULT_TIMEOUT, 1, false);
+
+        // wait if server is busy
+        if (status_code == 503) {
+            // random backoff
+            sleep(rand()%timeout);
+            // capped exponential backoff
+            if (timeout < timeout_max) {
+                timeout *= 2;
+            }
+        } else {
+            waiting = false;
+        }
+    }
+
+    if (status_code != 200) {
+        throw DVIDException("DVIDException for " + endpoint + "\n" + respdata + "\n" + binary_response->get_data(),
+                status_code);
     }
 }
 
@@ -922,7 +1090,6 @@ void DVIDNodeService::get_properties(string graph_name,
         for (VertexSet::iterator iter = bad_vertices.begin();
                 iter != bad_vertices.end(); ++iter) {
             vertices.push_back(Vertex(*iter, 0));
-            //std::cout << "Failed vertex get!: " << *iter << std::endl; 
         }
 
         // load properties

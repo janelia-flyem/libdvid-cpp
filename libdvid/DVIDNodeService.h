@@ -149,6 +149,8 @@ class DVIDNodeService {
     bool create_labelblk(std::string datatype_name,
             std::string labelvol_name = "", size_t blocksize=DEFBLOCKSIZE);
 
+    bool create_labelarray(std::string datatype_name, size_t blocksize=64);
+
     /*!
      * Helper function to sync two datatype instances
      * \param datatype_name name of datatype instance to be synced
@@ -493,6 +495,8 @@ class DVIDNodeService {
     */
     void put_labelblocks(std::string datatype_instance,
             LabelBlocks blocks, std::vector<int> block_coords);
+
+    void put_labelblocks3D(std::string datatype_instance, Labels3D const & volume, std::vector<int> offset, bool throttle=false);
 
     /*************** API to access keyvalue interface ***************/
     
