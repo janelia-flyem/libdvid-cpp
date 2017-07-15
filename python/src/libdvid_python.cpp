@@ -13,6 +13,7 @@
 #include "DVIDConnection.h"
 #include "DVIDServerService.h"
 #include "DVIDNodeService.h"
+#include "DVIDLabelCodec.h"
 #include "DVIDException.h"
 
 #include "converters.hpp"
@@ -259,12 +260,37 @@ namespace libdvid { namespace python {
         nodeService.put_labels3D(datatype_instance, volume, offset, throttle, compress, roi, mutate);
     }
 
+    void put_labelblocks3D_zyx( DVIDNodeService & nodeService,
+                                std::string datatype_instance,
+                                Labels3D const & volume,
+                                std::vector<int> offset,
+                                bool throttle )
+    {
+        // Reverse offset
+        std::reverse(offset.begin(), offset.end());
+
+        // The Labels3D volume is automatically converted from ZYX order
+        // to XYZ thanks to DVIDVoxels converter logic in converters.hpp
+        nodeService.put_labelblocks3D(datatype_instance, volume, offset, throttle);
+    }
+
     boost::int64_t get_label_by_location_zyx( DVIDNodeService & nodeService,
                                               std::string datatype_instance,
                                               PointXYZ point )
     {
         // The user gives a python PointZYX, which is converted to C++ PointXYZ for this function.
         return nodeService.get_label_by_location( datatype_instance, point.x, point.y, point.z );
+    }
+
+    BinaryDataPtr py_encode_label_block(Labels3D const & label_block)
+    {
+        EncodedData encoded_block = encode_label_block(label_block);
+        return BinaryData::create_binary_data( reinterpret_cast<char *>(&encoded_block[0]), encoded_block.size() );
+    }
+
+    Labels3D py_decode_label_block(BinaryDataPtr encoded_data)
+    {
+        return decode_label_block( reinterpret_cast<char const *>(encoded_data->get_raw()), encoded_data->length() );
     }
 
     Roi3D get_roi3D_zyx( DVIDNodeService & nodeService,
@@ -386,6 +412,17 @@ namespace libdvid { namespace python {
         class_<StringVec>("StringVec")
                 .def(vector_indexing_suite<StringVec>() );
 
+        // Label codec
+        def("encode_label_block", &py_encode_label_block,
+           ( arg("label_vol_zyx") ),
+           "Encode the given (64,64,64) block using DVID's label encoding\n"
+           "scheme, and return the encoded bytes.\n");
+
+        def("decode_label_block", &py_decode_label_block,
+           ( arg("label_vol_zyx") ),
+           "Decode the given buffer into a (64,64,64) label block using DVID's\n"
+           "label decoding scheme.\n");
+
         // DVIDConnection python class definition
         class_<DVIDConnection>("DVIDConnection",
             "Creates a ``libcurl`` connection and \n"
@@ -460,6 +497,7 @@ namespace libdvid { namespace python {
         void          (DVIDNodeService::*put_binary)(std::string, std::string, BinaryDataPtr)                = &DVIDNodeService::put;
         bool          (DVIDNodeService::*create_grayscale8)(std::string, size_t)                             = &DVIDNodeService::create_grayscale8;
         bool          (DVIDNodeService::*create_labelblk)(std::string, std::string, size_t)                  = &DVIDNodeService::create_labelblk;
+        bool          (DVIDNodeService::*create_labelarray)(std::string, size_t)                             = &DVIDNodeService::create_labelarray;
         BinaryDataPtr (DVIDNodeService::*custom_request)(std::string, BinaryDataPtr, ConnectionMethod, bool, unsigned long long) = &DVIDNodeService::custom_request;
 
         // DVIDNodeService python class definition
@@ -648,6 +686,15 @@ namespace libdvid { namespace python {
                 ":param blocksize: size of block chunks \n"
                 ":returns: true if both created, false if one already exists \n")
 
+            .def("create_labelarray", create_labelarray,
+                ( arg("instance_name"), arg("blocksize")=DEFBLOCKSIZE ),
+                "Create an instance of uint64 labelarray datatype."
+                "\n"
+                ":param instance_name: name of new labelarray datatype instance \n"
+                ":param blocksize: size of block chunks \n"
+                ":returns: true if created, false if it already exists \n")
+
+
             .def("get_labels3D", &get_labels3D_zyx,
                 ( arg("service"), arg("instance_name"), arg("shape_zyx"), arg("offset_zyx"), arg("throttle")=true, arg("compress")=true, arg("roi")=object() ),
                 "Retrieve a 3D 8-byte label volume with the specified \n"
@@ -681,7 +728,7 @@ namespace libdvid { namespace python {
                 ( arg("service"), arg("instance_name"), arg("label_vol_zyx"), arg("offset_zyx"), arg("throttle")=true, arg("compress")=true, arg("roi")=object(), arg("mutate")=false ),
                 "Put a 3D 8-byte label volume to DVID with the specified \n"
                 "dimension and spatial offset.  THE DIMENSION AND OFFSET ARE \n"
-                "IN VOXEL COORDINATS BUT MUST BE BLOCK ALIGNED.  The size \n"
+                "IN VOXEL COORDINATES BUT MUST BE BLOCK ALIGNED.  The size \n"
                 "of DVID blocks are determined at instance creation and is \n"
                 "32x32x32 by default.  The axis order is always \n"
                 "X, Y, Z.  Because it is easy to overload a single server \n"
@@ -690,13 +737,32 @@ namespace libdvid { namespace python {
                 "multiple volume GETs/PUTs from executing at the same time. \n"
                 "The number of voxels put cannot be larger than INT_MAX/8. \n"
                 "\n"
-                ":param instance_name: name of the grayscale type instance \n"
+                ":param instance_name: name of the labelblk type instance \n"
                 ":param volume: label 3D volume encodes dimension sizes and binary buffer \n"
                 ":param offset_zyx: offset in voxel coordinates \n"
                 ":param throttle: allow only one request at time (default: true) \n"
                 ":param roi: specify DVID roi to mask PUT operation (default: empty) \n"
                 ":param compress: enable lz4 compression \n"
                 ":param mutate: set to True if overwriting previous segmentation (default: False) \n")
+
+            .def("put_labelblocks3D", &put_labelblocks3D_zyx,
+                ( arg("service"), arg("instance_name"), arg("label_vol_zyx"), arg("offset_zyx"), arg("throttle")=true ),
+                "(labelarray instances only) Put a 3D 8-byte label volume to DVID with the specified \n"
+                "dimension and spatial offset.  THE DIMENSION AND OFFSET ARE \n"
+                "IN VOXEL COORDINATES BUT MUST BE BLOCK ALIGNED.  The size \n"
+                "of DVID blocks are determined at instance creation, but \n"
+                "currently only 64x64x64 is supported.\n"
+                "Because it is easy to overload a single server \n"
+                "implementation of DVID with hundreds \n"
+                "of volume PUTs, we support a throttle command that prevents \n"
+                "multiple volume GETs/PUTs from executing at the same time. \n"
+                "The number of voxels put cannot be larger than INT_MAX/8. \n"
+                "\n"
+                ":param instance_name: name of the labelarray type instance \n"
+                ":param volume: label 3D volume encodes dimension sizes and binary buffer \n"
+                ":param offset_zyx: offset in voxel coordinates \n"
+                ":param throttle: allow only one request at time (default: true) \n"
+                )
 
             .def("body_exists", &DVIDNodeService::body_exists,
                 ( arg("labelvol_name"), arg("bodyid") ),
@@ -705,6 +771,7 @@ namespace libdvid { namespace python {
                 ":param labelvol_name: name of label volume type \n"
                 ":param bodyid: body id being queried (int) \n"
                 ":returns: True if in label volume, False otherwise \n")
+
 
             //
             // TILES

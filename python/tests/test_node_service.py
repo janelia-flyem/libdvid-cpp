@@ -120,7 +120,31 @@ class Test_DVIDNodeService(unittest.TestCase):
         node_service.put_labels3D( "test_labels_3d2", data, (0,0,0) )
         retrieved_data = node_service.get_labels3D( "test_labels_3d2", (30,31,32), (20,20,20) )
         self.assertTrue( (retrieved_data == data[20:50, 20:51, 20:52]).all() )
- 
+  
+    def test_labelarray_put_single_block(self):
+        node_service = DVIDNodeService(TEST_DVID_SERVER, self.uuid, "foo@bar.com", "test_labelarray_put_single_block")
+        node_service.create_labelarray("test_labelarray64", 64)
+        data = numpy.random.randint(0, 10, (64,64,64)).astype(numpy.uint64)
+        node_service.put_labelblocks3D( "test_labelarray64", data, (0,0,64) )
+        retrieved_data = node_service.get_labels3D( "test_labelarray64", (64,64,64), (0,0,64) )
+        assert (retrieved_data == data[:64,:64,:64]).all()
+    
+    def test_labelarray_put_volumes(self):
+        node_service = DVIDNodeService(TEST_DVID_SERVER, self.uuid, "foo@bar.com", "test_labelarray_put_single_block")
+        node_service.create_labelarray("test_labelarray64", 64)
+        data = numpy.random.randint(0, 10, (128,128,128)).astype(numpy.uint64)
+        assert data.flags['C_CONTIGUOUS']
+
+        node_service.put_labelblocks3D( "test_labelarray64", data, (0,0,0) )
+        retrieved_data = node_service.get_labels3D( "test_labelarray64", (30,31,32), (20,20,20) )
+        assert (retrieved_data == data[20:50, 20:51, 20:52]).all()
+    
+        retrieved_data = node_service.get_labels3D( "test_labelarray64", (64,64,64), (0,0,0) )
+        assert (retrieved_data == data[:64,:64,:64]).all()
+    
+        retrieved_data = node_service.get_labels3D( "test_labelarray64", (128,128,128), (0,0,0) )
+        assert (retrieved_data == data).all()
+        
     @unittest.skip("FIXME: No way to create tile data via the DVID http API.")
     def test_grayscale_2d_tile(self):
         # Create tile data here...

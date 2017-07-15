@@ -38,7 +38,18 @@ class BinaryData {
     {
         return BinaryDataPtr(new BinaryData(data_, length));
     }
-    
+
+    static BinaryDataPtr create_binary_data(const unsigned char* data_, unsigned int length)
+    {
+        return BinaryDataPtr(new BinaryData(reinterpret_cast<const char*>(data_), length));
+    }
+
+    //! Create from scratch
+    static BinaryDataPtr create_binary_data(unsigned int length)
+    {
+        return BinaryDataPtr(new BinaryData(length));
+    }
+
     /*!
      * Create an empty binary data object for later modifications.
      * \return smart pointer to new binary data
@@ -70,12 +81,30 @@ class BinaryData {
     static BinaryDataPtr decompress_lz4(const BinaryDataPtr lz4binary,
             int uncompressed_size, char* buffer = 0, int bufsize = 0);
 
+    static BinaryDataPtr decompress_gzip( const BinaryDataPtr compressed_data,
+                                          int max_uncompressed_size );
+
     /*!
      * Load data and compress to lz4 format.
      * \param binary data to compress
      * \return smart pointer to new binary data (compressed)
     */
     static BinaryDataPtr compress_lz4(const BinaryDataPtr lz4binary);
+
+    /*!
+     * Load data and compress to DVID labelarray native block format.
+     * \param binary data to compress (must be a SINGLE label block)
+     * \return smart pointer to new binary data (compressed)
+    */
+    static BinaryDataPtr compress_labelarray_block(const BinaryDataPtr full_bock, unsigned int block_width=64);
+
+    /*!
+     * Encode (with DVID labelarray native block format) and then lz4-compress.
+     * \param binary data to compress (must be a SINGLE label block)
+     * \return smart pointer to new binary data (encoded and lz4-compressed)
+    */
+    static BinaryDataPtr compress_lz4_labelarray_block(const BinaryDataPtr full_bock, unsigned int block_width=64);
+    static BinaryDataPtr compress_gzip_labelarray_block(const BinaryDataPtr full_bock, unsigned int block_width=64 );
 
     /*!
      * Decompress and load from jpeg format.
@@ -97,6 +126,24 @@ class BinaryData {
     */ 
     static BinaryDataPtr decompress_png8(const BinaryDataPtr pngbinary,
         unsigned int& width, unsigned int& height);
+
+
+    /*!
+     * Decompress and load from DVID labelarray native block format.
+     * \param blockbinary binary that contains encoded labelarray data for a single block.
+     * \return smart pointer to new binary data (uncompressed)
+    */
+    static BinaryDataPtr decompress_labelarray_block(const BinaryDataPtr blockbinary, unsigned int block_width=64);
+
+    /*!
+     * Decompress and load from lz4-compressed DVID labelarray native block format.
+     * \param blockbinary binary that contains lz4-compressed encoded labelarray data for a single block.
+     * \return smart pointer to new binary data (completely inflated, from lz4 and then dvid native compression)
+    */
+    static BinaryDataPtr decompress_lz4_labelarray_block(const BinaryDataPtr lz4_compressed, unsigned int block_width=64);
+    static BinaryDataPtr decompress_gzip_labelarray_block(const BinaryDataPtr gzip_compressed, unsigned int block_width=64);
+
+    static BinaryDataPtr compress_gzip(const BinaryDataPtr uncompressed_data);
 
     /*!
      * Allows modification of underlying buffer data.
@@ -122,9 +169,14 @@ class BinaryData {
     */ 
     const byte * get_raw() const
     {
-        return (const byte *)(data.c_str());
+        return reinterpret_cast<const byte *>(data.c_str());
     }
-   
+
+    //! Same as above, but returns char instead of byte (signed vs. unsigned)
+    const char * get_raw_char() const
+    {
+        return reinterpret_cast<const char *>(data.c_str());
+    }
     
     /*!
      * Default destruction of string is sufficient.
@@ -140,6 +192,14 @@ class BinaryData {
     */
     BinaryData(const char* data_, unsigned int length) : data(data_, length) {}
    
+
+    /*!
+     * Private constructor to prevent stack allocation of binary data.
+     * This creates an uninitialized string of the requested length.
+     * \param length Number of bytes in data_
+    */
+    BinaryData(unsigned int length) : data(length, '\0') {}
+
     /*!
      * Private empty constructor.
     */

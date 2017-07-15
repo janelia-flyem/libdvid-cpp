@@ -25,7 +25,15 @@ class DVIDCompressedBlock {
   public:
 
     //! Defines compression used by DVIDBlocks
-    enum CompressType { lz4, jpeg, uncompressed };
+    enum CompressType
+    {
+        lz4,
+        jpeg,
+        labelarray,
+        lz4_labelarray,
+        gzip_labelarray, // This is the only valid mode for DVID blocks ingestion
+        uncompressed
+    };
 
     /*!
      * Constructor takes compressed data, offset, blocksize.
@@ -83,6 +91,18 @@ class DVIDCompressedBlock {
           {
               int decomp_size = blocksize*blocksize*blocksize*typesize;
               return BinaryData::decompress_lz4(cdata, decomp_size);
+          }
+          case labelarray:
+          {
+              return BinaryData::decompress_labelarray_block(cdata, blocksize);
+          }
+          case lz4_labelarray:
+          {
+              return BinaryData::decompress_lz4_labelarray_block(cdata, blocksize);
+          }
+          case gzip_labelarray:
+          {
+              return BinaryData::decompress_gzip_labelarray_block(cdata, blocksize);
           }
           case uncompressed:
           {

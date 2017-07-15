@@ -190,6 +190,7 @@ add_library (dvidcpp SHARED
              src/DVIDConnection.cpp
              src/DVIDException.cpp
              src/DVIDGraph.cpp
+             src/DVIDLabelCodec.cpp
              src/BinaryData.cpp
              src/DVIDThreadedFetch.cpp 
              src/Algorithms.cpp 
@@ -242,6 +243,13 @@ if (LIBDVID_WRAP_PYTHON)
     add_subdirectory(python)    
 endif()
 
+add_executable(encode_labels "src/tools/encode_labels.cpp" src/DVIDLabelCodec.cpp)
+target_link_libraries(encode_labels)
+install(TARGETS encode_labels RUNTIME DESTINATION bin)
+
+add_executable(decode_labels "src/tools/decode_labels.cpp" src/DVIDLabelCodec.cpp)
+target_link_libraries(decode_labels)
+install(TARGETS decode_labels RUNTIME DESTINATION bin)
 add_executable(dvidtest_newrepo "tests/test_newrepo.cpp")
 target_link_libraries(dvidtest_newrepo dvidcpp ${support_LIBS})
 
