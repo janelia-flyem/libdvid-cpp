@@ -44,6 +44,12 @@ class BinaryData {
         return BinaryDataPtr(new BinaryData(reinterpret_cast<const char*>(data_), length));
     }
 
+    //! Create from scratch
+    static BinaryDataPtr create_binary_data(unsigned int length)
+    {
+        return BinaryDataPtr(new BinaryData(length));
+    }
+
     /*!
      * Create an empty binary data object for later modifications.
      * \return smart pointer to new binary data
@@ -171,7 +177,6 @@ class BinaryData {
     {
         return reinterpret_cast<const char *>(data.c_str());
     }
-
     
     /*!
      * Default destruction of string is sufficient.
@@ -187,6 +192,14 @@ class BinaryData {
     */
     BinaryData(const char* data_, unsigned int length) : data(data_, length) {}
    
+
+    /*!
+     * Private constructor to prevent stack allocation of binary data.
+     * This creates an uninitialized string of the requested length.
+     * \param length Number of bytes in data_
+    */
+    BinaryData(unsigned int length) : data(length, '\0') {}
+
     /*!
      * Private empty constructor.
     */

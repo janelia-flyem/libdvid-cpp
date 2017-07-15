@@ -397,10 +397,12 @@ BinaryDataPtr BinaryData::compress_labelarray_block(const BinaryDataPtr full_blo
 {
     if (block_width != 64)
     {
-        throw ErrMsg("Can't handle block widths other than 64px");
+        std::ostringstream ss;
+        ss << "Can't handle block widths other than 64px (You gave " << block_width << ")";
+        throw ErrMsg(ss.str());
     }
 
-    if (full_block->length() != block_width*block_width*block_width)
+    if (full_block->length() != sizeof(uint64_t)*block_width*block_width*block_width)
     {
         std::ostringstream ss;
         ss << "Can't compress labelarray block: Buffer size (" << full_block->length()
