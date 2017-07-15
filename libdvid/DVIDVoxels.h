@@ -85,7 +85,7 @@ class DVIDVoxels {
      * \param data_ binary buffer referenced by the volume
      * \param dims_ dimension sizes for the volume
     */ 
-    DVIDVoxels(BinaryDataPtr data_, Dims_t& dims_) :
+    DVIDVoxels(BinaryDataPtr data_, Dims_t const& dims_) :
             data(data_), dims(dims_) {
         
         if (dims.size() != N) {
@@ -127,7 +127,7 @@ class DVIDVoxels {
     */
     const T* get_raw() const
     {
-        return (T*) data->get_raw();
+        return reinterpret_cast<T const *>(data->get_raw());
     }
 
     /*!
