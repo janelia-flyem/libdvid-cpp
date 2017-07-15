@@ -21,6 +21,30 @@ EncodedData encode_label_block(LabelVec const & labels);
 
 Labels3D decode_label_block(char const * encoded_data, size_t num_bytes);
 
+// Utility functions
+// Append an int (of any size) onto the given byte vector
+template <typename T>
+void encode_int(EncodedData & data, T value)
+{
+    uint8_t const * bytes = reinterpret_cast<uint8_t const *>(&value);
+    for (size_t i = 0; i < sizeof(T); ++i)
+    {
+        data.push_back( bytes[i] );
+    }
+}
+
+// Append a vector of ints (of any size) onto the given byte array
+template <typename T>
+void encode_vector(EncodedData & encoded_data, std::vector<T> const & vec)
+{
+    for (auto value : vec)
+    {
+        encode_int<T>(encoded_data, value);
+    }
+}
+
+void encode_binary_data(EncodedData & encoded_data, BinaryDataPtr data);
+
 } // namespace libdvid
 
 #endif // DVIDLABELCODEC_H

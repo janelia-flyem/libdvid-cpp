@@ -102,26 +102,14 @@ private:
     IndexMap m_index_map;
 };
 
-// Append an int (of any size) onto the given byte vector
-template <typename T>
-void encode_int(EncodedData & data, T value)
+void encode_binary_data(EncodedData & encoded_data, BinaryDataPtr data)
 {
-    uint8_t const * bytes = reinterpret_cast<uint8_t const *>(&value);
-    for (size_t i = 0; i < sizeof(T); ++i)
+    for (char byte : data->get_data())
     {
-        data.push_back( bytes[i] );
+        encode_int<char>(encoded_data, byte);
     }
 }
 
-// Append a vector of ints (of any size) onto the given byte array
-template <typename T>
-void encode_vector(EncodedData & encoded_data, std::vector<T> vec)
-{
-    for (auto value : vec)
-    {
-        encode_int(encoded_data, value);
-    }
-}
 
 // Append the block header info to the given byte vector.
 // The DVID Compression spec describes it as follows
