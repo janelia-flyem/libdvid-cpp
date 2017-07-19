@@ -805,7 +805,7 @@ void DVIDNodeService::put_labels3D(string datatype_instance, Labels3D const & vo
 {
     Dims_t sizes = volume.get_dims();
     put_volume(datatype_instance, volume.get_binary(), sizes,
-            offset, throttle, compress, roi, mutate, true);
+            offset, throttle, compress, roi, mutate, false);
 }
 
 void DVIDNodeService::put_gray3D(string datatype_instance, Grayscale3D const & volume,
@@ -813,7 +813,7 @@ void DVIDNodeService::put_gray3D(string datatype_instance, Grayscale3D const & v
 {
     Dims_t sizes = volume.get_dims();
     put_volume(datatype_instance, volume.get_binary(), sizes,
-            offset, throttle, compress, "", false, true);
+            offset, throttle, compress, "", false, false);
 }
 
 GrayscaleBlocks DVIDNodeService::get_grayblocks(string datatype_instance,
