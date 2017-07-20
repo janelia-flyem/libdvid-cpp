@@ -30,7 +30,7 @@ requirements:
     - lz4-c >=1.7.5,<100 # Old versions of lz4 used a different versioning scheme, e.g. 'r116'
     - zeromq 4.1.3
     - jpeg 9*
-    - libpng 1.6*
+    - libpng 1.6.28
     - curl 7.45*
     - python >=2.7
     - python {{PY_VER}}*
@@ -42,7 +42,8 @@ requirements:
     - lz4-c >=1.7.5,<2 # Old versions of lz4 used a different versioning scheme, e.g. 'r116'
     - zeromq 4.1.3
     - jpeg 9*
-    - libpng 1.6*
+    - libpng >=1.6.28,<1.7  # On Mac, libpng versions are not backwards compatible, unfortunately.
+                            # See: https://github.com/conda-forge/libpng-feedstock/issues/10
     - curl 7.45*
     - python {{PY_VER}}*
     - numpy  {{NPY_VER}}*
