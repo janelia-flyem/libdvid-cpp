@@ -555,7 +555,7 @@ Labels3D extract_label_subvol( Labels3D const & vol,
 }
 
 
-void DVIDNodeService::put_labelblocks3D(string datatype_instance, Labels3D const & volume, vector<int> volume_offset_xyz, bool throttle)
+void DVIDNodeService::put_labelblocks3D(string datatype_instance, Labels3D const & volume, vector<int> volume_offset_xyz, bool throttle, int scale)
 {
     unsigned int blocksize = (unsigned int)get_blocksize(datatype_instance);
 
@@ -627,6 +627,10 @@ void DVIDNodeService::put_labelblocks3D(string datatype_instance, Labels3D const
     if (throttle)
     {
         ss_uri << "?throttle=on";
+        ss_uri << "&scale=" << scale;
+    } else {
+        ss_uri << "?scale=" << scale;
+
     }
     std::string endpoint = ss_uri.str();
 

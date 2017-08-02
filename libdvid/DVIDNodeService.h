@@ -496,7 +496,19 @@ class DVIDNodeService {
     void put_labelblocks(std::string datatype_instance,
             LabelBlocks blocks, std::vector<int> block_coords);
 
-    void put_labelblocks3D(std::string datatype_instance, Labels3D const & volume, std::vector<int> offset, bool throttle=false);
+    /*!
+     * Put label blocks into DVID using compressed segmentation format.
+     * Note: offset must be properly shifted for downres level chosen.  The
+     * scale parameter only routes the data to correct level and is
+     * not responsible for downsampling. 
+     * \param datatype instance name of labelarray type instance
+     * \param volume uncompressed label data 
+     * \param offset X,Y,Z offset in dvid
+     * \param throttle allow only one request at time (default: false)
+     * \param scale downsample level (0 highest resolution)
+     *
+    */
+    void put_labelblocks3D(std::string datatype_instance, Labels3D const & volume, std::vector<int> offset, bool throttle=false, int scale=0);
 
     /*************** API to access keyvalue interface ***************/
     

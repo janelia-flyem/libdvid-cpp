@@ -264,14 +264,14 @@ namespace libdvid { namespace python {
                                 std::string datatype_instance,
                                 Labels3D const & volume,
                                 std::vector<int> offset,
-                                bool throttle )
+                                bool throttle, int scale )
     {
         // Reverse offset
         std::reverse(offset.begin(), offset.end());
 
         // The Labels3D volume is automatically converted from ZYX order
         // to XYZ thanks to DVIDVoxels converter logic in converters.hpp
-        nodeService.put_labelblocks3D(datatype_instance, volume, offset, throttle);
+        nodeService.put_labelblocks3D(datatype_instance, volume, offset, throttle, scale);
     }
 
     boost::int64_t get_label_by_location_zyx( DVIDNodeService & nodeService,
@@ -746,7 +746,7 @@ namespace libdvid { namespace python {
                 ":param mutate: set to True if overwriting previous segmentation (default: False) \n")
 
             .def("put_labelblocks3D", &put_labelblocks3D_zyx,
-                ( arg("service"), arg("instance_name"), arg("label_vol_zyx"), arg("offset_zyx"), arg("throttle")=true ),
+                ( arg("service"), arg("instance_name"), arg("label_vol_zyx"), arg("offset_zyx"), arg("throttle")=true, arg("scale")=0 ),
                 "(labelarray instances only) Put a 3D 8-byte label volume to DVID with the specified \n"
                 "dimension and spatial offset.  THE DIMENSION AND OFFSET ARE \n"
                 "IN VOXEL COORDINATES BUT MUST BE BLOCK ALIGNED.  The size \n"
@@ -762,6 +762,7 @@ namespace libdvid { namespace python {
                 ":param volume: label 3D volume encodes dimension sizes and binary buffer \n"
                 ":param offset_zyx: offset in voxel coordinates \n"
                 ":param throttle: allow only one request at time (default: true) \n"
+                ":param scale: downres level, 0 max res (default: 0) \n"
                 )
 
             .def("body_exists", &DVIDNodeService::body_exists,
