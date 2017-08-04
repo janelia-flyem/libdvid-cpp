@@ -55,8 +55,8 @@ if [[ $CONFIGURE_ONLY == 0 ]]; then
     # For debug builds, this symlink can be useful...
     #cd ${PREFIX}/lib && ln -s libdvidcpp-g.${DYLIB_EXT} libdvidcpp.${DYLIB_EXT} && cd -
 
-    if [ -z "${SKIP_BUILD_TESTS}" ]; then
-        echo "Running build tests.  To skip, set SKIP_BUILD_TESTS=1"
+    if [[ -z "$SKIP_LIBDVID_TESTS" || "$SKIP_LIBDVID_TESTS" == "0" ]]; then
+        echo "Running build tests.  To skip, set SKIP_LIBDVID_TESTS=1"
     
         # This script runs 'make test', which uses the build artifacts in the build directory, not the installed files.
         # Therefore, they haven't been post-processed by conda to automatically locate their dependencies.
