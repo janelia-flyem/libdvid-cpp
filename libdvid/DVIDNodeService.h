@@ -812,9 +812,10 @@ class DVIDNodeService {
      * \param blockcoords vector of x,y,z,x,y,z ...
      * \param gray indicates whether a grayscale datatype is being accessed 
      * \param c_blocks array of lz4/jpeg compressed label blocks
+     * \param scale downsample level (0 highest resolution)
     */
     void get_specificblocks3D(std::string datatype_instance, std::vector<int>& blockcoords, bool gray, 
-        std::vector<DVIDCompressedBlock>& c_blocks);
+        std::vector<DVIDCompressedBlock>& c_blocks, int scale=0);
 
     /*!
      * Prefetch specific blocks from DVID (non-blocking)

@@ -441,7 +441,7 @@ void DVIDNodeService::prefetch_specificblocks3D(string datatype_instance,
 }
 
 void DVIDNodeService::get_specificblocks3D(string datatype_instance,
-        vector<int>& blockcoords, bool gray, vector<DVIDCompressedBlock>& c_blocks)
+        vector<int>& blockcoords, bool gray, vector<DVIDCompressedBlock>& c_blocks, int scale)
 {
     size_t blocksize = get_blocksize(datatype_instance);
     if ((blockcoords.size() % 3) != 0) {
@@ -464,15 +464,24 @@ void DVIDNodeService::get_specificblocks3D(string datatype_instance,
         resloc << blockcoords[i+1] << ",";
         resloc << blockcoords[i+2]; 
     }
- 
+
+    // add scale param
+    if (scale > 0) {
+        resloc << "&scale=" << scale;
+    }
+
     BinaryDataPtr binary_result = custom_request(resloc.str(), BinaryDataPtr(), GET);
 
     const unsigned char * head = binary_result->get_raw();
     int buffer_size = binary_result->length();
 
-    DVIDCompressedBlock::CompressType ctype = DVIDCompressedBlock::lz4;
+    DVIDCompressedBlock::CompressType ctype = DVIDCompressedBlock::gzip_labelarray;
     if (gray) {
         ctype = DVIDCompressedBlock::jpeg;
+    }
+    size_t datasize = sizeof(uint64);
+    if (gray) {
+        datasize = 1;
     }
 
     // it is possible to have less blocks than requested if they are blank
@@ -493,11 +502,6 @@ void DVIDNodeService::get_specificblocks3D(string datatype_instance,
         buffer_size -= 4;
 
         BinaryDataPtr blockdata = BinaryData::create_binary_data((const char*) head, lz4_bytes);
-
-        size_t datasize = sizeof(uint64);
-        if (gray) {
-            datasize = 1;
-        }
 
         DVIDCompressedBlock c_block(blockdata, offset, blocksize, datasize, ctype);
 
