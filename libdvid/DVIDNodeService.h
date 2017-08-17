@@ -815,7 +815,7 @@ class DVIDNodeService {
      * \param scale downsample level (0 highest resolution)
     */
     void get_specificblocks3D(std::string datatype_instance, std::vector<int>& blockcoords, bool gray, 
-        std::vector<DVIDCompressedBlock>& c_blocks, int scale=0);
+        std::vector<DVIDCompressedBlock>& c_blocks, int scale=0, bool uncompressed=false);
 
     /*!
      * Prefetch specific blocks from DVID (non-blocking)

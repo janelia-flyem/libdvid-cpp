@@ -441,7 +441,7 @@ void DVIDNodeService::prefetch_specificblocks3D(string datatype_instance,
 }
 
 void DVIDNodeService::get_specificblocks3D(string datatype_instance,
-        vector<int>& blockcoords, bool gray, vector<DVIDCompressedBlock>& c_blocks, int scale)
+        vector<int>& blockcoords, bool gray, vector<DVIDCompressedBlock>& c_blocks, int scale, bool uncompressed)
 {
     size_t blocksize = get_blocksize(datatype_instance);
     if ((blockcoords.size() % 3) != 0) {
@@ -469,6 +469,10 @@ void DVIDNodeService::get_specificblocks3D(string datatype_instance,
     if (scale > 0) {
         resloc << "&scale=" << scale;
     }
+    
+    if (uncompressed) {
+        resloc << "&compression=uncompressed";
+    }
 
     BinaryDataPtr binary_result = custom_request(resloc.str(), BinaryDataPtr(), GET);
 
@@ -482,6 +486,9 @@ void DVIDNodeService::get_specificblocks3D(string datatype_instance,
     size_t datasize = sizeof(uint64);
     if (gray) {
         datasize = 1;
+    }
+    if (uncompressed) {
+        ctype = DVIDCompressedBlock::uncompressed;
     }
 
     // it is possible to have less blocks than requested if they are blank
