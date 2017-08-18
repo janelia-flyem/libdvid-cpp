@@ -100,7 +100,11 @@ class DVIDVoxels {
             }
         }
         if (total*sizeof(T) != (uint64)(data->length())) {
-            throw ErrMsg("Dimension mismatch with buffer size");
+            std::ostringstream ssMsg;
+            ssMsg << "Dimension mismatch with buffer size: "
+                  << "(" << dims_[0] << ", " << dims_[1] << ", " << dims_[2] << ")"
+                  << " vs. " << data->length();
+            throw ErrMsg(ssMsg.str());
         }
     }
 

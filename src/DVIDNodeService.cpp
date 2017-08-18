@@ -392,8 +392,23 @@ Labels3D DVIDNodeService::get_labels3D(string datatype_instance, Dims_t sizes,
         data = BinaryData::decompress_lz4(data, decomp_size);
     }
 
-    Labels3D labels(data, sizes);
-    return labels; 
+    try {
+        Labels3D labels(data, sizes);
+        return labels;
+    } catch (std::exception const & ex) {
+        std::ostringstream ssMsg;
+        ssMsg << "Failed to read labels: " << ex.what() << "\n"
+              << "Call was: get_labels3D( "
+              << "\"" << datatype_instance << "\", "
+              << "(" << sizes[0] << "," << sizes[1] << "," << sizes[2] << "), "
+              << "(" << offset[0] << "," << offset[1] << "," << offset[2] << "), "
+              << "(" << axes[0] << "," << axes[1] << "," << axes[2] << "), "
+              << ( (throttle) ? "true" : "false" )
+              << ( (compress) ? "true" : "false" )
+              << roi
+              << ")";
+         throw ErrMsg(ssMsg.str());
+    }
 }
 
 vector<DVIDCompressedBlock> DVIDNodeService::get_grayblocks3D(string datatype_instance, Dims_t sizes,
