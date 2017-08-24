@@ -18,6 +18,22 @@
 
 #include "converters.hpp"
 
+// import_array() is a macro whose return type changed in python 3
+// https://mail.scipy.org/pipermail/numpy-discussion/2010-December/054350.html
+#if PY_MAJOR_VERSION >= 3
+int
+init_numpy()
+{
+    import_array();
+}
+#else
+void
+init_numpy()
+{
+    import_array();
+}
+#endif
+
 namespace libdvid { namespace python {
 
     //! Python wrapper function for DVIDConnection::make_request().
@@ -358,7 +374,7 @@ namespace libdvid { namespace python {
         docstring_options doc_options(true, true, false);
 
         // http://docs.scipy.org/doc/numpy/reference/c-api.array.html#importing-the-api
-        import_array();
+        init_numpy();
 
         // Create custom Python exception types for the C++ exceptions defined in DVIDException.h,
         // and register a translator for each
@@ -940,6 +956,20 @@ namespace libdvid { namespace python {
             .value("XZ", XZ)
             .value("YZ", YZ)
         ;
+
+        // Register conversion for all scalar types.
+        NumpyScalarConverter<signed char>();
+        NumpyScalarConverter<short>();
+        NumpyScalarConverter<int>();
+        NumpyScalarConverter<long>();
+        NumpyScalarConverter<long long>();
+        NumpyScalarConverter<unsigned char>();
+        NumpyScalarConverter<unsigned short>();
+        NumpyScalarConverter<unsigned int>();
+        NumpyScalarConverter<unsigned long>();
+        NumpyScalarConverter<unsigned long long>();
+        NumpyScalarConverter<float>();
+        NumpyScalarConverter<double>();
 
     }
 

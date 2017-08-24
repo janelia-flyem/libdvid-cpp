@@ -5,9 +5,9 @@ fi
 
 export PREFIX="${1%/}"
 export PYTHON="${PREFIX}/bin/python"
-export CPU_COUNT=`python -c "import multiprocessing; print multiprocessing.cpu_count()"`
+export CPU_COUNT=`python -c "import multiprocessing; print(multiprocessing.cpu_count())"`
 export PATH="${PREFIX}/bin":$PATH
-export NPY_VER=$(python -c 'import numpy; print numpy.version.version[:3]')
+export NPY_VER=$(python -c 'import numpy; print(numpy.version.version[:3])')
 
 # Start in the same directory as this script.
 cd `dirname $0`

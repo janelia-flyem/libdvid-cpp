@@ -102,7 +102,7 @@ class VoxelsMetadata(dict):
         for channel_fields in metadata["Properties"]["Values"]:
             dtypes.append( numpy.dtype( channel_fields["DataType"] ) )
 
-        assert all( map( lambda dtype: dtype == dtypes[0], dtypes ) ), \
+        assert all( [dtype == dtypes[0] for dtype in dtypes] ), \
             "Can't support heterogeneous channel types: {}".format( dtypes )
         self._dtype = dtypes[0]
         
@@ -218,7 +218,7 @@ class VoxelsMetadata(dict):
 
     @classmethod    
     def determine_channels_from_dvid_typename(cls, typename):
-        mapping = { v:k for k,v in cls.TYPENAMES.items() }
+        mapping = { v:k for k,v in list(cls.TYPENAMES.items()) }
         try:
             return mapping[typename]
         except KeyError:
@@ -250,7 +250,7 @@ class VoxelsMetadata(dict):
                 # TODO: Check resolution units, because apparently 
                 #        they can be different from one axis to the next...
     
-            assert all( map( lambda dtype: dtype == dtypes[0], dtypes ) ), \
+            assert all( [dtype == dtypes[0] for dtype in dtypes] ), \
                 "Can't support heterogeneous channel types: {}".format( dtypes )
 
             # Reverse from F-order to C-order

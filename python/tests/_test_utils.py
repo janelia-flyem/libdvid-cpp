@@ -1,5 +1,4 @@
 import os
-import httplib
 import json
 
 from libdvid import DVIDConnection, ConnectionMethod
@@ -9,8 +8,7 @@ def get_testrepo_root_uuid():
     connection = DVIDConnection(TEST_DVID_SERVER, "test1@blah.com", "myapp")
     status, body, _error_message = connection.make_request( "/repos/info", ConnectionMethod.GET)
     repos_info = json.loads(body)
-    test_repos = filter( lambda (uuid, repo_info): repo_info and repo_info['Alias'] == 'testrepo', 
-                         repos_info.items() )
+    test_repos = [uuid_repo_info for uuid_repo_info in list(repos_info.items()) if uuid_repo_info[1] and uuid_repo_info[1]['Alias'] == 'testrepo']
     if test_repos:
         uuid = test_repos[0][0]
         return str(uuid)

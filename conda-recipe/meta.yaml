@@ -11,45 +11,41 @@ package:
 source:
   path: ../
 
-# You can set BOOST_VER via an environment variable when building this recipe.
-{% if not BOOST_VER is defined %}
-  {% set BOOST_VER = "1.55.0" %}
-{% endif %}
-
 build:
-  number: 0
+  number: 1
 
   #
-  # You must build this recipe using 'conda build --numpy=X.Y'
+  # You must build this recipe using 'conda build --python=X.Y --numpy=X.Y'
   #
-  string: np{{CONDA_NPY}}py{{CONDA_PY}}boost{{BOOST_VER}}_{{PKG_BUILDNUM}}_g{{GIT_FULL_HASH[:7]}}
+  string: np{{CONDA_NPY}}py{{CONDA_PY}}_{{PKG_BUILDNUM}}_g{{GIT_FULL_HASH[:7]}}
   
   script_env:
     - SKIP_LIBDVID_TESTS
   
 requirements:
   build:
-    - gcc 4.8.5*
-    - boost {{BOOST_VER}}
+    - cmake
+    - boost 1.63.0
     - jsoncpp 1.6.2
-    - lz4 128
+    - lz4-c >=1.7.5,<100 # Old versions of lz4 used a different versioning scheme, e.g. 'r116'
     - zeromq 4.1.3
-    - jpeg 8d
-    - libpng 1.6.17
+    - jpeg 9*
+    - libpng 1.6.28
     - curl 7.45*
-    - python 2.7.12 # Apparently we get a segfault if we build against python 2.7.12 and then try to use 2.7.11... WTH?
+    - python >=2.7
+    - python {{PY_VER}}*
     - numpy >=1.9,{{NPY_VER}}*
     
   run:
-    - libgcc 4.8.5*
-    - boost {{BOOST_VER}}
+    - boost 1.63.0
     - jsoncpp 1.6.2
-    - lz4 128
+    - lz4-c >=1.7.5,<2 # Old versions of lz4 used a different versioning scheme, e.g. 'r116'
     - zeromq 4.1.3
-    - jpeg 8d
-    - libpng 1.6.17
+    - jpeg 9*
+    - libpng >=1.6.28,<1.7  # On Mac, libpng versions are not backwards compatible, unfortunately.
+                            # See: https://github.com/conda-forge/libpng-feedstock/issues/10
     - curl 7.45*
-    - python 2.7.12 # Apparently we get a segfault if we build against python 2.7.12 and then try to use 2.7.11... WTH?
+    - python {{PY_VER}}*
     - numpy  {{NPY_VER}}*
 
 test:
