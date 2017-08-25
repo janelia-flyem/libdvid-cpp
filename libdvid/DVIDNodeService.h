@@ -460,6 +460,21 @@ class DVIDNodeService {
            Dims_t dims, std::vector<int> offset, bool throttle= false);
 
     /*!
+     * Fetch labelarray blocks from DVID with the specified dimension
+     * size and spatial offset.  The request must be block aligned.
+     * \param datatype instance name of labelblk type instance
+     * \param dims size of X, Y, Z dimensions in voxel coordinates
+     * \param offset X, Y, Z offset in voxel coordinates
+     * \param throttle allow only one request at time (default: false)
+     * \return array of lz4 compressed label blocks
+    */
+    Labels3D get_labelarray_blocks3D( std::string datatype_instance,
+                                      Dims_t sizes,
+                                      std::vector<int> offset,
+                                      bool throttle );
+
+
+    /*!
      * Fetch label blocks from DVID with teh specified dimension
      * size and spatial offset.  The request must be block aligned.
      * \param datatype instance name of labelblk type instance
