@@ -259,6 +259,22 @@ namespace libdvid { namespace python {
         return nodeService.get_labels3D(datatype_instance, sizes, offset, throttle, compress, roi);
     }
 
+    Labels3D get_labelarray_blocks3D_zyx( DVIDNodeService & nodeService,
+                                         std::string datatype_instance,
+                                         Dims_t sizes,
+                                         std::vector<int> offset,
+                                         bool throttle )
+    {
+        // Reverse offset and sizes
+        std::reverse(offset.begin(), offset.end());
+        std::reverse(sizes.begin(), sizes.end());
+
+        // Result is automatically converted to ZYX order thanks
+        // to DVIDVoxels converter logic in converters.hpp
+        return nodeService.get_labelarray_blocks3D(datatype_instance, sizes, offset, throttle);
+    }
+
+
     void put_labels3D_zyx( DVIDNodeService & nodeService,
                            std::string datatype_instance,
                            Labels3D const & volume,
@@ -731,6 +747,27 @@ namespace libdvid { namespace python {
                 ":param compress: enable lz4 compression \n"
                 ":param roi: specify DVID roi to mask GET operation (return 0s outside ROI) \n"
                 ":returns: 3D ``ndarray`` with dtype ``uint64`` \n")
+
+
+            .def("get_labelarray_blocks3D", &get_labelarray_blocks3D_zyx,
+                ( arg("service"), arg("instance_name"), arg("shape_zyx"), arg("offset_zyx"), arg("throttle")=true ),
+                "Retrieve a 3D 8-byte labelarray volume with the specified \n"
+                "dimension size and spatial offset.  The dimension \n"
+                "sizes and offset default to X,Y,Z (the \n"
+                "DVID 0,1,2 axis order).  The data is returned so X corresponds \n"
+                "to the matrix column.  Because it is easy to overload a single \n"
+                "server implementation of DVID with hundreds of volume requests, \n"
+                "we support a throttle command that prevents multiple volume \n"
+                "GETs/PUTs from executing at the same time. \n"
+                "A 2D slice should be requested as X x Y x 1.  The requested \n"
+                "number of voxels cannot be larger than INT_MAX/8. \n"
+                "\n"
+                ":param instance_name: name of the labelblk type instance \n"
+                ":param shape_zyx: size of X, Y, Z dimensions in voxel coordinates \n"
+                ":param offset_zyx: offset in voxel coordinates \n"
+                ":param throttle: allow only one request at time (default: true) \n"
+                ":returns: 3D ``ndarray`` with dtype ``uint64`` \n")
+
 
             .def("get_label_by_location",  &get_label_by_location_zyx,
                 ( arg("service"), arg("instance_name"), arg("point_zyx") ),
