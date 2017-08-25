@@ -78,7 +78,7 @@ class DVIDCompressedBlock {
      * Decompress data.
      * \return decompressed binary
     */
-    BinaryDataPtr get_uncompressed_data()
+    BinaryDataPtr get_uncompressed_data() const
     {
         // lz4 decompress
         switch (ctype) {
