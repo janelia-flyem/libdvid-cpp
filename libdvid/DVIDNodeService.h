@@ -936,7 +936,8 @@ class DVIDNodeService {
     */
     void get_subvolblocks3D(std::string datatype_instance, Dims_t sizes,
         std::vector<int> offset, bool throttle, bool gray, 
-        std::vector<DVIDCompressedBlock>& c_blocks);
+        std::vector<DVIDCompressedBlock>& c_blocks,
+        DVIDCompressedBlock::CompressType ctype);
 
     /*!
      * Helper function to construct a REST endpoint string for
