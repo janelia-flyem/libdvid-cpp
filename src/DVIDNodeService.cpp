@@ -415,7 +415,7 @@ vector<DVIDCompressedBlock> DVIDNodeService::get_grayblocks3D(string datatype_in
         vector<int> offset, bool throttle)
 {
     vector<DVIDCompressedBlock> c_blocks;
-    get_subvolblocks3D(datatype_instance, sizes, offset, throttle, true, c_blocks);
+    get_subvolblocks3D(datatype_instance, sizes, offset, throttle, true, c_blocks, DVIDCompressedBlock::jpeg);
     return c_blocks;
 }
 
@@ -423,9 +423,12 @@ vector<DVIDCompressedBlock> DVIDNodeService::get_labelblocks3D(string datatype_i
         vector<int> offset, bool throttle)
 {
     vector<DVIDCompressedBlock> c_blocks;
-    get_subvolblocks3D(datatype_instance, sizes, offset, throttle, false, c_blocks);
+    get_subvolblocks3D(datatype_instance, sizes, offset, throttle, false, c_blocks, DVIDCompressedBlock::lz4);
     return c_blocks;
 }
+
+
+
 
 void DVIDNodeService::prefetch_specificblocks3D(string datatype_instance,
         vector<int>& blockcoords)
@@ -699,7 +702,8 @@ void DVIDNodeService::put_labelblocks3D(string datatype_instance, Labels3D const
 
 
 void DVIDNodeService::get_subvolblocks3D(string datatype_instance, Dims_t sizes,
-        vector<int> offset, bool throttle, bool gray, vector<DVIDCompressedBlock>& c_blocks)
+        vector<int> offset, bool throttle, bool gray, vector<DVIDCompressedBlock>& c_blocks,
+        DVIDCompressedBlock::CompressType ctype)
 {
     // make sure volume specified is legal and block aligned
     if ((sizes.size() != 3) || (offset.size() != 3)) {
@@ -737,8 +741,23 @@ void DVIDNodeService::get_subvolblocks3D(string datatype_instance, Dims_t sizes,
     for (unsigned int i = 1; i < offset.size(); ++i) {
         sstr << "_" << offset[i];
     }
+
+    sstr << "?compression=";
+    if (ctype == DVIDCompressedBlock::jpeg)
+    {
+        sstr << "jpeg";
+    }
+    if (ctype == DVIDCompressedBlock::lz4)
+    {
+        sstr << "lz4";
+    }
+    if (ctype == DVIDCompressedBlock::gzip_labelarray)
+    {
+        sstr << "blocks";
+    }
+
     if (throttle) {
-        sstr << "?throttle=on";
+        sstr << "&throttle=on";
     }
  
     // try get until DVID is available (no contention)
@@ -770,12 +789,6 @@ void DVIDNodeService::get_subvolblocks3D(string datatype_instance, Dims_t sizes,
 
     const unsigned char * head = binary_result->get_raw();
     int buffer_size = binary_result->length();
-
-    DVIDCompressedBlock::CompressType ctype = DVIDCompressedBlock::lz4;
-    //DVIDCompressedBlock::CompressType ctype = DVIDCompressedBlock::gzip_labelarray;
-    if (gray) {
-        ctype = DVIDCompressedBlock::jpeg;
-    }
 
     // it is possible to have less blocks than requested if they are blank
     while (buffer_size) {
