@@ -112,7 +112,7 @@ if (NOT ${BUILDEM_DIR} STREQUAL "None")
         include (python)
         include (numpy)
         set (LIBDVID_DEPS ${LIBDVID_DEPS} ${python_NAME} ${numpy_NAME})
-        set(boostpython_LIB ${BUILDEM_LIB_DIR}/libboost_python.${BUILDEM_PLATFORM_DYLIB_EXTENSION})
+        set(Boost_PYTHON_LIBRARY ${BUILDEM_LIB_DIR}/libboost_python.${BUILDEM_PLATFORM_DYLIB_EXTENSION})
     endif()
     set (support_LIBS ${json_LIB} 
                       ${boost_LIBS} 
@@ -121,12 +121,67 @@ if (NOT ${BUILDEM_DIR} STREQUAL "None")
                       ${BUILDEM_LIB_DIR}/libjpeg.${BUILDEM_PLATFORM_DYLIB_EXTENSION} 
                       ${BUILDEM_LIB_DIR}/liblz4.${BUILDEM_PLATFORM_DYLIB_EXTENSION} )
 else ()
-    set(BOOST_COMPONENTS thread system)
+    # python is intentionally omitted here, in favor of the more reliable detection, below.
+    FIND_PACKAGE(Boost REQUIRED COMPONENTS thread system)
+
     if (LIBDVID_WRAP_PYTHON)
-        set(BOOST_COMPONENTS ${BOOST_COMPONENTS} python)
+    
+        FIND_PACKAGE(PythonInterp)
+
+        ######################################################################
+        #
+        #  Find boost::python library
+        #
+        #  (Copied from vigra/config/FindVIGRANUMPY_DEPENDENCIES.cmake)
+        #
+        # 'FIND_PACKAGE(Boost COMPONENTS python)' is unreliable because it often selects
+        # boost_python for the wrong Python version
+        #
+        ######################################################################
+        IF(Boost_FOUND)
+
+            IF(Boost_USE_MULTITHREADED)
+                # define names for thread-safe library variants
+                SET(BOOST_PYTHON_NAMES
+                        boost_python-py${PYTHON_VERSION_MAJOR}${PYTHON_VERSION_MINOR}-mt
+                        boost_python-${PYTHON_VERSION_MAJOR}.${PYTHON_VERSION_MINOR}-mt
+                        boost_python${PYTHON_VERSION_MAJOR}-mt
+                        boost_python-mt)
+            ENDIF()
+
+            IF(Boost_LIB_SUFFIX)
+                SET(BOOST_PYTHON_NAMES ${BOOST_PYTHON_NAMES}
+                    # Windows with mangled library names
+                    boost_python${PYTHON_VERSION_MAJOR}${Boost_LIB_SUFFIX}
+                    boost_python${Boost_LIB_SUFFIX})
+            ENDIF()
+    
+            # define names for boost_python library variants
+            # (may or may not be thread-safe)
+            SET(BOOST_PYTHON_NAMES ${BOOST_PYTHON_NAMES}
+                    # Linux with multiple Python versions
+                    boost_python-py${PYTHON_VERSION_MAJOR}${PYTHON_VERSION_MINOR}
+                    # Gentoo
+                    boost_python-${PYTHON_VERSION_MAJOR}.${PYTHON_VERSION_MINOR}
+                    # Mac with Python 3
+                    boost_python${PYTHON_VERSION_MAJOR}
+                    # default
+                    boost_python)
+    
+            FIND_LIBRARY(Boost_PYTHON_LIBRARY
+                         NAMES ${BOOST_PYTHON_NAMES}
+                         NAMES_PER_DIR
+                         HINTS "${Boost_LIBRARY_DIR}"
+                         DOC "boost_python libraries")
+        ENDIF()
+    
+        if(Boost_PYTHON_LIBRARY)
+            MESSAGE(STATUS "Found boost_python library: ${Boost_PYTHON_LIBRARY}")
+        else()
+            MESSAGE(FATAL_ERROR "Could NOT find boost_python library")
+        endif()
     endif()
 
-    FIND_PACKAGE(Boost REQUIRED COMPONENTS ${BOOST_COMPONENTS})
     include_directories(AFTER ${Boost_INCLUDE_DIR})
     if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
         set (PLATFORM_DYLIB_EXTENSION "dylib")
@@ -137,9 +192,6 @@ else ()
         set(Boost_LIBRARY_DIR_RELEASE ${Boost_LIBRARY_DIR})
     endif()
     set (boost_LIBS ${Boost_LIBRARY_DIR_RELEASE}/libboost_thread.${PLATFORM_DYLIB_EXTENSION} ${Boost_LIBRARY_DIR_RELEASE}/libboost_system.${PLATFORM_DYLIB_EXTENSION})
-    if (LIBDVID_WRAP_PYTHON)
-        set(boostpython_LIB ${Boost_LIBRARY_DIR_RELEASE}/libboost_python.${PLATFORM_DYLIB_EXTENSION})
-    endif()
 
     #set(JPEGTURBO ON)
     FIND_PACKAGE(PNG REQUIRED)
