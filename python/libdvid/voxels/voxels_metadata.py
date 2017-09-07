@@ -177,7 +177,7 @@ class VoxelsMetadata(dict):
         metadata = {}
         metadata["Axes"] = []
         metadata["Properties"] = {}
-        for key, size in zip(axiskeys, shape)[::-1][1:]: # skip channel
+        for key, size in list(zip(axiskeys, shape))[::-1][1:]: # skip channel
             axisdict = {}
             axisdict["Label"] = key.upper()
             axisdict["Resolution"] = resolution

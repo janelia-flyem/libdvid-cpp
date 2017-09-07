@@ -276,7 +276,7 @@ class TestVoxelsAccessor(unittest.TestCase):
         from libdvid.voxels import VoxelsAccessor, VoxelsMetadata
            
         # Open a connection to DVID
-        connection = DVIDConnection( "localhost:8000" )
+        connection = DVIDConnection( "127.0.0.1:8000" )
           
         # Get detailed dataset info: /api/repos/info (note: /api is prepended automatically)
         status, body, _error_message = connection.make_request( "/repos/info", ConnectionMethod.GET)
@@ -286,21 +286,21 @@ class TestVoxelsAccessor(unittest.TestCase):
         # Create a new remote volume (assuming you already know the uuid of the node)
         uuid = UUID
         voxels_metadata = VoxelsMetadata.create_default_metadata( (0,0,0,1), numpy.uint8, 'zyxc', 1.0, "" )
-        VoxelsAccessor.create_new( "localhost:8000", uuid, "my_volume", voxels_metadata )
+        VoxelsAccessor.create_new( "127.0.0.1:8000", uuid, "my_volume", voxels_metadata )
   
         # Use the VoxelsAccessor convenience class to manipulate a particular data volume     
-        accessor = VoxelsAccessor( "localhost:8000", uuid, "my_volume" )
+        accessor = VoxelsAccessor( "127.0.0.1:8000", uuid, "my_volume" )
         # print(dvid_volume.axiskeys, dvid_volume.dtype, dvid_volume.minindex, dvid_volume.shape)
            
         # Add some data (must be block-aligned)
         # Must include all channels.
         updated_data = numpy.ones( (256,192,128,1), dtype=numpy.uint8)
-        accessor[256:512, 32:224, 0:128, :] = updated_data
+        accessor[256:512, 32:224, 0:128, 0] = updated_data
         # OR:
         #accessor.post_ndarray( (0,10,20,30), (1,110,120,130), updated_data )
           
         # Read from it (First axis is channel.)
-        cutout_array = accessor[300:330, 40:120, 10:110, :]
+        cutout_array = accessor[300:330, 40:120, 10:110, 0]
         # OR:
         cutout_array = accessor.get_ndarray( (300,40,10,0), (330,120,110,1) )
   
