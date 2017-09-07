@@ -292,6 +292,8 @@ EncodedData encode_label_block(uint64_t const * label_block)
         encode_vector<uint32_t>(encoded_data, index_list);
     });
 
+    auto size_before_bitstream = encoded_data.size();
+    
     // Write out the bit-stream of all encoded values
     for_indices(GZ, GY, GX, [&](size_t gz, size_t gy, size_t gx) {
         LabelVec subblock = extract_subblock(label_block, gz, gy, gx);
@@ -344,6 +346,11 @@ EncodedData encode_label_block(uint64_t const * label_block)
         encode_vector<uint8_t>(encoded_data, encoded_voxels);
     });
 
+    if (size_before_bitstream == encoded_data.size())
+    {
+        throw std::runtime_error("Encoding error: We generated a non-empty index table, but no sub-blocks had any data!");
+    }
+    
     return encoded_data;
 }
 

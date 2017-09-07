@@ -703,7 +703,20 @@ void DVIDNodeService::put_labelblocks3D(string datatype_instance, Labels3D const
                 encode_int<int32_t>(full_data, (volume_offset_xyz[2] + subvol_offset_xyz[2]) / blocksize);
                 encode_int<int32_t>(full_data, static_cast<int32_t>(encoded_block->length()));
 
-                encode_binary_data(full_data, encoded_block);
+                try
+                {
+                    encode_binary_data(full_data, encoded_block);
+                }
+                catch (std::exception const & ex)
+                {
+                    std::ostringstream ss;
+                    ss << "Error while encoding volume at offset: "
+                       << "(" << volume_offset_xyz[0] << ", " << volume_offset_xyz[1] << ", " << volume_offset_xyz[2] << "), "
+                       << "block index: " << "[" << x_block << ", " << y_block << ", " << z_block << "]\n"
+                       << ex.what();
+
+                    throw std::runtime_error( ss.str() );
+                }
             }
         }
     }
