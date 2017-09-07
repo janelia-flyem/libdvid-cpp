@@ -554,6 +554,7 @@ Labels3D extract_label_subvol( Labels3D const & vol,
 
     // Unfortunately, the design of BinaryData doesn't allow us to avoid a copy here.
     std::vector<uint64_t> subvol_data(sv_Z * sv_Y * sv_X, 0);
+    auto const & vol_raw_data = vol.get_raw();
 
     size_t sv_offset = 0;
     for (size_t sv_z = 0; sv_z < sv_Z; ++sv_z)
@@ -572,7 +573,7 @@ Labels3D extract_label_subvol( Labels3D const & vol,
                 int y_offset = y * vol_X;
                 int x_offset = x;
 
-                subvol_data[sv_offset] = vol.get_raw()[z_offset + y_offset + x_offset];
+                subvol_data[sv_offset] = vol_raw_data[z_offset + y_offset + x_offset];
                 sv_offset += 1;
             }
         }
@@ -600,6 +601,8 @@ void overwrite_label_subvol( Labels3D & vol,
     int off_x = subvol_offset_xyz[0];
 
     BinaryDataPtr subvol_binary_data = subvol.get_binary();
+    auto & vol_data = vol.get_binary()->get_data();
+    auto const & subvol_data = subvol_binary_data->get_data();
 
     size_t sv_offset = 0;
     for (size_t sv_z = 0; sv_z < sv_Z; ++sv_z)
@@ -623,7 +626,7 @@ void overwrite_label_subvol( Labels3D & vol,
 
                 for (auto i = 0; i < sizeof(uint64_t); ++i)
                 {
-                    vol.get_binary()->get_data()[vol_offset_bytes + i] = subvol_binary_data->get_data()[subvol_offset_bytes + i];
+                    vol_data[vol_offset_bytes + i] = subvol_data[subvol_offset_bytes + i];
                 }
                 sv_offset += 1;
             }
