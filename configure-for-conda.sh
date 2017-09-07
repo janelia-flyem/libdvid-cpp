@@ -26,9 +26,4 @@ if [[ -e "${BUILD_DIR}/CMakeCache.txt" ]]; then
     fi
 fi
 
-# Install gcc first if necessary.
-if [ ! -e "${PREFIX}/bin/gcc" ]; then
-    conda install -p "${PREFIX}" -c flyem gcc
-fi
-
 BUILD_DIR="${BUILD_DIR}" NPY_VER=$NPY_VER bash -x -e - ./conda-recipe/build.sh --configure-only
