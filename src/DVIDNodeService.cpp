@@ -644,7 +644,12 @@ Labels3D DVIDNodeService::get_labelarray_blocks3D(string datatype_instance, Dims
     for ( auto const & c_block : c_blocks )
     {
         Labels3D label_block( c_block.get_uncompressed_data(), block_size );
-        overwrite_label_subvol( full_volume, label_block, c_block.get_offset() );
+        
+        std::vector<int> local_offset = c_block.get_offset();
+        local_offset[0] -= offset[0];
+        local_offset[1] -= offset[1];
+        local_offset[2] -= offset[2];
+        overwrite_label_subvol( full_volume, label_block, local_offset );
     }
 
     return full_volume;
