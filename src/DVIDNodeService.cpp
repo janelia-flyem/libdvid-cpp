@@ -6,6 +6,8 @@
 
 #include <set>
 #include <algorithm>
+#include <cstdlib>
+#include <unordered_set>
 #include <json/json.h>
 #include <boost/assign/list_of.hpp>
 #include <boost/bind.hpp>
@@ -19,6 +21,10 @@ using std::ifstream; using std::set; using std::stringstream;
 //! Gives the limit for how many vertice can be operated on in one call
 static const unsigned int TransactionLimit = 1000;
 
+static const bool DVIDNODESERVICE_EXTRA_CHECKS = []{
+    char * var = getenv("DVIDNODESERVICE_EXTRA_CHECKS");
+    return (var != NULL) && (var == std::string("1"));
+}();
 
 namespace libdvid {
 
@@ -690,21 +696,44 @@ void DVIDNodeService::put_labelblocks3D(string datatype_instance, Labels3D const
         {
             for (int x_block = 0; x_block < vol_X / blocksize; ++x_block)
             {
-                std::vector<int> subvol_offset_xyz = { x_block * (int)blocksize,
-                                                       y_block * (int)blocksize,
-                                                       z_block * (int)blocksize };
-
-                const Dims_t subvol_dims = { blocksize, blocksize, blocksize };
-                Labels3D subvol = extract_label_subvol(volume, subvol_dims, subvol_offset_xyz);
-                BinaryDataPtr encoded_block = BinaryData::compress_gzip_labelarray_block(subvol.get_binary(), blocksize);
-
-                encode_int<int32_t>(full_data, (volume_offset_xyz[0] + subvol_offset_xyz[0]) / blocksize);
-                encode_int<int32_t>(full_data, (volume_offset_xyz[1] + subvol_offset_xyz[1]) / blocksize);
-                encode_int<int32_t>(full_data, (volume_offset_xyz[2] + subvol_offset_xyz[2]) / blocksize);
-                encode_int<int32_t>(full_data, static_cast<int32_t>(encoded_block->length()));
-
                 try
                 {
+                    std::vector<int> subvol_offset_xyz = { x_block * (int)blocksize,
+                                                           y_block * (int)blocksize,
+                                                           z_block * (int)blocksize };
+
+                    const Dims_t subvol_dims = { blocksize, blocksize, blocksize };
+                    Labels3D subvol = extract_label_subvol(volume, subvol_dims, subvol_offset_xyz);
+
+                    BinaryDataPtr encoded_block;
+                    
+                    if (!DVIDNODESERVICE_EXTRA_CHECKS) // From environment -- see above
+                    {
+                        encoded_block = BinaryData::compress_gzip_labelarray_block(subvol.get_binary(), blocksize);
+                    }
+                    else
+                    {
+                        // Perfom labelarray compression and gzip in two steps, so we can examine the block before gzipping.
+                        BinaryDataPtr encoded_block_before_gzip = BinaryData::compress_labelarray_block(subvol.get_binary(), blocksize);
+                        uint32_t table_size = reinterpret_cast<uint32_t const *>(encoded_block_before_gzip->get_raw())[3];
+
+                        // Re-scan the entire block to count the number of unique labels.
+                        std::unordered_set<uint64_t> unique_voxels( subvol.get_raw(), subvol.get_raw() + subvol.count() );
+                        if (unique_voxels.size() != table_size)
+                        {
+                            std::ostringstream ss;
+                            ss << "Block has " << unique_voxels.size() << " unique labels, but the encoded block table has " << table_size << " entries.";
+                            throw std::runtime_error(ss.str());
+                        }
+
+                        encoded_block = BinaryData::compress_gzip(encoded_block_before_gzip);
+                    }
+                
+                    encode_int<int32_t>(full_data, (volume_offset_xyz[0] + subvol_offset_xyz[0]) / blocksize);
+                    encode_int<int32_t>(full_data, (volume_offset_xyz[1] + subvol_offset_xyz[1]) / blocksize);
+                    encode_int<int32_t>(full_data, (volume_offset_xyz[2] + subvol_offset_xyz[2]) / blocksize);
+                    encode_int<int32_t>(full_data, static_cast<int32_t>(encoded_block->length()));
+                    
                     encode_binary_data(full_data, encoded_block);
                 }
                 catch (std::exception const & ex)
