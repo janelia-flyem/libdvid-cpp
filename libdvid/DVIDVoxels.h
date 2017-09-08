@@ -142,6 +142,14 @@ class DVIDVoxels {
     {
         return dims;
     }
+    
+    /*!
+     * Get the total count of voxels in the volume
+    */
+    size_t count() const
+    {
+        return dims[0] * dims[1] * dims[2];
+    }
 
   private:
     //! Holds binary data
