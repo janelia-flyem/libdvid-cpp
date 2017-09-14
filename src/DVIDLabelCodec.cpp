@@ -346,10 +346,9 @@ EncodedData encode_label_block(uint64_t const * label_block)
         encode_vector<uint8_t>(encoded_data, encoded_voxels);
     });
 
-    if (size_before_bitstream == encoded_data.size())
-    {
-        throw std::runtime_error("Encoding error: We generated a non-empty index table, but no sub-blocks had any data!");
-    }
+    // This assertion is not valid if all 8x8x8 subblocks are contiguous,
+    // but they don't all have the same label.
+    // assert (size_before_bitstream != encoded_data.size())
     
     return encoded_data;
 }
