@@ -8,6 +8,7 @@
 #include <algorithm>
 #include <cstdlib>
 #include <unordered_set>
+#include <unordered_map>
 #include <json/json.h>
 #include <boost/assign/list_of.hpp>
 #include <boost/bind.hpp>
@@ -641,10 +642,10 @@ void overwrite_label_subvol( Labels3D & vol,
 }
 
 Labels3D DVIDNodeService::get_labelarray_blocks3D(string datatype_instance, Dims_t sizes,
-        vector<int> offset, bool throttle)
+        vector<int> offset, bool throttle, int scale)
 {
     vector<DVIDCompressedBlock> c_blocks;
-    get_subvolblocks3D(datatype_instance, sizes, offset, throttle, false, c_blocks, DVIDCompressedBlock::gzip_labelarray);
+    get_subvolblocks3D(datatype_instance, sizes, offset, throttle, false, c_blocks, DVIDCompressedBlock::gzip_labelarray, scale);
 
     BinaryDataPtr full_volume_data = BinaryData::create_binary_data( sizeof(uint64_t) * sizes[0] * sizes[1] * sizes[2] );
     Labels3D full_volume(full_volume_data, sizes);
@@ -819,7 +820,7 @@ void DVIDNodeService::put_labelblocks3D(string datatype_instance, Labels3D const
 
 void DVIDNodeService::get_subvolblocks3D(string datatype_instance, Dims_t sizes,
         vector<int> offset, bool throttle, bool gray, vector<DVIDCompressedBlock>& c_blocks,
-        DVIDCompressedBlock::CompressType ctype)
+        DVIDCompressedBlock::CompressType ctype, int scale)
 {
     // make sure volume specified is legal and block aligned
     if ((sizes.size() != 3) || (offset.size() != 3)) {
@@ -858,23 +859,18 @@ void DVIDNodeService::get_subvolblocks3D(string datatype_instance, Dims_t sizes,
         sstr << "_" << offset[i];
     }
 
-    sstr << "?compression=";
-    if (ctype == DVIDCompressedBlock::jpeg)
-    {
-        sstr << "jpeg";
-    }
-    if (ctype == DVIDCompressedBlock::lz4)
-    {
-        sstr << "lz4";
-    }
-    if (ctype == DVIDCompressedBlock::gzip_labelarray)
-    {
-        sstr << "blocks";
-    }
+    std::unordered_map<DVIDCompressedBlock::CompressType, std::string, std::hash<int> > compression_strings;
+    compression_strings[DVIDCompressedBlock::jpeg] = "jpeg";
+    compression_strings[DVIDCompressedBlock::lz4] = "lz4";
+    compression_strings[DVIDCompressedBlock::gzip_labelarray] = "blocks";
+
+    sstr << "?compression=" << compression_strings[ctype];
 
     if (throttle) {
         sstr << "&throttle=on";
     }
+
+    sstr << "&scale=" << scale;
  
     // try get until DVID is available (no contention)
     BinaryDataPtr binary_result; 

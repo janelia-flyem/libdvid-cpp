@@ -263,7 +263,8 @@ namespace libdvid { namespace python {
                                          std::string datatype_instance,
                                          Dims_t sizes,
                                          std::vector<int> offset,
-                                         bool throttle )
+                                         bool throttle,
+                                         int scale)
     {
         // Reverse offset and sizes
         std::reverse(offset.begin(), offset.end());
@@ -271,7 +272,7 @@ namespace libdvid { namespace python {
 
         // Result is automatically converted to ZYX order thanks
         // to DVIDVoxels converter logic in converters.hpp
-        return nodeService.get_labelarray_blocks3D(datatype_instance, sizes, offset, throttle);
+        return nodeService.get_labelarray_blocks3D(datatype_instance, sizes, offset, throttle, scale);
     }
 
 
@@ -296,7 +297,8 @@ namespace libdvid { namespace python {
                                 std::string datatype_instance,
                                 Labels3D const & volume,
                                 std::vector<int> offset,
-                                bool throttle, int scale )
+                                bool throttle,
+                                int scale )
     {
         // Reverse offset
         std::reverse(offset.begin(), offset.end());
@@ -750,7 +752,7 @@ namespace libdvid { namespace python {
 
 
             .def("get_labelarray_blocks3D", &get_labelarray_blocks3D_zyx,
-                ( arg("service"), arg("instance_name"), arg("shape_zyx"), arg("offset_zyx"), arg("throttle")=true ),
+                ( arg("service"), arg("instance_name"), arg("shape_zyx"), arg("offset_zyx"), arg("throttle")=true, arg("scale")=0 ),
                 "Retrieve a 3D 8-byte labelarray volume with the specified \n"
                 "dimension size and spatial offset.  The dimension \n"
                 "sizes and offset default to X,Y,Z (the \n"
@@ -764,8 +766,9 @@ namespace libdvid { namespace python {
                 "\n"
                 ":param instance_name: name of the labelblk type instance \n"
                 ":param shape_zyx: size of X, Y, Z dimensions in voxel coordinates \n"
-                ":param offset_zyx: offset in voxel coordinates \n"
+                ":param offset_zyx: offset in voxel coordinates of whichever scale you are fetching from \n"
                 ":param throttle: allow only one request at time (default: true) \n"
+                ":param scale: Which scale of the pyramid to fetch the blocks from\n"
                 ":returns: 3D ``ndarray`` with dtype ``uint64`` \n")
 
 

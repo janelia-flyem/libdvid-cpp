@@ -471,7 +471,8 @@ class DVIDNodeService {
     Labels3D get_labelarray_blocks3D( std::string datatype_instance,
                                       Dims_t sizes,
                                       std::vector<int> offset,
-                                      bool throttle );
+                                      bool throttle,
+                                      int scale );
 
 
     /*!
@@ -952,7 +953,7 @@ class DVIDNodeService {
     void get_subvolblocks3D(std::string datatype_instance, Dims_t sizes,
         std::vector<int> offset, bool throttle, bool gray, 
         std::vector<DVIDCompressedBlock>& c_blocks,
-        DVIDCompressedBlock::CompressType ctype);
+        DVIDCompressedBlock::CompressType ctype, int scale=0);
 
     /*!
      * Helper function to construct a REST endpoint string for
