@@ -89,16 +89,6 @@ int main(int argc, char** argv)
     libdvid::DVIDNodeService dvid_node(argv[1], argv[2]);
     libdvid::DVIDNodeService dvid_node2(argv[4], argv[5]);
 
-#if 0
-    cout << "test old interface" << endl; 
-    vector<libdvid::BinaryDataPtr> blocks;
-    {
-        // call using the ND raw
-        ScopeTime overall_time;
-        blocks = libdvid::get_body_blocks(dvid_node, argv[3], argv[6], atoi(argv[7]), 2, false, 1);
-    }
-#endif
-
     int scale;
     std::vector<libdvid::DVIDCompressedBlock> maskblocks;
     // extract sparse labelarray mask
@@ -109,6 +99,20 @@ int main(int argc, char** argv)
     }    
     cout << "num blocks: " << maskblocks.size() << endl;
 
+    // debug count
+    unsigned long long count = 0;
+    for (int i = 0; i < maskblocks.size(); ++i) {
+        auto data = maskblocks[i].get_uncompressed_data();
+        auto rawdata = data->get_raw();
+        for (int j = 0; j < (64*64*64); ++j) {
+            if (*rawdata == 255) {
+                count++;
+            }
+            rawdata++;
+        }
+    }
+    cout << "voxel count: " << count << endl;
+
     std::vector<libdvid::DVIDCompressedBlock> grayblocks;
     cout << "fetch grayscale" << endl; 
     // extract grayscale
@@ -116,6 +120,18 @@ int main(int argc, char** argv)
         ScopeTime overall_time;
         libdvid::get_sparsegraymask(dvid_node2, argv[6], maskblocks, grayblocks, scale, false);
     } 
+
+    // debug count
+    unsigned long long gcount = 0;
+    for (int i = 0; i < grayblocks.size(); ++i) {
+        auto data = grayblocks[i].get_uncompressed_data();
+        auto rawdata = data->get_raw();
+        for (int j = 0; j < (64*64*64); ++j) {
+            gcount += *rawdata;
+            rawdata++;
+        }
+    }
+    cout << "gray count: " << gcount << endl;
 
     // write binary string of data
     
@@ -172,7 +188,7 @@ int main(int argc, char** argv)
     // write to file
     std::ofstream fout("arraystring.txt");
     for (int i = 0; i < ((x2-x1)*(y2-y1)*(z2-z1)); ++i) {
-        fout << buffer[i];
+       fout << int(buffer[i]) << " ";
     } 
     fout.close();
 

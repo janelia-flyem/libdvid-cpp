@@ -1,6 +1,7 @@
 #include <libdvid/DVIDThreadedFetch.h>
 #include <libdvid/DVIDException.h>
 #include <boost/thread/thread.hpp>
+#include <thread>
 
 #include <vector>
 
@@ -616,7 +617,6 @@ int get_sparselabelmask(DVIDNodeService& service, uint64_t bodyid, std::string l
     
   
     // dvid currently missing header  
-#if 0
     gxgygz.push_back(extractval<int32_t>(head, buffer_size));
     gxgygz.push_back(extractval<int32_t>(head, buffer_size));
     gxgygz.push_back(extractval<int32_t>(head, buffer_size));
@@ -636,12 +636,6 @@ int get_sparselabelmask(DVIDNodeService& service, uint64_t bodyid, std::string l
 
     uint64_t bodycheck = extractval<uint64_t>(head, buffer_size);
     assert(bodycheck == bodyid);
-#else
-    gxgygz.push_back(blocksize/8);
-    gxgygz.push_back(blocksize/8);
-    gxgygz.push_back(blocksize/8);
-    const unsigned int SBW = 8;
-#endif
 
     int oneblocks = 0;
     int zeroblocks = 0;
@@ -653,15 +647,9 @@ int get_sparselabelmask(DVIDNodeService& service, uint64_t bodyid, std::string l
         vector<int> offset;
 
         // currently dvid is providing voxel coordinates
-#if 0
-        offset.push_back(extractval<int32_t>(head, buffer_size) * blocksize);
-        offset.push_back(extractval<int32_t>(head, buffer_size) * blocksize);
-        offset.push_back(extractval<int32_t>(head, buffer_size) * blocksize);
-#else
         offset.push_back(extractval<int32_t>(head, buffer_size));
         offset.push_back(extractval<int32_t>(head, buffer_size));
         offset.push_back(extractval<int32_t>(head, buffer_size));
-#endif
 
         // get header 
         unsigned char blockstatus = extractval<uint8_t>(head, buffer_size);
@@ -670,6 +658,7 @@ int get_sparselabelmask(DVIDNodeService& service, uint64_t bodyid, std::string l
         unsigned char * blockdata = new unsigned char[blocksize*blocksize*blocksize];
         memset(blockdata, 255, blocksize*blocksize*blocksize); 
 
+        //std::cout << offset[0] << " " << offset[1] << " " << offset[2] << std::endl;
         // should not be all blank by construction
         assert(blockstatus != 0);
 
@@ -799,7 +788,11 @@ void  get_sparsegraymask(DVIDNodeService& service, std::string dataname, const s
     if (usejpeg) {
         // decompress all jpeg (in parallel)
         boost::thread_group threads; // destructor auto deletes threads
-        int num_threads = 8; // TODO allocate dynamically
+        int num_threads = std::thread::hardware_concurrency();
+        if (num_threads == 0) {
+            // just default to something if hardware concurrency not supported                      
+            num_threads = 8;
+        }            
 
         vector<boost::thread*> curr_threads;  
         for (int i = 0; i < num_threads; ++i) {
