@@ -13,6 +13,9 @@
 #include <boost/assign/list_of.hpp>
 #include <boost/bind.hpp>
 #include <sys/time.h>
+#include <boost/thread/thread.hpp>
+using std::tuple; using std::make_tuple;
+#include <thread>
 
 using std::string; using std::vector;
 
@@ -1991,6 +1994,300 @@ bool DVIDNodeService::get_coarse_body(string labelvol_name, uint64 bodyid,
     }
 
     return true;
+}
+
+/*!
+ * Helper function to extract data from buffer.
+*/
+template <typename T>
+T extractval(const unsigned char*& head, int& buffer_size)
+{
+    T val = (*(T*)(head));
+    head += sizeof(T);
+    buffer_size -= sizeof(T);
+
+    return val;
+}
+
+/* Utility function to avoid writing triple-nested loops throughout this
+ * file.   Simply iterate over the given z/y/x index ranges (in that
+ * order), and call the given function for each iteration.
+*/
+void for_indiceszyx ( size_t Z, size_t Y, size_t X,
+                  std::function<void(size_t z, size_t y, size_t x)> func )
+{
+    for (size_t z = 0; z < Z; ++z)
+    {
+        for (size_t y = 0; y < Y; ++y)
+        {
+            for (size_t x = 0; x < X; ++x)
+            {
+                func(z, y, x);
+            }
+        }
+    }
+}
+
+/*!
+ * Helper function to write a subvolume into a larger block.
+*/
+template <typename T>
+void write_subblock(T* block, T* subblock_flat, int gz, int gy, int gx, const unsigned int BLOCK_WIDTH, const unsigned int SBW)
+{
+    size_t subblock_index = 0;
+    for_indiceszyx(SBW, SBW, SBW, [&](size_t z, size_t y, size_t x) {
+        int z_slice = gz * SBW + z;
+        int y_row   = gy * SBW + y;
+        int x_col   = gx * SBW + x;
+
+        int z_offset = z_slice * BLOCK_WIDTH * BLOCK_WIDTH;
+        int y_offset = y_row   * BLOCK_WIDTH;
+        int x_offset = x_col;
+
+        block[z_offset + y_offset + x_offset] = subblock_flat[subblock_index];
+        subblock_index += 1;
+    });
+}
+
+int DVIDNodeService::get_sparselabelmask(uint64_t bodyid, std::string labelname, std::vector<DVIDCompressedBlock>& maskblocks, unsigned long long maxsize, int scale)
+{
+    if (scale == -1 && maxsize > 0) {
+        // TODO: get label size (need new DVID API)
+        throw ErrMsg("DVID label size API not available yet");
+        std::ostringstream ss_uri;
+        ss_uri << "/" << labelname << "/labelsize/" << bodyid << "/";
+        
+        // perform query
+        auto binary = custom_request(ss_uri.str(), BinaryDataPtr(), GET);
+        
+        // fetch result 
+        Json::Value data;
+        Json::Reader json_reader;
+        if (!json_reader.parse(binary->get_data(), data)) {
+            throw ErrMsg("Could not decode JSON");
+        }
+        scale = data["LabelSize"].asInt();
+    }
+    
+    // set to default max rez if scale still not set
+    if (scale == -1) {
+        scale = 0;
+    }
+
+    // perform custom fetch of labels
+    std::ostringstream ss_uri;
+    ss_uri << "/" << labelname << "/sparsevol/" << bodyid << "?format=blocks&scale=" << scale;
+    auto binary_result = custom_request(ss_uri.str(), BinaryDataPtr(), GET);
+
+    const unsigned int blocksize = get_blocksize(labelname);
+
+    // extract sparse volume from binary encoding
+    int buffer_size = binary_result->length();
+    const unsigned char * head = binary_result->get_raw();
+
+    // fetch gx, gy, gz and body id (num sub-blocks in each dim)
+    vector<int> gxgygz;
+    
+  
+    // dvid currently missing header  
+    gxgygz.push_back(extractval<int32_t>(head, buffer_size));
+    gxgygz.push_back(extractval<int32_t>(head, buffer_size));
+    gxgygz.push_back(extractval<int32_t>(head, buffer_size));
+
+    // sub-block must be isotropic and divide into block size 
+    if (gxgygz[0] != gxgygz[1] || gxgygz[0] != gxgygz[2]) {
+        throw ErrMsg("Sub-block size must be nxnxn");
+    }
+    
+    if ((blocksize % gxgygz[0]) != 0) {
+        throw ErrMsg("Sub-block size must be divide into block size");
+    }
+    const unsigned int SBW = blocksize / gxgygz[0];
+    if ((SBW % 8) != 0) {
+        throw ErrMsg("Sub-block size must be a multiple of 8");
+    }
+
+    uint64_t bodycheck = extractval<uint64_t>(head, buffer_size);
+    assert(bodycheck == bodyid);
+
+    int oneblocks = 0;
+    int zeroblocks = 0;
+    int mixblocks = 0;
+
+    // iterate x,y,z block; header; sub-blocks
+    while (buffer_size) {
+        // retrieve offset
+        vector<int> offset;
+
+        // currently dvid is providing voxel coordinates
+        offset.push_back(extractval<int32_t>(head, buffer_size));
+        offset.push_back(extractval<int32_t>(head, buffer_size));
+        offset.push_back(extractval<int32_t>(head, buffer_size));
+
+        // get header 
+        unsigned char blockstatus = extractval<uint8_t>(head, buffer_size);
+
+        // create all one block for init case
+        unsigned char * blockdata = new unsigned char[blocksize*blocksize*blocksize];
+        memset(blockdata, 255, blocksize*blocksize*blocksize); 
+
+        //std::cout << offset[0] << " " << offset[1] << " " << offset[2] << std::endl;
+        // should not be all blank by construction
+        assert(blockstatus != 0);
+
+        if (blockstatus == 2) {
+            // parse gx,gy,gz subblocks
+            for (int z = 0; z < gxgygz[2]; ++z) {
+                for (int y = 0; y < gxgygz[1]; ++y) {
+                    for (int x = 0; x < gxgygz[0]; ++x) {
+                        // create all 0 subblock for copy over
+                        unsigned char * subblockdata = new unsigned char[SBW*SBW*SBW]();
+                        
+                        unsigned char subblockstatus = extractval<uint8_t>(head, buffer_size);
+                        if (int(subblockstatus) == 0) {
+                            // zero out subblock
+                            write_subblock(blockdata, subblockdata, z, y, x, blocksize, SBW);
+                            ++zeroblocks;
+                        } else if (int(subblockstatus) == 2) {
+                            // write binary block out -- traverse 1 bit encoded subblock
+                            ++mixblocks;
+                            int index = 0;
+                           
+                            for (int byteloc = 0; byteloc < (SBW*SBW); ++byteloc) {
+                                // each sub-block row is packed in a byte
+                                uint8_t val8 = extractval<uint8_t>(head, buffer_size);
+                                for (int i = 0; i < 8; ++i) {
+                                    subblockdata[index] = (val8 & 1) * 255;
+                                    ++index;
+                                    val8 = val8 >> 1;
+                                }
+                            } 
+                            write_subblock(blockdata, subblockdata, z, y, x, blocksize, SBW); 
+                        } else {
+                            ++oneblocks;
+                        }
+                    }
+                }
+            }
+        }
+
+        // push block back
+        BinaryDataPtr blockdata2 = BinaryData::create_binary_data((const char*) blockdata, blocksize*blocksize*blocksize);
+        auto m_block = DVIDCompressedBlock(blockdata2, offset, blocksize, 1, DVIDCompressedBlock::uncompressed);
+        maskblocks.push_back(m_block);
+    }
+
+    //std::cout << "ones: " << oneblocks << " zeros: " << zeroblocks << " mix: " << mixblocks << std::endl;
+
+    // indicate which scale used
+    return scale;
+}
+
+void decompress_block(vector<DVIDCompressedBlock>* blocks, int id, int num_threads)
+{
+    BinaryDataPtr uncompressed_data;
+    int curr_id = 0;
+
+    for (auto iter = blocks->begin(); iter != blocks->end(); ++iter, ++curr_id) {
+        if ((curr_id % num_threads) == id) {
+            // create new uncompressed block
+            vector<int> toffset = iter->get_offset();
+            uncompressed_data = iter->get_uncompressed_data(); 
+            size_t bsize = iter->get_blocksize();
+            size_t tsize = iter->get_typesize();
+
+            DVIDCompressedBlock temp_block(uncompressed_data, toffset, bsize, tsize, DVIDCompressedBlock::uncompressed);
+            (*blocks)[curr_id] = temp_block;
+        }
+    }
+}
+
+struct BlockTupleHash {
+    std::size_t operator() (const tuple<int, int,int>& data) const
+    {
+        std::size_t seed = 0;
+        boost::hash_combine(seed, std::get<0>(data));
+        boost::hash_combine(seed, std::get<1>(data));
+        boost::hash_combine(seed, std::get<2>(data));
+        return seed;
+    }
+};
+
+void DVIDNodeService::get_sparsegraymask(std::string dataname, const std::vector<DVIDCompressedBlock>& maskblocks, std::vector<DVIDCompressedBlock>& grayblocks, int scale, bool usejpeg)
+{
+    // TODO: auto determine datatype encoding (would cause extra unnecessary latency now but maybe not important)
+    
+    if (maskblocks.empty()) {
+        return;
+    }
+    auto blocksize = maskblocks[0].get_blocksize(); 
+
+    // extract intersecting blocks
+    vector<int> blockcoords;
+    for (int i = 0; i < maskblocks.size(); ++i) {
+        auto offset = maskblocks[i].get_offset();
+        blockcoords.push_back(offset[0]/blocksize);
+        blockcoords.push_back(offset[1]/blocksize);
+        blockcoords.push_back(offset[2]/blocksize);
+    }
+
+    // get scaled name (grayscale doesn't have an explicit multi-scale type in DVID)
+    string dataname_scaled = dataname;
+    if (scale > 0) {
+        std::ostringstream sstr;
+        sstr << dataname << "_" << scale;
+        dataname_scaled = sstr.str();
+    }
+
+
+    // fetch specific blocks
+    vector<DVIDCompressedBlock> blockstemp;
+    get_specificblocks3D(dataname_scaled, blockcoords, true, blockstemp, 0, !usejpeg); 
+
+    if (usejpeg) {
+        // decompress all jpeg (in parallel)
+        boost::thread_group threads; // destructor auto deletes threads
+        int num_threads = std::thread::hardware_concurrency();
+        if (num_threads == 0) {
+            // just default to something if hardware concurrency not supported                      
+            num_threads = 8;
+        }            
+
+        vector<boost::thread*> curr_threads;  
+        for (int i = 0; i < num_threads; ++i) {
+            boost::thread* t = new boost::thread(decompress_block, &blockstemp, i, num_threads);
+            threads.add_thread(t);
+            curr_threads.push_back(t);
+        } 
+        threads.join_all();
+        grayblocks = blockstemp;
+    } else {
+        grayblocks = blockstemp;
+    }
+
+    // apply mask
+    std::unordered_map<tuple<int, int, int>, DVIDCompressedBlock, BlockTupleHash> maskmap;
+    
+    // load indices
+    for (int i = 0; i < maskblocks.size(); ++i) {
+        auto offset = maskblocks[i].get_offset();
+        maskmap[make_tuple(offset[0], offset[1], offset[2])] = maskblocks[i];
+    }
+
+    for (int i = 0; i < grayblocks.size(); ++i) {
+        auto offset = grayblocks[i].get_offset();
+        size_t blocksize = grayblocks[i].get_blocksize();
+        string& raw_data = grayblocks[i].get_uncompressed_data()->get_data();
+
+        auto mask = maskmap[make_tuple(offset[0], offset[1], offset[2])];
+        auto mask_data = mask.get_uncompressed_data()->get_data();
+        
+        int index = 0;
+        for_indiceszyx(blocksize, blocksize, blocksize, [&](size_t z, size_t y, size_t x) {
+            raw_data[index] &= mask_data[index];
+            ++index;         
+        }); 
+    }
 }
 
 // ******************** PRIVATE HELPER FUNCTIONS *******************************

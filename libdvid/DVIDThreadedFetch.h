@@ -22,51 +22,6 @@ namespace libdvid {
 #define MINPOOLSIZE 16
 
 /*!
- * Helper function to extract data from buffer.
-*/
-template <typename T>
-T extractval(const unsigned char*& head, int& buffer_size)
-{
-    T val = (*(T*)(head));
-    head += sizeof(T);
-    buffer_size -= sizeof(T);
-
-    return val;
-}
-
-//
-// Utility function to avoid writing triple-nested loops throughout this file.
-// Simply iterate over the given z/y/x index ranges (in that order),
-// and call the given function for each iteration.
-//
-void for_indiceszyx ( size_t Z, size_t Y, size_t X,
-                  std::function<void(size_t z, size_t y, size_t x)> func );
-/*!
- * Helper function to write a subvolume into a larger block.
-*/
-template <typename T>
-void write_subblock(T* block, T* subblock_flat, int gz, int gy, int gx, const unsigned int BLOCK_WIDTH, const unsigned int SBW)
-{
-    size_t subblock_index = 0;
-    for_indiceszyx(SBW, SBW, SBW, [&](size_t z, size_t y, size_t x) {
-        int z_slice = gz * SBW + z;
-        int y_row   = gy * SBW + y;
-        int x_col   = gx * SBW + x;
-
-        int z_offset = z_slice * BLOCK_WIDTH * BLOCK_WIDTH;
-        int y_offset = y_row   * BLOCK_WIDTH;
-        int x_offset = x_col;
-
-        block[z_offset + y_offset + x_offset] = subblock_flat[subblock_index];
-        subblock_index += 1;
-    });
-}
-
-
-
-
-
-/*!
  * Thread pool singleton for threading resources.
 */
 class DVIDThreadPool {
@@ -183,39 +138,11 @@ std::vector<BinaryDataPtr> get_tile_array_binary(DVIDNodeService& service,
         const std::vector<std::vector<int> >& tile_locs_array, int num_threads=0);
 
 /*!
- * Fetches sparse label volume as a series of block masks using labelarray interface.
- * Note: The user can specify the scale level. 
- * \param service name of dvid node service
- * \param bodyid body label id
- * \param labelname name of labelarray datatype
- * \param maskblocks libdvid blocks encoding 0/255 byte mask for body
- * \param maxsize the maximum size body size allowed to trigger downsampling (0 = no limit)
- * \param erosion shrink body size erosion (0 = no erosion)
- * \param scale resolution to use to fetch body (-1 = use default 0 or determined by maxsize)
- * \return scale resolution of mask
-*/
-int get_sparselabelmask(DVIDNodeService& service, std::uint64_t bodyid, std::string labelname, std::vector<DVIDCompressedBlock>& maskblocks, unsigned long long maxsize=0, int scale=-1);
-
-/*!
  * Erodes the foreground (non-zero) label encoded in list of blocks.
  * Note: currently unimplemented.
  * \param erosion shrink body size erosion (0 = no erosion).
 */
 void erode_sparselabelmask(std::vector<DVIDCompressedBlock>& maskblocks, unsigned int erosion);
-
-/*!
- * Fetches sparse label volume as a series of block masks using labelarray interface.
- * Note: The user must specify whether instance using jpeg encoding.  Fetching jpeg data
- * from a non-jpeg encoded data instance will throw an error.
- * TODO: automatically extract encoding from data instance meta data.
- * \param service name of dvid node service
- * \param grayname name of uint8blk datatype
- * \param maskblocks libdvid blocks encoding 0/1 mask for body
- * \param grayblocks libdvid blocks encoding grayscale in uncompressed grayscale
- * \param scale resolution to use to fetch body (returned by get_sparselabelmask)
- * \param isjpeg specfies whether datatype support jpeg encoding
-*/
-void  get_sparsegraymask(DVIDNodeService& service, std::string dataname, const std::vector<DVIDCompressedBlock>& maskblocks, std::vector<DVIDCompressedBlock>& grayblocks, int scale, bool usejpeg=false);
 
 }
 

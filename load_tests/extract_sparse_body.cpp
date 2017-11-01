@@ -95,7 +95,7 @@ int main(int argc, char** argv)
     cout << "fetch labels" << endl; 
     {
         ScopeTime overall_time;
-        scale = libdvid::get_sparselabelmask(dvid_node, atoi(argv[7]), argv[3], maskblocks, 0, atoi(argv[8]));
+        scale = dvid_node.get_sparselabelmask(atoi(argv[7]), argv[3], maskblocks, 0, atoi(argv[8]));
     }    
     cout << "num blocks: " << maskblocks.size() << endl;
 
@@ -118,7 +118,7 @@ int main(int argc, char** argv)
     // extract grayscale
     {
         ScopeTime overall_time;
-        libdvid::get_sparsegraymask(dvid_node2, argv[6], maskblocks, grayblocks, scale, false);
+        dvid_node2.get_sparsegraymask(argv[6], maskblocks, grayblocks, scale, false);
     } 
 
     // debug count

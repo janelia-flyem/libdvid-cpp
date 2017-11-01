@@ -840,6 +840,32 @@ class DVIDNodeService {
     */
     void prefetch_specificblocks3D(std::string datatype_instance, std::vector<int>& blockcoords);
 
+    /*!
+     * Fetches sparse label volume as a series of block masks using labelarray interface.
+     * Note: The user can specify the scale level. 
+     * \param bodyid body label id
+     * \param labelname name of labelarray datatype
+     * \param maskblocks libdvid blocks encoding 0/255 byte mask for body
+     * \param maxsize the maximum size body size allowed to trigger downsampling (0 = no limit)
+     * \param erosion shrink body size erosion (0 = no erosion)
+     * \param scale resolution to use to fetch body (-1 = use default 0 or determined by maxsize)
+     * \return scale resolution of mask
+    */
+    int get_sparselabelmask(std::uint64_t bodyid, std::string labelname, std::vector<DVIDCompressedBlock>& maskblocks, unsigned long long maxsize=0, int scale=-1);
+
+    /*!
+     * Fetches sparse label volume as a series of block masks using labelarray interface.
+     * Note: The user must specify whether instance using jpeg encoding.  Fetching jpeg data
+     * from a non-jpeg encoded data instance will throw an error.
+     * TODO: automatically extract encoding from data instance meta data.
+     * \param grayname name of uint8blk datatype
+     * \param maskblocks libdvid blocks encoding 0/1 mask for body
+     * \param grayblocks libdvid blocks encoding grayscale in uncompressed grayscale
+     * \param scale resolution to use to fetch body (returned by get_sparselabelmask)
+     * \param isjpeg specfies whether datatype support jpeg encoding
+    */
+    void get_sparsegraymask(std::string dataname, const std::vector<DVIDCompressedBlock>& maskblocks, std::vector<DVIDCompressedBlock>& grayblocks, int scale, bool usejpeg=false);
+
   private:
     //! HTTP connection with DVID
     DVIDConnection connection;
