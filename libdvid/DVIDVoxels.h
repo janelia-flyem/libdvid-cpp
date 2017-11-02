@@ -177,6 +177,9 @@ typedef DVIDVoxels<uint8, 3> Roi3D;
 //! 2D label volume
 typedef DVIDVoxels<uint64, 2> Labels2D;
 
+//! 2D array of coordinates
+typedef DVIDVoxels<int32, 2> Coords2D;
+
 //! 2D 8-bit volume (corresponding to grayscale)
 typedef DVIDVoxels<uint8, 2> Grayscale2D;
 

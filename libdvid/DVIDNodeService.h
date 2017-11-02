@@ -846,12 +846,11 @@ class DVIDNodeService {
      * \param bodyid body label id
      * \param labelname name of labelarray datatype
      * \param maskblocks libdvid blocks encoding 0/255 byte mask for body
-     * \param maxsize the maximum size body size allowed to trigger downsampling (0 = no limit)
-     * \param erosion shrink body size erosion (0 = no erosion)
      * \param scale resolution to use to fetch body (-1 = use default 0 or determined by maxsize)
+     * \param maxsize the maximum size body size allowed to trigger downsampling (0 = no limit)
      * \return scale resolution of mask
     */
-    int get_sparselabelmask(std::uint64_t bodyid, std::string labelname, std::vector<DVIDCompressedBlock>& maskblocks, unsigned long long maxsize=0, int scale=-1);
+    int get_sparselabelmask(std::uint64_t bodyid, std::string labelname, std::vector<DVIDCompressedBlock>& maskblocks, int scale=-1, unsigned long long maxsize=0);
 
     /*!
      * Fetches sparse label volume as a series of block masks using labelarray interface.

@@ -278,7 +278,9 @@ namespace libdvid { namespace python {
     template <> struct numpy_typenums<uint8> { static const int typenum = NPY_UINT8; };
     template <> struct numpy_typenums<uint16> { static const int typenum = NPY_UINT16; };
     template <> struct numpy_typenums<uint32> { static const int typenum = NPY_UINT32; };
+    template <> struct numpy_typenums<int32> { static const int typenum = NPY_INT32; };
     template <> struct numpy_typenums<uint64> { static const int typenum = NPY_UINT64; };
+
 
     //!*********************************************************************************************
     //! Declares a mapping between numpy typenumbers and the corresponding dtype names
@@ -288,6 +290,7 @@ namespace libdvid { namespace python {
         (NPY_UINT8, "uint8")
         (NPY_UINT16, "uint16")
         (NPY_UINT32, "uint32")
+        (NPY_INT32, "int32")
         (NPY_UINT64, "uint64");
 
     //!*********************************************************************************************

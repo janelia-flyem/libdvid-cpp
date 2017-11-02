@@ -2049,7 +2049,7 @@ void write_subblock(T* block, T* subblock_flat, int gz, int gy, int gx, const un
     });
 }
 
-int DVIDNodeService::get_sparselabelmask(uint64_t bodyid, std::string labelname, std::vector<DVIDCompressedBlock>& maskblocks, unsigned long long maxsize, int scale)
+int DVIDNodeService::get_sparselabelmask(uint64_t bodyid, std::string labelname, std::vector<DVIDCompressedBlock>& maskblocks, int scale, unsigned long long maxsize)
 {
     if (scale == -1 && maxsize > 0) {
         // TODO: get label size (need new DVID API)

@@ -95,7 +95,7 @@ int main(int argc, char** argv)
     cout << "fetch labels" << endl; 
     {
         ScopeTime overall_time;
-        scale = dvid_node.get_sparselabelmask(atoi(argv[7]), argv[3], maskblocks, 0, atoi(argv[8]));
+        scale = dvid_node.get_sparselabelmask(atoi(argv[7]), argv[3], maskblocks, atoi(argv[8]), 0);
     }    
     cout << "num blocks: " << maskblocks.size() << endl;
 

@@ -78,6 +78,62 @@ namespace libdvid { namespace python {
     	return result_list;
     }
 
+    //! Python wrapper function for DVIDNodeService::get_sparselabelmask().
+    //! Instead of requiring the user to pass an "out-parameter" (not idiomatic in python),
+    //! This wrapper function returns the result as a python list of numpy objects.
+    boost::python::tuple get_sparselabelmask( DVIDNodeService & nodeService, uint64_t bodyid,
+            std::string labelname, int scale)
+    {
+    	using namespace boost::python;
+
+    	// Retrieve from DVID
+    	std::vector<DVIDCompressedBlock> maskblocks;
+        nodeService.get_sparselabelmask(bodyid, labelname, maskblocks, scale);
+
+        // if there are no blocks, there should be an exception
+        assert(maskblocks.size() > 0);
+
+    	// Convert to Python list
+    	list result_list;
+
+        // create coordinate data
+        Dims_t cdims;
+        cdims.push_back(3); cdims.push_back(maskblocks.size());
+        unsigned int coordlength = 3*maskblocks.size();
+        int* coordsdata = new int[coordlength];
+        int coordindex = 0;
+
+        size_t blocksize = maskblocks[0].get_blocksize();
+        Dims_t bdims(3, blocksize);
+        size_t blength = blocksize*blocksize*blocksize;
+
+        BOOST_FOREACH(DVIDCompressedBlock const & cblock, maskblocks)
+    	{
+            // Thanks to some logic in converters.hpp,
+            // this cast will convert the DVIDVoxels into an ndarray
+            // load coordinates
+            auto offset = cblock.get_offset();
+            coordsdata[coordindex++] = offset[2];
+            coordsdata[coordindex++] = offset[1];
+            coordsdata[coordindex++] = offset[0];
+
+
+            // create dvid voxels per cblock
+            auto rawdata = cblock.get_uncompressed_data()->get_raw();
+            Array8bit3D voxels(rawdata, blength, bdims);
+
+            result_list.append( static_cast<object>(voxels) );
+    	}
+        
+        // create coords voxel type which will be converted to an ndarray 
+        Coords2D coords(coordsdata, coordlength, cdims);
+        delete []coordsdata; 
+    	
+        // return tuple of result list and ndarray
+    	return make_tuple(static_cast<object>(coords), result_list);
+    }
+
+
     //! Python wrapper function for DVIDConnection::get_roi_partition().
     //! (Since "return-by-reference" is not an option in Python, boost::python can't provide an automatic wrapper.)
     //! Returns a tuple: (status, result_list, error_msg), where result_list is a list of SubstackZYX tuples
@@ -419,6 +475,7 @@ namespace libdvid { namespace python {
         ndarray_to_volume<Labels3D>();
         ndarray_to_volume<Grayscale2D>();
         ndarray_to_volume<Labels2D>();
+        ndarray_to_volume<Coords2D>();
 
         // BlockXYZ <--> BlockZYX (for python conventions)
         namedtuple_converter<BlockXYZ, int, 3>::class_member_ptr_vec block_members =
@@ -906,6 +963,17 @@ namespace libdvid { namespace python {
                 "\n\n"
                 ":param roi: name of the roi instance \n"
                 ":returns: list of ``BlockZYX`` coordinate tuples \n")
+
+            .def("get_sparselabelmask", &get_sparselabelmask,
+                ( arg("service"), arg("bodyid"), arg("labelname"), arg("scale") ),
+                "Retrieve a list of block coordinates and masks fora given body. \n"
+                "The blocks returned will be ordered by Z then Y then X. \n"
+                "\n\n"
+                ":param bodyid: sparse body mask to fetch \n"
+                ":param labelname: name of segmentation type \n"
+                ":param scale: resolution level for mask (0=no downsampling) \n"
+                ":returns: (2d INT Nx3 array of z, y, x voxel  coordinates for each block, list of 3D 8bit ndarray masks) \n")
+
 
             .def("post_roi", &DVIDNodeService::post_roi,
                 ( arg("roi_name"), arg("blocks_zyx") ),
