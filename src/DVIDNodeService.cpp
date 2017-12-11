@@ -127,10 +127,17 @@ size_t DVIDNodeService::get_blocksize(string datatype_name)
     }
      
     // check if all block dimensions are equal
-    size_t x = blockdata[0u].asUInt();
-    size_t y = blockdata[1u].asUInt();
-    size_t z = blockdata[2u].asUInt(); 
-   
+    int x = blockdata[0u].asInt();
+    int y = blockdata[1u].asInt();
+    int z = blockdata[2u].asInt();
+
+    if (x < 1 || y < 1 || z < 1)
+    {
+    		std::ostringstream ss;
+    		ss << "Instance metadata specifies invalid BlockSize: [" << x << ", " << y << ", " << z << "]";
+    		throw ErrMsg(ss.str());
+    }
+
     if (x != y || x != z) {
         throw ErrMsg("Instance does not have a block size with equal dimensions");
     } 
