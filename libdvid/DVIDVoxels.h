@@ -46,37 +46,10 @@ class DVIDVoxels {
      * \param dims_ dimension sizes for the volume
     */ 
     DVIDVoxels(const T* array_, unsigned int length, Dims_t& dims_)
-               : dims(dims_) {
-        uint64 total_size = uint64(dims_[0])*uint64(dims_[1])*
-            uint64(dims_[2])*uint64(sizeof(T)); 
-        if (total_size > INT_MAX) {
-            throw ErrMsg("Cannot allocate larger than INT_MAX");
-        }
-
-        data = BinaryData::create_binary_data((const char*) array_,
-                                                length*sizeof(T));
-        if (dims.size() != N) {
-            throw ErrMsg("Incorrect dimensions provided");
-        }
-
-        uint64 total = 0;
-        for (unsigned int i = 0; i < dims.size(); ++i) {
-            if (i == 0) {
-                total = dims[0];
-            } else {
-                total *= dims[i];
-            }
-        }
-        if (total*sizeof(T) != (uint64)(data->length())) {
-            std::stringstream ssMsg;
-            ssMsg << "Dimensions ( ";
-            BOOST_FOREACH( Dims_t::value_type d, dims )
-            {
-                ssMsg << d << " ";
-            }
-            ssMsg << ") do not match buffer size (" << data->length() << ").";
-            throw ErrMsg( ssMsg.str() );
-        }
+    : dims(dims_)
+    {
+        check_inputs(length*sizeof(T), dims_);
+        data = BinaryData::create_binary_data(reinterpret_cast<const char*>(array_), length*sizeof(T));
     }
 
     /*!
@@ -85,27 +58,11 @@ class DVIDVoxels {
      * \param data_ binary buffer referenced by the volume
      * \param dims_ dimension sizes for the volume
     */ 
-    DVIDVoxels(BinaryDataPtr data_, Dims_t const& dims_) :
-            data(data_), dims(dims_) {
-        
-        if (dims.size() != N) {
-            throw ErrMsg("Incorrect dimensions provided");
-        }
-        uint64 total = 0;
-        for (unsigned int i = 0; i < dims.size(); ++i) {
-            if (i == 0) {
-                total = dims[0];
-            } else {
-                total *= dims[i];
-            }
-        }
-        if (total*sizeof(T) != (uint64)(data->length())) {
-            std::ostringstream ssMsg;
-            ssMsg << "Dimension mismatch with buffer size: "
-                  << "(" << dims_[0] << ", " << dims_[1] << ", " << dims_[2] << ")"
-                  << " vs. " << data->length();
-            throw ErrMsg(ssMsg.str());
-        }
+    DVIDVoxels(BinaryDataPtr data_, Dims_t const& dims_)
+    : data(data_)
+    , dims(dims_)
+    {
+        check_inputs(data_->length(), dims_);
     }
 
     /*!
@@ -157,6 +114,33 @@ class DVIDVoxels {
 
     //! Dimensions for volume
     Dims_t dims;
+
+    //! Check input length/dimensions and throw an exception is something is wrong.
+    void check_inputs(size_t length_bytes, Dims_t const & dims_)
+    {
+        if (dims_.size() != N) {
+            throw ErrMsg("Incorrect dimensions provided");
+        }
+        
+        uint64 total_size = sizeof(T);
+        for (auto dim : dims_) {
+            total_size *= dim;
+        }
+        
+        if (total_size > INT_MAX) {
+            throw ErrMsg("Cannot allocate larger than INT_MAX");
+        }
+        
+        if (total_size != length_bytes) {
+            std::stringstream ssMsg;
+            ssMsg << "Dimensions ( ";
+            for ( auto d : dims ) {
+                ssMsg << d << ", ";
+            }
+            ssMsg << ") do not match buffer size (" << length_bytes << ").";
+            throw ErrMsg( ssMsg.str() );
+        }
+    }
 };
 
 //! 3D label volume
