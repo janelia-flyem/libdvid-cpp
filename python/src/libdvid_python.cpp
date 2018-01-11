@@ -25,6 +25,7 @@ int
 init_numpy()
 {
     import_array();
+    return 0;
 }
 #else
 void
