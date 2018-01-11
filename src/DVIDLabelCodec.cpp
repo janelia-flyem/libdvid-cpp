@@ -312,7 +312,8 @@ EncodedData encode_label_block(uint64_t const * label_block)
         subblock_tables[gz][gy][gx] = LabelTable( subblock );
         
         // Update global table, too
-        global_table.insert_labels(&subblock[0], subblock.size());
+        auto const & unique_labels = subblock_tables[gz][gy][gx].list();
+        global_table.insert_labels(&unique_labels[0], unique_labels.size());
     });
 
     EncodedData encoded_data;
