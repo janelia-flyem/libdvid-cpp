@@ -6,7 +6,8 @@ import numpy
 import json
 
 from libdvid import DVIDNodeService, ConnectionMethod, Slice2D, BlockZYX, SubstackZYX, PointZYX, ErrMsg
-from _test_utils import TEST_DVID_SERVER, get_testrepo_root_uuid, delete_all_data_instances
+from _test_utils import TEST_DVID_SERVER, get_testrepo_root_uuid, delete_all_data_instances, bb_to_slicing
+from skimage.util.shape import view_as_blocks
 
 
 class Test_DVIDNodeService(unittest.TestCase):
@@ -170,7 +171,43 @@ class Test_DVIDNodeService(unittest.TestCase):
         retrieved_data = node_service.get_labelarray_blocks3D( "test_labelarray64_get", (128,128,128), (0,0,0) )
         assert (retrieved_data == data).all()
 
+    def test_sparselabelmask(self):
+        node_service = DVIDNodeService(TEST_DVID_SERVER, self.uuid, "foo@bar.com", "test_sparselabelmask")
+        node_service.create_labelarray("test_sparselabelmask", 64)
         
+        # Diagonal Stripes
+        data = numpy.indices((128,128,128), dtype=numpy.uint16).sum(axis=0).astype(numpy.uint64)
+        data[:] //= 5
+
+        data_downsampled = data[::2,::2,::2].copy('C') # cheap downsampling...
+
+        TEST_LABEL = data[64,64,64] # This is a big diagonal that passes through all but the first block.
+        assert TEST_LABEL in data
+        assert data.flags['C_CONTIGUOUS']
+
+        # Load two scales
+        node_service.put_labelblocks3D( "test_sparselabelmask", data, (0,0,0) )
+        node_service.put_labelblocks3D( "test_sparselabelmask", data_downsampled, (0,0,0), scale=1 )
+    
+        # Retrieve a body at full scale
+        block_starts, block_masks = node_service.get_sparselabelmask(TEST_LABEL, "test_sparselabelmask", 0)
+        assert len(block_starts) == len(block_masks) == 7
+        assert block_masks[0].dtype == numpy.bool
+        
+        block_stops = block_starts + 64
+        
+        for start, stop, mask in zip( block_starts, block_stops, block_masks ):
+            expected_mask = (data[bb_to_slicing(start, stop)] == TEST_LABEL)
+            assert (mask == expected_mask).all()
+
+        # Retrieve that body at half scale
+        block_starts, block_masks = node_service.get_sparselabelmask(TEST_LABEL, "test_sparselabelmask", 1)
+        assert len(block_starts) == len(block_masks) == 1
+
+        expected_mask = (data_downsampled == TEST_LABEL)
+        assert (block_starts[0] == (0,0,0)).all()
+        assert (block_masks[0] == expected_mask).all()
+
     @unittest.skip("FIXME: No way to create tile data via the DVID http API.")
     def test_grayscale_2d_tile(self):
         # Create tile data here...

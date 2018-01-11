@@ -1,5 +1,6 @@
 import os
 import json
+from itertools import starmap
 
 from libdvid import DVIDConnection, ConnectionMethod
 TEST_DVID_SERVER = os.getenv("TEST_DVID_SERVER", "127.0.0.1:8000")
@@ -27,3 +28,14 @@ def delete_all_data_instances(uuid):
         status, body, _error_message = connection.make_request( "/repo/{uuid}/{dataname}?imsure=true"
                                                                .format( uuid=uuid, dataname=str(instance_name) ),
                                                                ConnectionMethod.DELETE, checkHttpErrors=False )            
+
+def bb_to_slicing(start, stop):
+    """
+    For the given bounding box (start, stop),
+    return the corresponding slicing tuple.
+
+    Example:
+    
+        >>> assert bb_to_slicing([1,2,3], [4,5,6]) == np.s_[1:4, 2:5, 3:6]
+    """
+    return tuple( starmap( slice, zip(start, stop) ) )
