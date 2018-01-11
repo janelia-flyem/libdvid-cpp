@@ -4,6 +4,7 @@
 #include "DVIDLabelCodec.h"
 #include "BinaryData.h"
 
+#include <memory>
 #include <set>
 #include <algorithm>
 #include <cstdlib>
@@ -2135,8 +2136,8 @@ int DVIDNodeService::get_sparselabelmask(uint64_t bodyid, std::string labelname,
         unsigned char blockstatus = extractval<uint8_t>(head, buffer_size);
 
         // create all one block for init case
-        unsigned char * blockdata = new unsigned char[blocksize*blocksize*blocksize];
-        memset(blockdata, 255, blocksize*blocksize*blocksize); 
+        std::unique_ptr<unsigned char[]> blockdata(new unsigned char[blocksize*blocksize*blocksize]);
+        memset(blockdata.get(), 255, blocksize*blocksize*blocksize);
 
         //std::cout << offset[0] << " " << offset[1] << " " << offset[2] << std::endl;
         // should not be all blank by construction
@@ -2153,7 +2154,7 @@ int DVIDNodeService::get_sparselabelmask(uint64_t bodyid, std::string labelname,
                         unsigned char subblockstatus = extractval<uint8_t>(head, buffer_size);
                         if (int(subblockstatus) == 0) {
                             // zero out subblock
-                            write_subblock(blockdata, subblockdata, z, y, x, blocksize, SBW);
+                            write_subblock(blockdata.get(), subblockdata, z, y, x, blocksize, SBW);
                             ++zeroblocks;
                         } else if (int(subblockstatus) == 2) {
                             // write binary block out -- traverse 1 bit encoded subblock
@@ -2169,7 +2170,7 @@ int DVIDNodeService::get_sparselabelmask(uint64_t bodyid, std::string labelname,
                                     val8 = val8 >> 1;
                                 }
                             } 
-                            write_subblock(blockdata, subblockdata, z, y, x, blocksize, SBW); 
+                            write_subblock(blockdata.get(), subblockdata, z, y, x, blocksize, SBW);
                         } else {
                             ++oneblocks;
                         }
@@ -2179,7 +2180,7 @@ int DVIDNodeService::get_sparselabelmask(uint64_t bodyid, std::string labelname,
         }
 
         // push block back
-        BinaryDataPtr blockdata2 = BinaryData::create_binary_data((const char*) blockdata, blocksize*blocksize*blocksize);
+        BinaryDataPtr blockdata2 = BinaryData::create_binary_data(reinterpret_cast<const char *>(blockdata.get()), blocksize*blocksize*blocksize);
         auto m_block = DVIDCompressedBlock(blockdata2, offset, blocksize, 1, DVIDCompressedBlock::uncompressed);
         maskblocks.push_back(m_block);
     }
