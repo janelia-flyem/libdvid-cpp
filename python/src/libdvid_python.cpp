@@ -120,7 +120,10 @@ namespace libdvid { namespace python {
             auto rawdata = cblock.get_uncompressed_data()->get_raw();
             Array8bit3D voxels(rawdata, blength, bdims);
 
-            result_list.append( static_cast<object>(voxels) );
+            // Convert to numpy bool array
+            auto voxels_python = static_cast<object>(voxels);
+            auto voxels_python_bool = voxels_python.attr("astype")("bool");
+            result_list.append( voxels_python_bool );
     	}
         
         // create coords voxel type which will be converted to an ndarray 
