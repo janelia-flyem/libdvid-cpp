@@ -52,24 +52,32 @@ public:
     // Constructor (from raw pointer)
     LabelTable(uint64_t const * dense_labels, size_t label_count)
     {
-        // Faster to find unique values first with a (flat) set,
-        // then loop a second time to assign mappings.
-        typedef boost::container::flat_set<uint64_t> TableSet;
-        TableSet unique_set(dense_labels, dense_labels + label_count);
-
-        // Assign mappings
-        for (uint64_t const & label : unique_set)
-        {
-            // Apparently insert() is faster than assigning with operator[]??
-            m_index_map.insert( IndexMap::value_type(label, m_unique_list.size()) );
-            m_unique_list.push_back(label);
-        }
+        insert_labels(dense_labels, label_count);
     }
 
     // Constructor from std::vector
     LabelTable(LabelVec const & dense_labels)
     : LabelTable(&dense_labels[0], dense_labels.size())
     {
+    }
+    
+    void insert_labels(uint64_t const * dense_labels, size_t label_count)
+    {
+        // Faster to find unique values first with a (flat) set,
+        // then loop a second time to assign mappings.
+        typedef boost::container::flat_set<uint64_t> TableSet;
+        TableSet unique_set(dense_labels, dense_labels + label_count);
+        
+        // Assign mappings
+        for (uint64_t const & label : unique_set)
+        {
+            if (m_index_map.find(label) == m_index_map.end())
+            {
+                // Apparently insert() is faster than assigning with operator[]??
+                m_index_map.insert( IndexMap::value_type(label, m_unique_list.size()) );
+                m_unique_list.push_back(label);
+            }
+        }
     }
 
     size_t size() const
@@ -285,32 +293,38 @@ LabelVec extract_subblock(LabelVec const & label_block, int gz, int gy, int gx)
 //
 EncodedData encode_label_block(uint64_t const * label_block)
 {
-    LabelTable global_table(label_block, BLOCK_WIDTH * BLOCK_WIDTH * BLOCK_WIDTH);
-
-    EncodedData encoded_data;
-
-    // Write the header
-    encode_header(encoded_data, global_table.list());
-
-    // Early exit if the block is uniform
-    if ( global_table.size() == 1 )
-    {
-        return encoded_data;
-    }
-
     typedef boost::multi_array<LabelTable, 3> LabelTableArray;
     LabelTableArray subblock_tables(boost::extents[GZ][GY][GX]);
 
     typedef boost::multi_array<LabelVec, 3> SubBlockArray;
     SubBlockArray subblocks(boost::extents[GZ][GY][GX]);
-    
-    // Compute a label table for each subblock
+
+    // Compute a label table for each subblock and update the global table while we're at it.
     // Also, we cache the extracted subblocks to use below (small RAM/speed tradeoff)
+    LabelTable global_table;
     for_indices(GZ, GY, GX, [&](size_t gz, size_t gy, size_t gx) {
+        
+        // Extract subblock
         subblocks[gz][gy][gx] = extract_subblock(label_block, gz, gy, gx);
-        LabelTable table( subblocks[gz][gy][gx] );
-        subblock_tables[gz][gy][gx] = table;
+        auto const & subblock = subblocks[gz][gy][gx];
+
+        // Generate subblock table
+        subblock_tables[gz][gy][gx] = LabelTable( subblock );
+        
+        // Update global table, too
+        global_table.insert_labels(&subblock[0], subblock.size());
     });
+
+    EncodedData encoded_data;
+
+    // Write the header
+    encode_header(encoded_data, global_table.list());
+    
+    // Early exit if the block is uniform
+    if ( global_table.size() == 1 )
+    {
+        return encoded_data;
+    }
 
     // Write the subblock table lengths
     for_indices(GZ, GY, GX, [&](size_t gz, size_t gy, size_t gx) {
