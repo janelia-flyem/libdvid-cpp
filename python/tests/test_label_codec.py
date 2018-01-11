@@ -1,6 +1,148 @@
+import time
 import unittest
+import contextlib
+from datetime import timedelta
+
 import numpy as np
+
 from libdvid import encode_label_block, decode_label_block
+
+BENCHMARKING = False
+
+if BENCHMARKING:
+    import os
+    import lz4
+    from skimage.util import view_as_blocks
+    import DVIDSparkServices
+    ACTUAL_DATA_512_PATH = os.path.dirname(DVIDSparkServices.__file__) + '/../integration_tests/resources/labels.bin'
+    
+    @contextlib.contextmanager
+    def Timer():
+        result = _TimerResult
+        start = time.time()
+        yield result
+        result.seconds = time.time() - start
+        result.timedelta = timedelta(seconds=result.seconds)
+    
+    class _TimerResult(object):
+        seconds = -1.0
+    
+    def serialize_uint64_blocks(volume):
+        """
+        Compress and serialize a volume of uint64.
+        
+        Preconditions:
+          - volume.dtype == np.uint64
+          - volume.ndim == 3
+          - volume.shape is divisible by 64
+        
+        Returns compressed_blocks, where the blocks are a flat list, in scan-order
+        """
+        assert volume.dtype == np.uint64
+        assert volume.ndim == 3
+        assert (np.array(volume.shape) % 64 == 0).all()
+        
+        block_view = view_as_blocks( volume, (64,64,64) )
+        compressed_blocks = []
+        for zi, yi, xi in np.ndindex(*block_view.shape[:3]):
+            block = block_view[zi,yi,xi].copy('C')
+            compressed_blocks.append( encode_label_block(block) )
+            del block
+        
+        return compressed_blocks
+    
+    def deserialize_uint64_blocks(compressed_blocks, shape):
+        """
+        Reconstitute a volume that was serialized with serialize_uint64_blocks(), above.
+        """
+        volume = np.ndarray(shape, dtype=np.uint64)
+        block_view = view_as_blocks( volume, (64,64,64) )
+        
+        for bi, (zi, yi, xi) in enumerate(np.ndindex(*block_view.shape[:3])):
+            block = decode_label_block( compressed_blocks[bi] )
+            block_view[zi,yi,xi] = block
+        
+        return volume
+    
+    HEADER_PRINTED = False
+    def _test_block(labels, test_name):
+        
+        with Timer() as timer:
+            encoded = serialize_uint64_blocks(labels)
+        dvid_encoded_bytes = sum(map(len, encoded))
+        dvid_enc_time = timer.seconds
+        dvid_enc_throughput = (labels.nbytes / dvid_enc_time) / 1e6
+    
+        with Timer() as timer:
+            decoded = deserialize_uint64_blocks(encoded, labels.shape)
+        assert (decoded == labels).all()
+        dvid_dec_time = timer.seconds
+        dvid_dec_throughput = (labels.nbytes / dvid_dec_time) / 1e6
+    
+        with Timer() as timer:
+            lz4_encoded = lz4.compress(labels)
+        lz4_encoded_bytes = len(lz4_encoded)
+        lz4_enc_time = timer.seconds
+        lz4_enc_throughput = (labels.nbytes / lz4_enc_time) / 1e6
+    
+        with Timer() as timer:
+            lz4_decoded = lz4.decompress(lz4_encoded)
+        decoded_labels = np.frombuffer(lz4_decoded, np.uint64).reshape(labels.shape)
+        assert (decoded_labels == labels).all()
+        lz4_dec_time = timer.seconds
+        lz4_dec_throughput = (labels.nbytes / lz4_dec_time) / 1e6
+        
+        global HEADER_PRINTED
+        if not HEADER_PRINTED:
+            print(f"{'':>20s} {'______ ENCODED BYTES ______ ':^30s}  | {'______ ENCODING TIME ______ ':^54s} | {'______ DECODING TIME ______ ':^54s} |")
+            print(f"{'':>20s} {'LZ4':>10s} {'DVID':>10s} {'DECREASE':>9s} |"
+                  f"{'------- LZ4 -------':>22s} {'------ DVID ------':>22s} {'SLOWDOWN':>9s} |"
+                  f"{'------- LZ4 -------':>22s} {'------ DVID ------':>22s} {'SLOWDOWN':>9s} |")
+            HEADER_PRINTED = True
+
+        print(f"{test_name:>19s}: {lz4_encoded_bytes: 10d} {dvid_encoded_bytes: 10d} {lz4_encoded_bytes/dvid_encoded_bytes:8.1f}x |"
+              f"{lz4_enc_time:6.2f}s ({lz4_enc_throughput:7.1f} MB/s) {dvid_enc_time:6.2f}s ({dvid_enc_throughput:7.1f} MB/s) {dvid_enc_time/lz4_enc_time:8.1f}x |"
+              f"{lz4_dec_time:6.2f}s ({lz4_dec_throughput:7.1f} MB/s) {dvid_dec_time:6.2f}s ({dvid_dec_throughput:7.1f} MB/s) {dvid_dec_time/lz4_dec_time:8.1f}x |")
+    
+    def test_1px_stripes():
+        shape = (512,512,512)
+        #shape = (256,256,256)
+        labels = np.indices(shape, np.uint16).sum(axis=0).astype(np.uint64)
+        _test_block(labels, "1px stripes")
+    
+    def test_5px_stripes():
+        shape = (512,512,512)
+        #shape = (256,256,256)
+        labels = np.indices(shape, np.uint16).sum(axis=0).astype(np.uint64) // 5
+        _test_block(labels, "5px stripes")
+    
+    def test_10px_stripes():
+        shape = (512,512,512)
+        #shape = (256,256,256)
+        labels = np.indices(shape, np.uint16).sum(axis=0).astype(np.uint64) // 10
+        _test_block(labels, "10px stripes")
+    
+    def test_solid_subblocks():
+        from skimage.util import view_as_blocks
+        shape = (512,512,512)
+        #shape = (256,256,256)
+        labels = np.zeros(shape, dtype=np.uint8)
+        labels_view = view_as_blocks(labels, (64,64,64))
+        labels_view[:] = np.random.randint(255, size=(8,8,8,1,1,1), dtype=np.uint8)
+        assert (labels[0:64,0:64,0:64] == labels[0,0,0]).all()
+        
+        labels = labels.astype(np.uint64)
+    
+        _test_block(labels, "Solid sub-blocks")
+    
+    def test_actual_data():
+        with open(ACTUAL_DATA_512_PATH, 'rb') as f:
+            labels_bin = f.read()
+        
+        assert len(labels_bin) == 8 * 512**3
+        
+        labels = np.frombuffer(labels_bin, dtype=np.uint64).reshape(512,512,512)
+        _test_block(labels, "Actual (old) data")
 
 class TestLabelCodec(unittest.TestCase):
     
@@ -72,4 +214,11 @@ class TestLabelCodec(unittest.TestCase):
 
 
 if __name__ == "__main__":
-    unittest.main()
+    if BENCHMARKING:
+        test_solid_subblocks()
+        test_1px_stripes()
+        test_5px_stripes()
+        test_10px_stripes()
+        test_actual_data()
+    else:
+        unittest.main()
