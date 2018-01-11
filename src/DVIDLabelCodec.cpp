@@ -2,6 +2,8 @@
 #include "DVIDVoxels.h"
 #include "DVIDException.h"
 
+#include "boost/container/flat_map.hpp"
+#include "boost/container/flat_set.hpp"
 #include "boost/multi_array.hpp"
 
 #include <cmath>
@@ -39,8 +41,10 @@ class LabelTable
 {
 public:
     typedef std::vector<uint64_t> Table;
-    typedef std::unordered_map<uint64_t, uint32_t> IndexMap;
-
+    
+    //typedef std::unordered_map<uint64_t, uint32_t> IndexMap;
+    typedef boost::container::flat_map<uint64_t, uint32_t> IndexMap; // faster than unordered_map for small maps
+    
     LabelTable()
     {
     }
@@ -48,14 +52,17 @@ public:
     // Constructor (from raw pointer)
     LabelTable(uint64_t const * dense_labels, size_t label_count)
     {
-        for (size_t i = 0; i < label_count; ++i)
+        // Faster to find unique values first with a (flat) set,
+        // then loop a second time to assign mappings.
+        typedef boost::container::flat_set<uint64_t> TableSet;
+        TableSet unique_set(dense_labels, dense_labels + label_count);
+
+        // Assign mappings
+        for (uint64_t const & label : unique_set)
         {
-            uint64_t label = dense_labels[i];
-            if (m_index_map.find(label) == m_index_map.end())
-            {
-                m_index_map[label] = m_unique_list.size();
-                m_unique_list.push_back(label);
-            }
+            // Apparently insert() is faster than assigning with operator[]??
+            m_index_map.insert( IndexMap::value_type(label, m_unique_list.size()) );
+            m_unique_list.push_back(label);
         }
     }
 
@@ -88,10 +95,13 @@ public:
     //
     std::vector<uint32_t> mapped_list(LabelTable const & global_label_table) const
     {
+        auto const & global_map = global_label_table.index_map();
+        
         std::vector<uint32_t> result;
+        result.reserve(m_unique_list.size());
         for (auto label : m_unique_list)
         {
-            uint32_t mapped_label = global_label_table.index_map().at(label);
+            uint32_t mapped_label = global_map.at(label);
             result.push_back( mapped_label );
         }
         return result;
@@ -134,7 +144,7 @@ void encode_header( EncodedData & encoded_data,
 // Simply iterate over the given z/y/x index ranges (in that order),
 // and call the given function for each iteration.
 //
-void for_indices( size_t Z, size_t Y, size_t X,
+inline void for_indices( size_t Z, size_t Y, size_t X,
                   std::function<void(size_t z, size_t y, size_t x)> func )
 {
     for (size_t z = 0; z < Z; ++z)
@@ -157,41 +167,58 @@ LabelVec extract_subblock(uint64_t const * block, int gz, int gy, int gx)
 {
     auto SBW = SUBBLOCK_WIDTH;
 
-    LabelVec subblock;
-    subblock.reserve(SBW * SBW * SBW);
+    LabelVec subblock(SBW * SBW * SBW);
 
-    for_indices(SBW, SBW, SBW, [&](size_t z, size_t y, size_t x) {
-        int z_slice = gz * SBW + z;
-        int y_row   = gy * SBW + y;
-        int x_col   = gx * SBW + x;
+    // Apparently using for_indices here would be very slow.
+    size_t i = 0;
+    for (size_t z = 0; z < SBW; ++z)
+    {
+        for (size_t y = 0; y < SBW; ++y)
+        {
+            for (size_t x = 0; x < SBW; ++x)
+            {
+                int z_slice = gz * SBW + z;
+                int y_row   = gy * SBW + y;
+                int x_col   = gx * SBW + x;
 
-        int z_offset = z_slice * BLOCK_WIDTH * BLOCK_WIDTH;
-        int y_offset = y_row   * BLOCK_WIDTH;
-        int x_offset = x_col;
+                int z_offset = z_slice * BLOCK_WIDTH * BLOCK_WIDTH;
+                int y_offset = y_row   * BLOCK_WIDTH;
+                int x_offset = x_col;
 
-        subblock.push_back( block[z_offset + y_offset + x_offset] );
-    });
-
+                subblock[i] = block[z_offset + y_offset + x_offset];
+                ++i;
+            }
+        }
+    }
+    
     return subblock;
 }
 
 void write_subblock(uint64_t * block, uint64_t const * subblock_flat, int gz, int gy, int gx)
 {
     auto SBW = SUBBLOCK_WIDTH;
-
+    
+    // Apparently using for_indices here would be very slow.
     size_t subblock_index = 0;
-    for_indices(SBW, SBW, SBW, [&](size_t z, size_t y, size_t x) {
-        int z_slice = gz * SBW + z;
-        int y_row   = gy * SBW + y;
-        int x_col   = gx * SBW + x;
+    for (size_t z = 0; z < SBW; ++z)
+    {
+        for (size_t y = 0; y < SBW; ++y)
+        {
+            for (size_t x = 0; x < SBW; ++x)
+            {
+                int z_slice = gz * SBW + z;
+                int y_row   = gy * SBW + y;
+                int x_col   = gx * SBW + x;
 
-        int z_offset = z_slice * BLOCK_WIDTH * BLOCK_WIDTH;
-        int y_offset = y_row   * BLOCK_WIDTH;
-        int x_offset = x_col;
+                int z_offset = z_slice * BLOCK_WIDTH * BLOCK_WIDTH;
+                int y_offset = y_row   * BLOCK_WIDTH;
+                int x_offset = x_col;
 
-        block[z_offset + y_offset + x_offset] = subblock_flat[subblock_index];
-        subblock_index += 1;
-    });
+                block[z_offset + y_offset + x_offset] = subblock_flat[subblock_index];
+                subblock_index += 1;
+            }
+        }
+    }
 }
 
 //
@@ -274,9 +301,14 @@ EncodedData encode_label_block(uint64_t const * label_block)
     typedef boost::multi_array<LabelTable, 3> LabelTableArray;
     LabelTableArray subblock_tables(boost::extents[GZ][GY][GX]);
 
+    typedef boost::multi_array<LabelVec, 3> SubBlockArray;
+    SubBlockArray subblocks(boost::extents[GZ][GY][GX]);
+    
     // Compute a label table for each subblock
+    // Also, we cache the extracted subblocks to use below (small RAM/speed tradeoff)
     for_indices(GZ, GY, GX, [&](size_t gz, size_t gy, size_t gx) {
-        LabelTable table( extract_subblock(label_block, gz, gy, gx) );
+        subblocks[gz][gy][gx] = extract_subblock(label_block, gz, gy, gx);
+        LabelTable table( subblocks[gz][gy][gx] );
         subblock_tables[gz][gy][gx] = table;
     });
 
@@ -292,11 +324,9 @@ EncodedData encode_label_block(uint64_t const * label_block)
         encode_vector<uint32_t>(encoded_data, index_list);
     });
 
-    auto size_before_bitstream = encoded_data.size();
-    
     // Write out the bit-stream of all encoded values
     for_indices(GZ, GY, GX, [&](size_t gz, size_t gy, size_t gx) {
-        LabelVec subblock = extract_subblock(label_block, gz, gy, gx);
+        LabelVec const & subblock = subblocks[gz][gy][gx];
         LabelTable const & table = subblock_tables[gz][gy][gx];
 
         size_t bit_length = ceil( log2( table.size() ) );
@@ -307,7 +337,9 @@ EncodedData encode_label_block(uint64_t const * label_block)
         }
 
         int byte_count = ceil(bit_length * pow(SUBBLOCK_WIDTH, 3)/8.f);
-        std::vector<uint8_t> encoded_voxels(byte_count, 0);
+        
+        size_t voxels_start = encoded_data.size();
+        encoded_data.insert(encoded_data.end(), byte_count, 0);
 
         size_t byte_index = 0;
         size_t bit_counter = 0;
@@ -325,7 +357,7 @@ EncodedData encode_label_block(uint64_t const * label_block)
             // (current voxel) 11122233 3444555-
             //
             uint16_t shifted_index = index << (16 - bit_counter - bit_length);
-            encoded_voxels[byte_index] |= (shifted_index >> 8);
+            encoded_data[voxels_start + byte_index] |= (shifted_index >> 8);
 
             bit_counter += bit_length;
             if (bit_counter >= 8)
@@ -335,21 +367,12 @@ EncodedData encode_label_block(uint64_t const * label_block)
 
                 if (byte_index < byte_count)
                 {
-                    encoded_voxels[byte_index] |= (shifted_index & 0x00FF);
+                    encoded_data[voxels_start + byte_index] |= (shifted_index & 0x00FF);
                 }
             }
         }
-
-        // TODO: Instead of encoding the voxels into their own array and
-        //       copying them afterwards (here), we could just encode them
-        //       directly onto the encoded_data array to save a copy...
-        encode_vector<uint8_t>(encoded_data, encoded_voxels);
     });
 
-    // This assertion is not valid if all 8x8x8 subblocks are contiguous,
-    // but they don't all have the same label.
-    // assert (size_before_bitstream != encoded_data.size())
-    
     return encoded_data;
 }
 
