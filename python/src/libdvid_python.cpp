@@ -1,3 +1,4 @@
+#include <memory>
 #include <boost/python.hpp>
 #include <boost/python/suite/indexing/vector_indexing_suite.hpp>
 #include <boost/foreach.hpp>
@@ -101,7 +102,7 @@ namespace libdvid { namespace python {
         Dims_t cdims;
         cdims.push_back(3); cdims.push_back(maskblocks.size());
         unsigned int coordlength = 3*maskblocks.size();
-        int* coordsdata = new int[coordlength];
+        std::unique_ptr<int[]> coordsdata(new int[coordlength]);
         int coordindex = 0;
 
         size_t blocksize = maskblocks[0].get_blocksize();
@@ -110,14 +111,10 @@ namespace libdvid { namespace python {
 
         BOOST_FOREACH(DVIDCompressedBlock const & cblock, maskblocks)
     	{
-            // Thanks to some logic in converters.hpp,
-            // this cast will convert the DVIDVoxels into an ndarray
-            // load coordinates
             auto offset = cblock.get_offset();
             coordsdata[coordindex++] = offset[2];
             coordsdata[coordindex++] = offset[1];
             coordsdata[coordindex++] = offset[0];
-
 
             // create dvid voxels per cblock
             auto rawdata = cblock.get_uncompressed_data()->get_raw();
@@ -127,8 +124,7 @@ namespace libdvid { namespace python {
     	}
         
         // create coords voxel type which will be converted to an ndarray 
-        Coords2D coords(coordsdata, coordlength, cdims);
-        delete []coordsdata; 
+        Coords2D coords(coordsdata.get(), coordlength, cdims);
     	
         // return tuple of result list and ndarray
     	return make_tuple(static_cast<object>(coords), result_list);
