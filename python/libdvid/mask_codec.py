@@ -1,13 +1,81 @@
+from itertools import starmap, product
 import numpy as np
 from skimage.util import view_as_blocks
-
-from DVIDSparkServices.util import ndrange
 
 SOLID_BACKGROUND = 0
 SOLID_FOREGROUND = 1
 MIXED = 2
 
+def encode_mask_array(mask, corner=(0,0,0), foreground_label=1 ):
+    """
+    Compress a mask array using the DVID sparse encoding scheme.
+    
+    Note:
+        If the array bounds are not block aligned, the array is padded first.
+        In that case, the original shape of the array is lost.
+        The caller is responsible for keeping track of it, if desired.
+    
+    Returns: bytes
+    """
+    assert mask.ndim == 3
+    corner = np.asarray(corner)
+    assert corner.shape == (3,)
+    if (np.array(mask.shape) % 64).any():
+        padding = 64 - (np.array(mask.shape) % 64)
+        padded_mask = np.zeros( mask.shape + padding, np.bool )
+        padded_mask[box_to_slicing((0,0,0), mask.shape)] = mask
+    else:
+        padded_mask = np.asarray(mask, np.bool, 'C')
+
+    data_corners = np.array(list(ndrange((0,0,0), padded_mask.shape, (64,64,64))))
+    blocks = ( padded_mask[box_to_slicing(corner, corner + 64)] for corner in data_corners )
+
+    block_corners = ndrange(corner, corner + padded_mask.shape, (64,64,64))
+    return encode_mask_blocks( blocks, block_corners, foreground_label )
+
+def decode_mask_array( bytes_data, shape=None ):
+    """
+    Decode a mask array from the given bytes object.
+    
+    Args:
+        shape: (Optional) Truncate the result to the given shape after decoding.
+    
+    Returns:
+        mask, start_corner, foreground_label
+    """
+    blocks, corners, foreground_label = decode_mask_blocks(bytes_data)
+    
+    start_corner = np.min( corners, axis=0 )
+    stop_corner = 64 + np.max(corners, axis=0)
+    padded_shape = stop_corner - start_corner
+    padded_mask = np.zeros( padded_shape, dtype=np.bool )
+
+    block_corners = np.array(list(ndrange((0,0,0), padded_shape, (64,64,64))))
+    for block, corner in zip(blocks, block_corners):
+        padded_mask[box_to_slicing(corner, corner + 64)] = block
+
+    if shape is not None and shape != padded_mask.shape:
+        mask = padded_mask[box_to_slicing((0,0,0), shape)]
+    else:
+        mask = padded_mask
+        
+    return mask, start_corner, foreground_label
+
 def encode_mask_blocks( blocks, block_corners=None, foreground_label=1 ):
+    """
+    Encode the given list of binary blocks, each with shape (64,64,64),
+    into a bytes object using DVID's binary sparse blocks scheme.
+    
+    Args:
+        blocks: Iterable of blocks (64,64,64)
+        
+        block_corners: (Optional.) List of coordinates.
+        
+        foreground_label: (Optional.) The DVID sparse blocks scheme allows you to
+                          provide a uint64 label to associate with the binary mask.
+    
+    Returns: bytes
+    """
     stream_contents = []
     stream_contents.append( np.array([8, 8, 8], np.uint32) )
     stream_contents.append( np.array([foreground_label], np.uint64) )
@@ -30,10 +98,10 @@ def _encode_mask_block(block, block_corner=(0,0,0)):
     stream_contents = []
     stream_contents.append( np.array(block_corner, np.int32) )
 
-    sum = block.sum()
-    if sum == 0:
+    block_sum = block.sum()
+    if block_sum == 0:
         content_flag = SOLID_BACKGROUND
-    if sum == 64*64*64:
+    if block_sum == 64*64*64:
         content_flag = SOLID_FOREGROUND
     else:
         content_flag = MIXED
@@ -42,10 +110,11 @@ def _encode_mask_block(block, block_corner=(0,0,0)):
 
     if content_flag == MIXED:
         # In comments below,
-        # 'B' == subblock ID; 'b' == pixels within a subblock
+        # 'Bx' == subblock ID; 'bx' == pixels within a subblock
         block_u64 =  block.view(np.uint64)
+        subblocks_u64 = view_as_blocks( block_u64, (8,8,1) )
+
         assert block_u64.shape == (64,64,8)
-        subblocks_u64 = view_as_blocks( block_u64, (8,8,1) ).copy('C')
         assert subblocks_u64.shape == (8,8,8,8,8,1) # (Bz, By, Bx, bz, by, 1)
         
         packed_subblocks = np.zeros(subblocks_u64.shape, np.uint8)
@@ -55,11 +124,11 @@ def _encode_mask_block(block, block_corner=(0,0,0)):
         
         packed_subblocks = packed_subblocks.reshape(8*8*8, 8, 8, 1)
         for packed_subblock in packed_subblocks:
-            sum = packed_subblock.sum()
-            if sum == 0:
+            block_sum = packed_subblock.sum()
+            if block_sum == 0:
                 stream_contents.append(np.array([SOLID_BACKGROUND], dtype=np.uint8))
                 continue
-            if sum == 8*8*255: # solid ones
+            if block_sum == 8*8*255: # solid ones
                 stream_contents.append(np.array([SOLID_FOREGROUND], dtype=np.uint8))
                 continue
     
@@ -68,7 +137,19 @@ def _encode_mask_block(block, block_corner=(0,0,0)):
 
     return stream_contents
 
+
 def decode_mask_blocks( bytes_data ):
+    """
+    Decode a bytes object from DVID's binary sparse volume format into a list of blocks and their starting coordinates.
+    
+    Args:
+        bytes_data (bytes)    
+
+    Returns:
+        blocks: list of ndarray, shape=(64,64,64), dtype=bool
+        corners: list of coordinates
+        foreground_label: uint64
+    """
     assert isinstance(bytes_data, bytes)
     n_bytes = len(bytes_data)
     next_byte_index = 0
@@ -122,7 +203,7 @@ def _decode_mask_block( bytes_data, next_byte_index ):
     subblocks_u64 = view_as_blocks( block.view(np.uint64), (8,8,1))
     assert subblocks_u64.shape == (8,8,8,8,8,1) # (Bz, By, Bx, bz, by, 1)
 
-    # Verify that we're still using views, not copies
+    # We're still using views, not copies
     assert is_view_of(subblocks, block)
     assert is_view_of(subblocks_u64, block)
 
@@ -161,6 +242,50 @@ def is_view_of(view, base):
     if view is None:
         return False
     return is_view_of(view.base, base)
+
+def ndrange(start, stop=None, step=None):
+    """
+    Generator.
+
+    Like np.ndindex, but accepts start/stop/step instead of
+    assuming that start is always (0,0,0) and step is (1,1,1).
+    
+    Example:
+    
+    >>> for index in ndrange((1,2,3), (10,20,30), step=(5,10,15)):
+    ...     print(index)
+    (1, 2, 3)
+    (1, 2, 18)
+    (1, 12, 3)
+    (1, 12, 18)
+    (6, 2, 3)
+    (6, 2, 18)
+    (6, 12, 3)
+    (6, 12, 18)
+    """
+    if stop is None:
+        stop = start
+        start = (0,)*len(stop)
+
+    if step is None:
+        step = (1,)*len(stop)
+
+    assert len(start) == len(stop) == len(step), \
+        f"tuple lengths don't match: ndrange({start}, {stop}, {step})"
+
+    for index in product(*starmap(range, zip(start, stop, step))):
+        yield index
+
+def box_to_slicing(start, stop):
+    """
+    For the given bounding box (start, stop),
+    return the corresponding slicing tuple.
+
+    Example:
+    
+        >>> assert box_to_slicing([1,2,3], [4,5,6]) == np.s_[1:4, 2:5, 3:6]
+    """
+    return tuple( starmap( slice, zip(start, stop) ) )
 
 if __name__ == "__main__":
     import lz4

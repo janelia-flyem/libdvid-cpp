@@ -7,11 +7,12 @@ import numpy as np
 
 from libdvid import encode_label_block, decode_label_block
 
-BENCHMARKING = False
+BENCHMARKING = True
 
 if BENCHMARKING:
     import os
     import lz4
+    import gzip
     from skimage.util import view_as_blocks
     import DVIDSparkServices
     ACTUAL_DATA_512_PATH = os.path.dirname(DVIDSparkServices.__file__) + '/../integration_tests/resources/labels.bin'
@@ -67,18 +68,56 @@ if BENCHMARKING:
     HEADER_PRINTED = False
     def _test_block(labels, test_name):
         
+        # labelarray
         with Timer() as timer:
-            encoded = serialize_uint64_blocks(labels)
-        dvid_encoded_bytes = sum(map(len, encoded))
+            dvid_encoded_list = serialize_uint64_blocks(labels)
+        dvid_encoded_bytes = sum(map(len, dvid_encoded_list))
         dvid_enc_time = timer.seconds
         dvid_enc_throughput = (labels.nbytes / dvid_enc_time) / 1e6
     
         with Timer() as timer:
-            decoded = deserialize_uint64_blocks(encoded, labels.shape)
+            decoded = deserialize_uint64_blocks(dvid_encoded_list, labels.shape)
         assert (decoded == labels).all()
         dvid_dec_time = timer.seconds
         dvid_dec_throughput = (labels.nbytes / dvid_dec_time) / 1e6
-    
+
+        # DVID + gzip
+        with Timer() as timer:
+            gzipped_dvid_encoded_list = list(map(gzip.compress, dvid_encoded_list))
+        gzipped_dvid_enc_time = timer.seconds + dvid_enc_time
+        gzipped_dvid_enc_throughput = (labels.nbytes / gzipped_dvid_enc_time) / 1e6
+        
+        gzipped_dvid_encoded_bytes = sum(map(len, gzipped_dvid_encoded_list))
+        print("+ GZIP:", gzipped_dvid_encoded_bytes)
+        print(f"Compression ratio: {labels.nbytes/gzipped_dvid_encoded_bytes:.1f}x")
+        print(f"DVID+GZIP encode throughput: {gzipped_dvid_enc_throughput} MB/s")
+ 
+        with Timer() as timer:
+            unzippped = list(map(gzip.decompress, gzipped_dvid_encoded_list))
+        assert (decoded == labels).all()
+        gzipped_dvid_dec_time = timer.seconds + dvid_dec_time
+        gzipped_dvid_dec_throughput = (labels.nbytes / gzipped_dvid_dec_time) / 1e6
+        print(f"DVID+GZIP decode throughput: {gzipped_dvid_dec_throughput} MB/s")
+
+        # DVID + LZ4
+        with Timer() as timer:
+            lz4_dvid_encoded_list = list(map(lz4.compress, dvid_encoded_list))
+        lz4_dvid_enc_time = timer.seconds + dvid_enc_time
+        lz4_dvid_enc_throughput = (labels.nbytes / lz4_dvid_enc_time) / 1e6
+        
+        lz4_dvid_encoded_bytes = sum(map(len, lz4_dvid_encoded_list))
+        print("+ LZ4:", lz4_dvid_encoded_bytes)
+        print(f"Compression ratio: {labels.nbytes/lz4_dvid_encoded_bytes:.1f}x")
+        print(f"DVID+LZ4 encode throughput: {lz4_dvid_enc_throughput} MB/s")
+ 
+        with Timer() as timer:
+            unzippped = list(map(lz4.decompress, lz4_dvid_encoded_list))
+        assert (decoded == labels).all()
+        lz4_dvid_dec_time = timer.seconds + dvid_dec_time
+        lz4_dvid_dec_throughput = (labels.nbytes / lz4_dvid_dec_time) / 1e6
+        print(f"DVID+LZ4 decode throughput: {lz4_dvid_dec_throughput} MB/s")
+
+        # lz4
         with Timer() as timer:
             lz4_encoded = lz4.compress(labels)
         lz4_encoded_bytes = len(lz4_encoded)
@@ -91,13 +130,14 @@ if BENCHMARKING:
         assert (decoded_labels == labels).all()
         lz4_dec_time = timer.seconds
         lz4_dec_throughput = (labels.nbytes / lz4_dec_time) / 1e6
+
         
         global HEADER_PRINTED
         if not HEADER_PRINTED:
-            print(f"{'':>20s} {'______ ENCODED BYTES ______ ':^30s}  | {'______ ENCODING TIME ______ ':^54s} | {'______ DECODING TIME ______ ':^54s} |")
-            print(f"{'':>20s} {'LZ4':>10s} {'DVID':>10s} {'DECREASE':>9s} |"
-                  f"{'------- LZ4 -------':>22s} {'------ DVID ------':>22s} {'SLOWDOWN':>9s} |"
-                  f"{'------- LZ4 -------':>22s} {'------ DVID ------':>22s} {'SLOWDOWN':>9s} |")
+            print(f"{'':>20s} {'______ ENCODED BYTES ______ ':^41s}  | {'______ ENCODING TIME ______ ':^77s} | {'______ DECODING TIME ______ ':^77s} |")
+            print(f"{'':>20s} {'LZ4':>10s} {'DVID':>10s} {'D+G':>10s} {'DECREASE':>9s} |"
+                  f"{'------- LZ4 -------':>22s} {'------ DVID ------':>22s} {'---- DVID+GZIP ----':>22s} {'SLOWDOWN':>9s} |"
+                  f"{'------- LZ4 -------':>22s} {'------ DVID ------':>22s} {'---- DVID+GZIP ----':>22s} {'SLOWDOWN':>9s} |")
             HEADER_PRINTED = True
 
         print(f"{test_name:>19s}: {lz4_encoded_bytes: 10d} {dvid_encoded_bytes: 10d} {lz4_encoded_bytes/dvid_encoded_bytes:8.1f}x |"
@@ -215,10 +255,10 @@ class TestLabelCodec(unittest.TestCase):
 
 if __name__ == "__main__":
     if BENCHMARKING:
-        test_solid_subblocks()
-        test_1px_stripes()
-        test_5px_stripes()
-        test_10px_stripes()
+        #test_solid_subblocks()
+        #test_1px_stripes()
+        #test_5px_stripes()
+        #test_10px_stripes()
         test_actual_data()
     else:
         unittest.main()

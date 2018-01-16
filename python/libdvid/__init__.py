@@ -12,3 +12,5 @@ DVIDException.status = DVIDException_status
 def DVIDException_message(self):
     return self.args[1]
 DVIDException.message = DVIDException_message
+
+from .mask_codec import encode_mask_blocks, decode_mask_blocks, encode_mask_array, decode_mask_array
