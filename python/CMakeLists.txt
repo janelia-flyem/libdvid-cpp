@@ -180,6 +180,7 @@ install(TARGETS _dvid_python
         LIBRARY DESTINATION ${LIBDVID_PYTHON_INSTALL_DIR}/libdvid)
 
 install(FILES libdvid/__init__.py
+              libdvid/mask_codec.py
         DESTINATION ${LIBDVID_PYTHON_INSTALL_DIR}/libdvid)
 
 install(FILES libdvid/util/__init__.py
@@ -218,4 +219,9 @@ add_test(
 add_test(
     test_label_codec
     ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/tests/test_label_codec.py
+)
+
+add_test(
+    test_mask_codec
+    ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/tests/test_mas_codec.py
 )
