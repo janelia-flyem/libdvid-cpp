@@ -2149,12 +2149,12 @@ int DVIDNodeService::get_sparselabelmask(uint64_t bodyid, std::string labelname,
                 for (int y = 0; y < gxgygz[1]; ++y) {
                     for (int x = 0; x < gxgygz[0]; ++x) {
                         // create all 0 subblock for copy over
-                        unsigned char * subblockdata = new unsigned char[SBW*SBW*SBW]();
                         
+                        std::unique_ptr<unsigned char[]> subblockdata(new unsigned char[SBW*SBW*SBW]());
                         unsigned char subblockstatus = extractval<uint8_t>(head, buffer_size);
                         if (int(subblockstatus) == 0) {
                             // zero out subblock
-                            write_subblock(blockdata.get(), subblockdata, z, y, x, blocksize, SBW);
+                            write_subblock(blockdata.get(), subblockdata.get(), z, y, x, blocksize, SBW);
                             ++zeroblocks;
                         } else if (int(subblockstatus) == 2) {
                             // write binary block out -- traverse 1 bit encoded subblock
@@ -2170,7 +2170,7 @@ int DVIDNodeService::get_sparselabelmask(uint64_t bodyid, std::string labelname,
                                     val8 = val8 >> 1;
                                 }
                             } 
-                            write_subblock(blockdata.get(), subblockdata, z, y, x, blocksize, SBW);
+                            write_subblock(blockdata.get(), subblockdata.get(), z, y, x, blocksize, SBW);
                         } else {
                             ++oneblocks;
                         }
