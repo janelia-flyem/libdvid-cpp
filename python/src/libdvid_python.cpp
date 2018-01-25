@@ -1,7 +1,6 @@
 #include <memory>
 #include <boost/python.hpp>
 #include <boost/python/suite/indexing/vector_indexing_suite.hpp>
-#include <boost/foreach.hpp>
 #include <boost/assign/list_of.hpp>
 
 #define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
@@ -71,7 +70,7 @@ namespace libdvid { namespace python {
 
     	// Convert to Python list
     	list result_list;
-    	BOOST_FOREACH(BlockXYZ const & block, result_vector)
+    	for (BlockXYZ const & block : result_vector)
     	{
             // Thanks to some logic in converters.hpp,
             // this cast will convert the BlockXYZ to a tuple in (z, y, x) order.
@@ -109,7 +108,7 @@ namespace libdvid { namespace python {
         Dims_t bdims(3, blocksize);
         size_t blength = blocksize*blocksize*blocksize;
 
-        BOOST_FOREACH(DVIDCompressedBlock const & cblock, maskblocks)
+        for (DVIDCompressedBlock const & cblock : maskblocks)
     	{
             auto offset = cblock.get_offset();
             coordsdata[coordindex++] = offset[2];
@@ -149,7 +148,7 @@ namespace libdvid { namespace python {
 
     	// Convert to Python list
     	list result_list;
-    	BOOST_FOREACH(SubstackXYZ const & substack, result_substacks)
+    	for (SubstackXYZ const & substack : result_substacks)
     	{
     	    // Thanks to some logic in converters.hpp,
     	    // this cast will convert the substack to a tuple in (size, z, y, x) order.
@@ -177,7 +176,7 @@ namespace libdvid { namespace python {
 
     	// Convert to Python list
     	list result_list;
-    	BOOST_FOREACH(bool b, result_vector)
+        for (bool b : result_vector)
     	{
     		result_list.append( static_cast<object>(b) );
     	}
