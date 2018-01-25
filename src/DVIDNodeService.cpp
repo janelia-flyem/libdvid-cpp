@@ -134,9 +134,9 @@ size_t DVIDNodeService::get_blocksize(string datatype_name)
 
     if (x < 1 || y < 1 || z < 1)
     {
-    		std::ostringstream ss;
-    		ss << "Instance metadata specifies invalid BlockSize: [" << x << ", " << y << ", " << z << "]";
-    		throw ErrMsg(ss.str());
+            std::ostringstream ss;
+            ss << "Instance metadata specifies invalid BlockSize: [" << x << ", " << y << ", " << z << "]";
+            throw ErrMsg(ss.str());
     }
 
     if (x != y || x != z) {
@@ -2340,7 +2340,7 @@ void DVIDNodeService::put_volume(string datatype_instance, BinaryDataPtr volume,
     
     string endpoint =  construct_volume_uri(
             datatype_instance, sizes, offset,
-			axes, throttle, compress, roi, false, mutate);
+            axes, throttle, compress, roi, false, mutate);
 
     // compress using lz4
     if (compress) {

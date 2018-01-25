@@ -62,21 +62,21 @@ namespace libdvid { namespace python {
     //! This wrapper function returns the result as a python list of BlockZYX objects.
     boost::python::list get_roi( DVIDNodeService & nodeService, std::string roi_name )
     {
-    	using namespace boost::python;
+        using namespace boost::python;
 
-    	// Retrieve from DVID
-    	std::vector<BlockXYZ> result_vector;
-    	nodeService.get_roi( roi_name, result_vector );
+        // Retrieve from DVID
+        std::vector<BlockXYZ> result_vector;
+        nodeService.get_roi( roi_name, result_vector );
 
-    	// Convert to Python list
-    	list result_list;
-    	for (BlockXYZ const & block : result_vector)
-    	{
+        // Convert to Python list
+        list result_list;
+        for (BlockXYZ const & block : result_vector)
+        {
             // Thanks to some logic in converters.hpp,
             // this cast will convert the BlockXYZ to a tuple in (z, y, x) order.
-    		result_list.append( static_cast<object>(block) );
-    	}
-    	return result_list;
+            result_list.append( static_cast<object>(block) );
+        }
+        return result_list;
     }
 
     //! Python wrapper function for DVIDNodeService::get_sparselabelmask().
@@ -85,17 +85,17 @@ namespace libdvid { namespace python {
     boost::python::tuple get_sparselabelmask( DVIDNodeService & nodeService, uint64_t bodyid,
             std::string labelname, int scale)
     {
-    	using namespace boost::python;
+        using namespace boost::python;
 
-    	// Retrieve from DVID
-    	std::vector<DVIDCompressedBlock> maskblocks;
+        // Retrieve from DVID
+        std::vector<DVIDCompressedBlock> maskblocks;
         nodeService.get_sparselabelmask(bodyid, labelname, maskblocks, scale);
 
         // if there are no blocks, there should be an exception
         assert(maskblocks.size() > 0);
 
-    	// Convert to Python list
-    	list result_list;
+        // Convert to Python list
+        list result_list;
 
         // create coordinate data
         Dims_t cdims;
@@ -109,7 +109,7 @@ namespace libdvid { namespace python {
         size_t blength = blocksize*blocksize*blocksize;
 
         for (DVIDCompressedBlock const & cblock : maskblocks)
-    	{
+        {
             auto offset = cblock.get_offset();
             coordsdata[coordindex++] = offset[2];
             coordsdata[coordindex++] = offset[1];
@@ -123,13 +123,13 @@ namespace libdvid { namespace python {
             auto voxels_python = static_cast<object>(voxels);
             auto voxels_python_bool = voxels_python.attr("astype")("bool");
             result_list.append( voxels_python_bool );
-    	}
+        }
         
         // create coords voxel type which will be converted to an ndarray 
         Coords2D coords(coordsdata.get(), coordlength, cdims);
-    	
+        
         // return tuple of result list and ndarray
-    	return make_tuple(static_cast<object>(coords), result_list);
+        return make_tuple(static_cast<object>(coords), result_list);
     }
 
 
@@ -137,25 +137,25 @@ namespace libdvid { namespace python {
     //! (Since "return-by-reference" is not an option in Python, boost::python can't provide an automatic wrapper.)
     //! Returns a tuple: (status, result_list, error_msg), where result_list is a list of SubstackZYX tuples
     boost::python::tuple get_roi_partition( DVIDNodeService & nodeService,
-    										std::string roi_name,
-											unsigned int partition_size )
+                                            std::string roi_name,
+                                            unsigned int partition_size )
     {
         using namespace boost::python;
 
         // Retrieve from DVID
-    	std::vector<SubstackXYZ> result_substacks;
-    	double packing_factor = nodeService.get_roi_partition( roi_name, result_substacks, partition_size );
+        std::vector<SubstackXYZ> result_substacks;
+        double packing_factor = nodeService.get_roi_partition( roi_name, result_substacks, partition_size );
 
-    	// Convert to Python list
-    	list result_list;
-    	for (SubstackXYZ const & substack : result_substacks)
-    	{
-    	    // Thanks to some logic in converters.hpp,
-    	    // this cast will convert the substack to a tuple in (size, z, y, x) order.
-    		result_list.append( static_cast<object>(substack) );
-    	}
+        // Convert to Python list
+        list result_list;
+        for (SubstackXYZ const & substack : result_substacks)
+        {
+            // Thanks to some logic in converters.hpp,
+            // this cast will convert the substack to a tuple in (size, z, y, x) order.
+            result_list.append( static_cast<object>(substack) );
+        }
 
-    	return make_tuple(result_list, packing_factor);
+        return make_tuple(result_list, packing_factor);
     }
 
     //! Python wrapper function for DVIDNodeService::roi_ptquery().
@@ -165,22 +165,22 @@ namespace libdvid { namespace python {
     //! NOTE: The user gives point list as PointZYX, which is already converted
     //!       to C++ PointXYZ when this function is called.
     boost::python::list roi_ptquery( DVIDNodeService & nodeService,
-    				  	  	  	     std::string roi_name,
-									 const std::vector<PointXYZ>& points )
+                                           std::string roi_name,
+                                     const std::vector<PointXYZ>& points )
     {
-    	using namespace boost::python;
+        using namespace boost::python;
 
-    	// Retrieve from DVID
-    	std::vector<bool> result_vector;
-    	nodeService.roi_ptquery( roi_name, points, result_vector );
+        // Retrieve from DVID
+        std::vector<bool> result_vector;
+        nodeService.roi_ptquery( roi_name, points, result_vector );
 
-    	// Convert to Python list
-    	list result_list;
+        // Convert to Python list
+        list result_list;
         for (bool b : result_vector)
-    	{
-    		result_list.append( static_cast<object>(b) );
-    	}
-    	return result_list;
+        {
+            result_list.append( static_cast<object>(b) );
+        }
+        return result_list;
     }
 
     Grayscale3D get_gray3D_zyx( DVIDNodeService & nodeService,
@@ -422,14 +422,14 @@ namespace libdvid { namespace python {
     PyObject * PyErrMsg;
     PyObject * PyDVIDException; // Initialized in module definition (below)
 
-	//! Translator function for libdvid::ErrMsg
+    //! Translator function for libdvid::ErrMsg
     //!
     void translate_ErrMsg(ErrMsg const & e)
     {
         PyErr_SetString(PyErrMsg, e.what());
     }
 
-	//! Translator function for libdvid::DVIDException
+    //! Translator function for libdvid::DVIDException
     //!
     void translate_DVIDException(DVIDException const & e)
     {
@@ -478,17 +478,17 @@ namespace libdvid { namespace python {
 
         // BlockXYZ <--> BlockZYX (for python conventions)
         namedtuple_converter<BlockXYZ, int, 3>::class_member_ptr_vec block_members =
-			boost::assign::list_of(&BlockXYZ::z)(&BlockXYZ::y)(&BlockXYZ::x);
+            boost::assign::list_of(&BlockXYZ::z)(&BlockXYZ::y)(&BlockXYZ::x);
         namedtuple_converter<BlockXYZ, int, 3>("BlockZYX", "z y x", block_members, true);
 
         // PointXYZ <--> PointZYX (for python conventions)
         namedtuple_converter<PointXYZ, int, 3>::class_member_ptr_vec point_members =
-			boost::assign::list_of(&PointXYZ::z)(&PointXYZ::y)(&PointXYZ::x);
+            boost::assign::list_of(&PointXYZ::z)(&PointXYZ::y)(&PointXYZ::x);
         namedtuple_converter<PointXYZ, int, 3>("PointZYX", "z y x", point_members, true);
 
         // C++ SubstackXYZ --> SubstackZYX (size, z, y, x)
         namedtuple_converter<SubstackXYZ, int, 4>::class_member_ptr_vec substack_members =
-			boost::assign::list_of(&SubstackXYZ::size)(&SubstackXYZ::z)(&SubstackXYZ::y)(&SubstackXYZ::x);
+            boost::assign::list_of(&SubstackXYZ::size)(&SubstackXYZ::z)(&SubstackXYZ::y)(&SubstackXYZ::x);
         namedtuple_converter<SubstackXYZ, int, 4>("SubstackZYX", "size z y x", substack_members, true);
 
         binary_data_ptr_to_python_str();

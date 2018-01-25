@@ -189,8 +189,8 @@ DVIDConnection::~DVIDConnection()
 }
 
 int DVIDConnection::make_head_request(string endpoint) {
-	std::string error_msg;
-	return make_request(endpoint, HEAD, BinaryDataPtr(), BinaryData::create_binary_data(), error_msg);
+    std::string error_msg;
+    return make_request(endpoint, HEAD, BinaryDataPtr(), BinaryData::create_binary_data(), error_msg);
 }
 
 int DVIDConnection::make_request(string endpoint, ConnectionMethod method,

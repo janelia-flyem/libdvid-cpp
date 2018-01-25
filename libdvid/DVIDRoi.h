@@ -35,17 +35,17 @@ struct SubstackXYZ : boost::totally_ordered<SubstackXYZ> {
     */ 
     bool operator<(SubstackXYZ const & other) const
     {
-    	int params[] = {z, y, x, size};
-    	int other_params[] = {other.z, other.y, other.x, other.size};
-		return std::lexicographical_compare( &params[0], 	   &params[4],
-											 &other_params[0], &other_params[4] );
+        int params[] = {z, y, x, size};
+        int other_params[] = {other.z, other.y, other.x, other.size};
+        return std::lexicographical_compare( &params[0],        &params[4],
+                                             &other_params[0], &other_params[4] );
     }
 
     bool operator==(SubstackXYZ const & other) const
     {
-    	int params[] = {z, y, x, size};
-    	int other_params[] = {other.z, other.y, other.x, other.size};
-		return std::equal( &params[0], &params[4], &other_params[0] );
+        int params[] = {z, y, x, size};
+        int other_params[] = {other.z, other.y, other.x, other.size};
+        return std::equal( &params[0], &params[4], &other_params[0] );
     }
 
     //! public access to member data
@@ -72,17 +72,17 @@ struct BlockXYZ : boost::totally_ordered<BlockXYZ> {
     */ 
     bool operator<(BlockXYZ const & other) const
     {
-    	int params[] = {z, y, x};
-    	int other_params[] = {other.z, other.y, other.x};
-		return std::lexicographical_compare( &params[0], 	   &params[3],
-											 &other_params[0], &other_params[3] );
+        int params[] = {z, y, x};
+        int other_params[] = {other.z, other.y, other.x};
+        return std::lexicographical_compare( &params[0],        &params[3],
+                                             &other_params[0], &other_params[3] );
     }
 
     bool operator==(BlockXYZ const & other) const
     {
-    	int params[] = {z, y, x};
-    	int other_params[] = {other.z, other.y, other.x};
-		return std::equal( &params[0], &params[3], &other_params[0] );
+        int params[] = {z, y, x};
+        int other_params[] = {other.z, other.y, other.x};
+        return std::equal( &params[0], &params[3], &other_params[0] );
     }
 
     //! public access to member data
@@ -107,17 +107,17 @@ struct PointXYZ : boost::totally_ordered<PointXYZ>{
     // Like blocks, points are ordered z-y-x, not x-y-z
     bool operator<(PointXYZ const & other) const
     {
-    	int params[] = {z, y, x};
-    	int other_params[] = {other.z, other.y, other.x};
-		return std::lexicographical_compare( &params[0], 	   &params[3],
-											 &other_params[0], &other_params[3] );
+        int params[] = {z, y, x};
+        int other_params[] = {other.z, other.y, other.x};
+        return std::lexicographical_compare( &params[0],        &params[3],
+                                             &other_params[0], &other_params[3] );
     }
 
     bool operator==(PointXYZ const & other) const
     {
-    	int params[] = {z, y, x};
-    	int other_params[] = {other.z, other.y, other.x};
-		return std::equal( &params[0], &params[3], &other_params[0] );
+        int params[] = {z, y, x};
+        int other_params[] = {other.z, other.y, other.x};
+        return std::equal( &params[0], &params[3], &other_params[0] );
     }
 };
 

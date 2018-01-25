@@ -746,7 +746,7 @@ class DVIDNodeService {
      * \return Roi3D object that wraps a byte buffer
     */
     Roi3D get_roi3D(std::string roi_name, Dims_t dims,
-    		std::vector<int> offset, bool throttle=true,
+            std::vector<int> offset, bool throttle=true,
             bool compress=false);
 
     /*!
@@ -997,7 +997,7 @@ class DVIDNodeService {
             std::vector<int> offset,
             std::vector<unsigned int> axes, bool throttle, bool compress,
             std::string roi,
-			bool is_mask=false, bool mutate=false);
+            bool is_mask=false, bool mutate=false);
 };
 
 }
