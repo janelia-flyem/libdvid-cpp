@@ -87,12 +87,17 @@ def encode_mask_blocks( blocks, block_corners=None, foreground_label=1 ):
         encoded_block_stream_contents = _encode_mask_block(block, corner)
         stream_contents.extend( encoded_block_stream_contents )
 
-    stream_contents = np.concatenate(list(map(lambda a: a.view(np.uint8), stream_contents)))    
+    stream_contents = np.concatenate(list(map(lambda a: a.view(np.uint8), stream_contents)))
     encoded = stream_contents.tobytes()
     return encoded
 
 def _encode_mask_block(block, block_corner=(0,0,0)):
-    assert block.shape == (64,64,64)
+    ##
+    ## Note: Assertions below have been commented out for performance,
+    ##       but they are accurate and you should uncomment them when
+    ##       editing this function.
+    ##
+    #assert block.shape == (64,64,64)
     block = np.asarray(block, dtype=bool, order='C')
 
     stream_contents = []
@@ -114,8 +119,8 @@ def _encode_mask_block(block, block_corner=(0,0,0)):
         block_u64 =  block.view(np.uint64)
         subblocks_u64 = view_as_blocks( block_u64, (8,8,1) )
 
-        assert block_u64.shape == (64,64,8)
-        assert subblocks_u64.shape == (8,8,8,8,8,1) # (Bz, By, Bx, bz, by, 1)
+        #assert block_u64.shape == (64,64,8)
+        #assert subblocks_u64.shape == (8,8,8,8,8,1) # (Bz, By, Bx, bz, by, 1)
         
         packed_subblocks = np.zeros(subblocks_u64.shape, np.uint8)
         
@@ -179,6 +184,11 @@ def decode_mask_blocks( bytes_data ):
         
 
 def _decode_mask_block( bytes_data, next_byte_index ):
+    ##
+    ## Note: Assertions below have been commented out for performance,
+    ##       but they are accurate and you should uncomment them when
+    ##       editing this function.
+    ##
 
     def extract_field(dtype):
         nonlocal next_byte_index
@@ -197,15 +207,15 @@ def _decode_mask_block( bytes_data, next_byte_index ):
     if content_flag == SOLID_FOREGROUND:
         return (np.ones((64,64,64), dtype=np.bool), corner, next_byte_index)
 
-    assert content_flag == MIXED
+    #assert content_flag == MIXED
     block = np.zeros( (64,64,64), np.bool )
     subblocks = view_as_blocks(block, (8,8,8))
     subblocks_u64 = view_as_blocks( block.view(np.uint64), (8,8,1))
-    assert subblocks_u64.shape == (8,8,8,8,8,1) # (Bz, By, Bx, bz, by, 1)
+    #assert subblocks_u64.shape == (8,8,8,8,8,1) # (Bz, By, Bx, bz, by, 1)
 
     # We're still using views, not copies
-    assert is_view_of(subblocks, block)
-    assert is_view_of(subblocks_u64, block)
+    #assert is_view_of(subblocks, block)
+    #assert is_view_of(subblocks_u64, block)
 
     for Bz, By, Bx in np.ndindex(8,8,8):
         subblock = subblocks[Bz,By,Bx]
@@ -219,7 +229,7 @@ def _decode_mask_block( bytes_data, next_byte_index ):
             subblock[:] = 1
             continue
         
-        assert content_flag == MIXED
+        #assert content_flag == MIXED
 
         # Extract subblock bytestream
         bitstream_width = (8*8*8)//8
@@ -227,13 +237,13 @@ def _decode_mask_block( bytes_data, next_byte_index ):
         next_byte_index += bitstream_width
 
         packed_subblock = np.frombuffer(subblock_bytes, np.uint8).reshape(8,8,1).astype(np.uint64)
-        assert packed_subblock.shape == subblock_u64.shape
+        #assert packed_subblock.shape == subblock_u64.shape
 
         # Unpack
         for i in range(8):
             subblock_u64[:] |= (packed_subblock & (1<<i)) << (8*i - i)
 
-    assert (view_as_blocks(block, (8,8,8)) == subblocks).all()
+    #assert (view_as_blocks(block, (8,8,8)) == subblocks).all()
     return (block, corner, next_byte_index)
     
 def is_view_of(view, base):
