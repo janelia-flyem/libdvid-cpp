@@ -7,7 +7,8 @@ import numpy as np
 
 from libdvid import encode_label_block, decode_label_block
 
-BENCHMARKING = True
+
+BENCHMARKING = False
 
 if BENCHMARKING:
     import os
