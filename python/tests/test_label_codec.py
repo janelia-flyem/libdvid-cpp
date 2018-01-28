@@ -1,3 +1,4 @@
+import os
 import time
 import unittest
 import contextlib
@@ -252,6 +253,56 @@ class TestLabelCodec(unittest.TestCase):
         assert decoded_block.dtype == a.dtype
         assert decoded_block.shape == a.shape
         assert (decoded_block == a).all()
+ 
+    def test_encode_zeros(self):
+        """
+        A trivial test to verify that the header of
+        the encoded data is correct for a solid block of ZEROS
+        """
+        a = np.zeros((64,64,64), np.uint64)
+        encoded_data = encode_label_block(a)
+        assert len(encoded_data) == 24
+        assert (np.frombuffer(encoded_data[:12], np.uint32) == 8).all()
+        assert np.frombuffer(encoded_data[12:16], np.uint32)[0] == 1
+        assert np.frombuffer(encoded_data[16:24], np.uint64)[0] == 0
+     
+    def test_completely_unique_voxels(self):
+        """
+        Tests the worst possible scenario:
+        What if every voxel in the block has a unique label?
+        """
+        header_size = 16
+        global_table_size = (64**3) * 8
+        
+        num_sublocks = 8**3
+        voxels_per_subblock = 8**3 # 512 == 2**9
+        
+        bits_per_voxel = 9
+        stream_bits_per_subblock = bits_per_voxel*voxels_per_subblock
+        stream_bytes_per_subblock = (stream_bits_per_subblock + 7) // 8 # techinically, supposed to round up
+                                                                        # (ok, in this case, it's divisible anyway)
+        max_block_encoded_size = (   header_size
+                                   + global_table_size
+                                   + num_sublocks*2                             # num labels for each subblock
+                                   + num_sublocks*voxels_per_subblock*4         # subblock tables
+                                   + num_sublocks*stream_bytes_per_subblock )   # subblock bitstreams
+
+        a = np.arange(64**3, dtype=np.uint32).reshape((64,64,64)) # every voxel is unique
+        a = a.astype(np.uint64)
+
+        encoded_data = encode_label_block(a)
+        assert len(encoded_data) == max_block_encoded_size
+
+        decoded = decode_label_block(encoded_data)
+        assert (decoded == a).all()
+
+    def test_tricky_block(self):
+        test_inputs_dir = os.path.dirname(__file__) + '/../../tests/inputs'
+        tricky_block = np.load(test_inputs_dir + '/tricky-label-block.npz')['block']
+        encoded_data = encode_label_block(tricky_block)
+
+        decoded = decode_label_block(encoded_data)
+        assert (decoded == tricky_block).all()
 
 
 if __name__ == "__main__":

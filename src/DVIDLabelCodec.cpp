@@ -379,12 +379,20 @@ EncodedData encode_label_block(uint64_t const * label_block)
             {
                 bit_counter -= 8;
                 byte_index += 1;
-
+                
                 if (byte_index < byte_count)
                 {
                     encoded_data[voxels_start + byte_index] |= (shifted_index & 0x00FF);
                 }
+
+                // In case bit_counter was originally 16 (bit_counter == 7 and bit_length == 9)
+                if (bit_counter >= 8)
+                {
+                    bit_counter -= 8;
+                    byte_index += 1;
+                }
             }
+            assert(bit_counter < 8);
         }
     });
 
@@ -568,7 +576,7 @@ Labels3D decode_label_block(char const * encoded_data, size_t num_bytes)
             voxel = label_list[global_label_index];
 
             bit_counter += bit_length;
-            if (bit_counter >= 8)
+            while (bit_counter >= 8)
             {
                 bit_counter -= 8;
                 if (decoder.bytes_remaining() > 0)
