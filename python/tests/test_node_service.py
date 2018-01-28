@@ -171,6 +171,12 @@ class Test_DVIDNodeService(unittest.TestCase):
         retrieved_data = node_service.get_labelarray_blocks3D( "test_labelarray64_get", (128,128,128), (0,0,0) )
         assert (retrieved_data == data).all()
 
+        # What happens if we request a block that doesn't exist on the server?
+        missing = node_service.get_labelarray_blocks3D( "test_labelarray64_get", (128,128,128), (1024, 1024, 1024), scale=6 )
+        assert missing.shape == (128,128,128)
+        assert (missing == 0).all()
+        
+
     def test_sparselabelmask(self):
         node_service = DVIDNodeService(TEST_DVID_SERVER, self.uuid, "foo@bar.com", "test_sparselabelmask")
         node_service.create_labelarray("test_sparselabelmask", 64)
