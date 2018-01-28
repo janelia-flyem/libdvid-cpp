@@ -315,7 +315,7 @@ EncodedData encode_label_block(uint64_t const * label_block)
         auto const & unique_labels = subblock_tables[gz][gy][gx].list();
         global_table.insert_labels(&unique_labels[0], unique_labels.size());
     });
-
+    
     EncodedData encoded_data;
 
     // Write the header
@@ -351,7 +351,7 @@ EncodedData encode_label_block(uint64_t const * label_block)
             return;
         }
 
-        int byte_count = ceil(bit_length * pow(SUBBLOCK_WIDTH, 3)/8.f);
+        int byte_count = bit_length * SUBBLOCK_WIDTH*SUBBLOCK_WIDTH*SUBBLOCK_WIDTH / 8 ;
         
         size_t voxels_start = encoded_data.size();
         encoded_data.insert(encoded_data.end(), byte_count, 0);
@@ -371,6 +371,9 @@ EncodedData encode_label_block(uint64_t const * label_block)
             // encoded_voxels: 00101001 11001010
             // (current voxel) 11122233 3444555-
             //
+            static_assert( SUBBLOCK_WIDTH*SUBBLOCK_WIDTH*SUBBLOCK_WIDTH < (2 << 16),
+                          "The type of 'shifted_index' below must be modified if SUBBLOCK_WIDTH is greater than 8" );
+            
             uint16_t shifted_index = index << (16 - bit_counter - bit_length);
             encoded_data[voxels_start + byte_index] |= (shifted_index >> 8);
 
@@ -482,6 +485,11 @@ public:
         return m_end - m_current;
     }
     
+    void debug_status() const
+    {
+        std::cout << "Bytes consumed: " << (m_current - m_start) << " / " << (m_end - m_start) << std::endl;
+    }
+    
 private:
     char const * const m_start;
     char const * const m_end;
@@ -511,11 +519,11 @@ Labels3D decode_label_block(char const * encoded_data, size_t num_bytes)
 
     uint32_t num_labels = decoder.decode_int<uint32_t>();
 
-    std::vector<uint64_t> label_list = decoder.decode_vector<uint64_t>(num_labels);
+    std::vector<uint64_t> global_label_list = decoder.decode_vector<uint64_t>(num_labels);
 
     if (num_labels == 1)
     {
-        std::vector<uint64_t> solid_labels(BLOCK_VOXELS, label_list[0]);
+        std::vector<uint64_t> solid_labels(BLOCK_VOXELS, global_label_list[0]);
         return Labels3D(&solid_labels[0], BLOCK_VOXELS, BLOCK_DIMS);
     }
 
@@ -530,29 +538,29 @@ Labels3D decode_label_block(char const * encoded_data, size_t num_bytes)
         subblock_label_indexes[gz][gy][gx] = decoder.decode_vector<uint32_t>(sb_label_count);
         sb_index += 1;
     });
-
+    
     // Decode bit stream of encoded voxels into subblocks
     typedef boost::multi_array<LabelVec, 3> SubblockArray;
     SubblockArray subblock_dense_labels(boost::extents[GZ][GY][GX]);
     for_indices(GZ, GY, GX, [&](size_t gz, size_t gy, size_t gx) {
-        auto const & index_table = subblock_label_indexes[gz][gy][gx];
+        auto const & subblock_index_table = subblock_label_indexes[gz][gy][gx];
         auto & dense_labels = subblock_dense_labels[gz][gy][gx];
         dense_labels = LabelVec(SUBBLOCK_VOXELS, 0);
 
         size_t bit_counter = 0;
-        size_t bit_length = ceil( log2( index_table.size() ) );
+        size_t bit_length = ceil( log2( subblock_index_table.size() ) );
 
         if (bit_length == 0)
         {
             // No encoded voxels to read if the subblock is uniform
-            uint64_t solid_label = label_list[index_table[0]];
+            uint64_t solid_label = global_label_list[subblock_index_table[0]];
             for (auto & voxel : dense_labels)
             {
                 voxel = solid_label;
             }
             return;
         }
-
+        
         for (auto & voxel : dense_labels)
         {
             uint16_t next_bytes = decoder.peek_int<uint8_t>(0) << 8;
@@ -564,16 +572,19 @@ Labels3D decode_label_block(char const * encoded_data, size_t num_bytes)
             // Mask out previous bits
             next_bytes &= (0xFFFF >> bit_counter);
 
+            static_assert( SUBBLOCK_WIDTH*SUBBLOCK_WIDTH*SUBBLOCK_WIDTH < (2 << 16),
+                          "The type of 'index' below must be modified if SUBBLOCK_WIDTH is greater than 8" );
+
             // Shift the bits we want into place.
             uint16_t index = next_bytes >> (16-bit_length-bit_counter);
 
             assert(index < pow(2, bit_length));
-            assert(index < index_table.size());
+            assert(index < subblock_index_table.size());
 
-            uint32_t global_label_index = index_table[index];
-            assert(global_label_index < label_list.size());
+            uint32_t global_label_index = subblock_index_table[index];
+            assert(global_label_index < global_label_list.size());
 
-            voxel = label_list[global_label_index];
+            voxel = global_label_list[global_label_index];
 
             bit_counter += bit_length;
             while (bit_counter >= 8)
