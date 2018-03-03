@@ -676,7 +676,7 @@ Labels3D DVIDNodeService::get_labelarray_blocks3D(string datatype_instance, Dims
     return full_volume;
 }
 
-void DVIDNodeService::put_labelblocks3D(string datatype_instance, Labels3D const & volume, vector<int> volume_offset_xyz, bool throttle, int scale)
+void DVIDNodeService::put_labelblocks3D(string datatype_instance, Labels3D const & volume, vector<int> volume_offset_xyz, bool throttle, int scale, bool noindex)
 {
     unsigned int blocksize = (unsigned int)get_blocksize(datatype_instance);
 
@@ -787,8 +787,12 @@ void DVIDNodeService::put_labelblocks3D(string datatype_instance, Labels3D const
         ss_uri << "&scale=" << scale;
     } else {
         ss_uri << "?scale=" << scale;
-
     }
+
+    if (noindex) {
+    		ss_uri << "&noindex=true";
+    }
+
     std::string endpoint = ss_uri.str();
 
     // make instance random (create random seed based on time of day)
