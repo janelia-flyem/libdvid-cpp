@@ -522,12 +522,12 @@ class DVIDNodeService {
      * \param offset X,Y,Z offset in dvid
      * \param throttle allow only one request at time (default: false)
      * \param scale downsample level (0 highest resolution)
-     * \param noindex Tell the server not to update the label index yet.
-     *                Used during initial volume ingestion, in which label
-     *                indexes will be sent by the client later on.
+     * \param noindexing Tell the server not to update the label index yet.
+     *                   Used during initial volume ingestion, in which label
+     *                   indexes will be sent by the client later on.
      *
     */
-    void put_labelblocks3D(std::string datatype_instance, Labels3D const & volume, std::vector<int> offset, bool throttle=false, int scale=0, bool noindex=false);
+    void put_labelblocks3D(std::string datatype_instance, Labels3D const & volume, std::vector<int> offset, bool throttle=false, int scale=0, bool noindexing=false);
 
     /*************** API to access keyvalue interface ***************/
     
