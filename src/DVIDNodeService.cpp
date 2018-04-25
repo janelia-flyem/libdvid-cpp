@@ -774,9 +774,6 @@ void DVIDNodeService::put_labelblocks3D(string datatype_instance, Labels3D const
     bool waiting = true;
     int status_code;
     string respdata;
-    vector<unsigned int> axes;
-    axes.push_back(0); axes.push_back(1); axes.push_back(2);
-
 
      // construct query string
     std::ostringstream ss_uri;
