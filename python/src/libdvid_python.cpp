@@ -89,7 +89,8 @@ namespace libdvid { namespace python {
 
         // Retrieve from DVID
         std::vector<DVIDCompressedBlock> maskblocks;
-        nodeService.get_sparselabelmask(bodyid, labelname, maskblocks, scale, supervoxels);
+        int maxsize = 0; // FIXME: get_sparselabelmask() doesn't actually support the 'maxsize' feature yet.
+        nodeService.get_sparselabelmask(bodyid, labelname, maskblocks, scale, maxsize, supervoxels);
 
         // if there are no blocks, there should be an exception
         assert(maskblocks.size() > 0);
