@@ -398,10 +398,10 @@ Grayscale3D DVIDNodeService::get_gray3D(string datatype_instance, Dims_t sizes,
 
 Labels3D DVIDNodeService::get_labels3D(string datatype_instance, Dims_t sizes,
         vector<int> offset, vector<unsigned int> axes,
-        bool throttle, bool compress, string roi)
+        bool throttle, bool compress, string roi, bool supervoxels)
 {
     BinaryDataPtr data = get_volume3D(datatype_instance,
-            sizes, offset, axes, throttle, compress, roi);
+            sizes, offset, axes, throttle, compress, roi, supervoxels);
    
     // decompress using lz4
     if (compress) {
@@ -477,7 +477,12 @@ void DVIDNodeService::prefetch_specificblocks3D(string datatype_instance,
 }
 
 void DVIDNodeService::get_specificblocks3D(string datatype_instance,
-        vector<int>& blockcoords, bool gray, vector<DVIDCompressedBlock>& c_blocks, int scale, bool uncompressed)
+                                           vector<int>& blockcoords,
+                                           bool gray,
+                                           vector<DVIDCompressedBlock>& c_blocks,
+                                           int scale,
+                                           bool uncompressed,
+                                           bool supervoxels)
 {
     size_t blocksize = get_blocksize(datatype_instance);
     if ((blockcoords.size() % 3) != 0) {
@@ -510,6 +515,11 @@ void DVIDNodeService::get_specificblocks3D(string datatype_instance,
         resloc << "&compression=uncompressed";
     }
 
+    if (supervoxels) {
+        resloc << "&supervoxels=true";
+    }
+    
+    
     BinaryDataPtr binary_result = custom_request(resloc.str(), BinaryDataPtr(), GET);
 
     const unsigned char * head = binary_result->get_raw();
@@ -653,10 +663,10 @@ void overwrite_label_subvol( Labels3D & vol,
 }
 
 Labels3D DVIDNodeService::get_labelarray_blocks3D(string datatype_instance, Dims_t sizes,
-        vector<int> offset, bool throttle, int scale)
-{
+        vector<int> offset, bool throttle, int scale, bool supervoxels)
+    {
     vector<DVIDCompressedBlock> c_blocks;
-    get_subvolblocks3D(datatype_instance, sizes, offset, throttle, false, c_blocks, DVIDCompressedBlock::gzip_labelarray, scale);
+    get_subvolblocks3D(datatype_instance, sizes, offset, throttle, false, c_blocks, DVIDCompressedBlock::gzip_labelarray, scale, supervoxels);
 
     BinaryDataPtr full_volume_data = BinaryData::create_binary_data( sizeof(uint64_t) * sizes[0] * sizes[1] * sizes[2] );
     Labels3D full_volume(full_volume_data, sizes);
@@ -832,7 +842,7 @@ void DVIDNodeService::put_labelblocks3D(string datatype_instance, Labels3D const
 
 void DVIDNodeService::get_subvolblocks3D(string datatype_instance, Dims_t sizes,
         vector<int> offset, bool throttle, bool gray, vector<DVIDCompressedBlock>& c_blocks,
-        DVIDCompressedBlock::CompressType ctype, int scale)
+        DVIDCompressedBlock::CompressType ctype, int scale, bool supervoxels)
 {
     // make sure volume specified is legal and block aligned
     if ((sizes.size() != 3) || (offset.size() != 3)) {
@@ -882,6 +892,10 @@ void DVIDNodeService::get_subvolblocks3D(string datatype_instance, Dims_t sizes,
         sstr << "&throttle=on";
     }
 
+    if (supervoxels) {
+        sstr << "&supervoxels=true";
+    }
+    
     sstr << "&scale=" << scale;
  
     // try get until DVID is available (no contention)
@@ -949,21 +963,21 @@ void DVIDNodeService::get_subvolblocks3D(string datatype_instance, Dims_t sizes,
 
 
 Labels3D DVIDNodeService::get_labels3D(string datatype_instance, Dims_t sizes,
-        vector<int> offset, bool throttle, bool compress, string roi)
+        vector<int> offset, bool throttle, bool compress, string roi, bool supervoxels)
 {
     vector<unsigned int> axes;
     axes.push_back(0); axes.push_back(1); axes.push_back(2);
     return get_labels3D(datatype_instance, sizes, offset, axes,
-            throttle, compress, roi);
+            throttle, compress, roi, supervoxels);
 }
 
 uint64 DVIDNodeService::get_label_by_location(std::string datatype_instance, unsigned int x,
-            unsigned int y, unsigned int z)
+            unsigned int y, unsigned int z, bool supervoxels)
 {
     Dims_t sizes; sizes.push_back(1);
     sizes.push_back(1); sizes.push_back(1);
     vector<int> start; start.push_back(x); start.push_back(y); start.push_back(z);
-    Labels3D labels = get_labels3D(datatype_instance, sizes, start, false);
+    Labels3D labels = get_labels3D(datatype_instance, sizes, start, false, supervoxels);
     const uint64* ptr = (const uint64*) labels.get_raw();
     return *ptr;
 }
@@ -1712,11 +1726,15 @@ void DVIDNodeService::roi_ptquery(std::string roi_name,
     }
 }
     
-bool DVIDNodeService::body_exists(string labelvol_name, uint64 bodyid) 
+bool DVIDNodeService::body_exists(string labelvol_name, uint64 bodyid, bool supervoxels)
 {
     stringstream sstr;
     sstr << "/" << labelvol_name << "/sparsevol/";
     sstr << bodyid;
+    if (supervoxels) {
+        sstr << "?supervoxels=true";
+    }
+    
     string node_endpoint = "/node/" + uuid + sstr.str();
     int status_code = connection.make_head_request(node_endpoint);
     if (status_code == 200) {
@@ -2058,7 +2076,12 @@ void write_subblock(T* block, T* subblock_flat, int gz, int gy, int gx, const un
     });
 }
 
-int DVIDNodeService::get_sparselabelmask(uint64_t bodyid, std::string labelname, std::vector<DVIDCompressedBlock>& maskblocks, int scale, unsigned long long maxsize)
+int DVIDNodeService::get_sparselabelmask(uint64_t bodyid,
+                                         std::string labelname,
+                                         std::vector<DVIDCompressedBlock>& maskblocks,
+                                         int scale,
+                                         unsigned long long maxsize,
+                                         bool supervoxels)
 {
     if (scale == -1 && maxsize > 0) {
         // TODO: get label size (need new DVID API)
@@ -2086,6 +2109,10 @@ int DVIDNodeService::get_sparselabelmask(uint64_t bodyid, std::string labelname,
     // perform custom fetch of labels
     std::ostringstream ss_uri;
     ss_uri << "/" << labelname << "/sparsevol/" << bodyid << "?format=blocks&scale=" << scale;
+    if (supervoxels) {
+        ss_uri << "&supervoxels=true";
+    }
+    
     auto binary_result = custom_request(ss_uri.str(), BinaryDataPtr(), GET);
 
     const unsigned int blocksize = get_blocksize(labelname);
@@ -2483,7 +2510,7 @@ bool DVIDNodeService::exists(string datatype_endpoint)
 
 BinaryDataPtr DVIDNodeService::get_volume3D(string datatype_inst, Dims_t sizes,
         vector<int> offset, vector<unsigned int> axes,
-        bool throttle, bool compress, string roi, bool is_mask)
+        bool throttle, bool compress, string roi, bool is_mask, bool supervoxels)
 {
     bool waiting = true;
     int status_code;
@@ -2516,7 +2543,7 @@ BinaryDataPtr DVIDNodeService::get_volume3D(string datatype_inst, Dims_t sizes,
     }
 
     string endpoint = construct_volume_uri(datatype_inst, sizes, offset,
-                axes, throttle, compress, roi, is_mask);
+                axes, throttle, compress, roi, is_mask, supervoxels);
 
     // try get until DVID is available (no contention)
     while (waiting) {
@@ -2550,7 +2577,7 @@ BinaryDataPtr DVIDNodeService::get_volume3D(string datatype_inst, Dims_t sizes,
 
 string DVIDNodeService::construct_volume_uri(string datatype_inst, Dims_t sizes,
         vector<int> offset, vector<unsigned int> axes,
-        bool throttle, bool compress, string roi, bool is_mask, bool mutate)
+        bool throttle, bool compress, string roi, bool is_mask, bool mutate, bool supervoxels)
 {
     string voxels_type = "raw";
     if (is_mask)
@@ -2599,33 +2626,30 @@ string DVIDNodeService::construct_volume_uri(string datatype_inst, Dims_t sizes,
         sstr << "_" << offset[i];
     }
 
+    // Construct query string
+    std::vector<std::string> args;
+
     if (throttle) {
-        sstr << "?throttle=on";
+        args.push_back("throttle=on");
+    }
+    if (compress) {
+        args.push_back("compression=lz4");
+    }
+    if (roi != "") {
+        args.push_back("roi=" + roi);
+    }
+    if (mutate) {
+        args.push_back("mutate=true");
+    }
+    if (supervoxels) {
+        args.push_back("supervoxels=true");
     }
     
-    if (compress && !throttle) {
-        sstr << "?compression=lz4";
-    } else if (compress) {
-        sstr << "&compression=lz4";
+    for (int i = 0; i < args.size(); ++i)
+    {
+        sstr << ((i == 0) ? "?" : "&") << args[i];
     }
-
-    if ((compress || throttle) && roi != "") {
-        sstr << "&roi=" << roi;
-    } else if (roi != "") {
-        sstr << "?roi=" << roi;
-    }
-
-    if ((compress || throttle || roi != "") && mutate) {
-        // if mutate option is set (default is false on dvid)
-        sstr << "&mutate=true";
-    } else if (mutate) {
-        sstr << "?mutate=true";
-    }
-
-
-
-
-
+    
     return sstr.str();
 }
 

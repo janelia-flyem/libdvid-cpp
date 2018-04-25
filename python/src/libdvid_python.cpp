@@ -83,13 +83,13 @@ namespace libdvid { namespace python {
     //! Instead of requiring the user to pass an "out-parameter" (not idiomatic in python),
     //! This wrapper function returns the result as a python list of numpy objects.
     boost::python::tuple get_sparselabelmask( DVIDNodeService & nodeService, uint64_t bodyid,
-            std::string labelname, int scale)
+            std::string labelname, int scale, bool supervoxels)
     {
         using namespace boost::python;
 
         // Retrieve from DVID
         std::vector<DVIDCompressedBlock> maskblocks;
-        nodeService.get_sparselabelmask(bodyid, labelname, maskblocks, scale);
+        nodeService.get_sparselabelmask(bodyid, labelname, maskblocks, scale, supervoxels);
 
         // if there are no blocks, there should be an exception
         assert(maskblocks.size() > 0);
@@ -303,7 +303,8 @@ namespace libdvid { namespace python {
                                   std::vector<int> offset,
                                   bool throttle,
                                   bool compress,
-                                  std::string roi )
+                                  std::string roi,
+                                  bool supervoxels)
     {
         // Reverse offset and sizes
         std::reverse(offset.begin(), offset.end());
@@ -311,7 +312,7 @@ namespace libdvid { namespace python {
 
         // Result is automatically converted to ZYX order thanks
         // to DVIDVoxels converter logic in converters.hpp
-        return nodeService.get_labels3D(datatype_instance, sizes, offset, throttle, compress, roi);
+        return nodeService.get_labels3D(datatype_instance, sizes, offset, throttle, compress, roi, supervoxels);
     }
 
     Labels3D get_labelarray_blocks3D_zyx( DVIDNodeService & nodeService,
@@ -319,7 +320,8 @@ namespace libdvid { namespace python {
                                          Dims_t sizes,
                                          std::vector<int> offset,
                                          bool throttle,
-                                         int scale)
+                                         int scale,
+                                         bool supervoxels)
     {
         // Reverse offset and sizes
         std::reverse(offset.begin(), offset.end());
@@ -327,7 +329,7 @@ namespace libdvid { namespace python {
 
         // Result is automatically converted to ZYX order thanks
         // to DVIDVoxels converter logic in converters.hpp
-        return nodeService.get_labelarray_blocks3D(datatype_instance, sizes, offset, throttle, scale);
+        return nodeService.get_labelarray_blocks3D(datatype_instance, sizes, offset, throttle, scale, supervoxels);
     }
 
 
@@ -366,10 +368,11 @@ namespace libdvid { namespace python {
 
     boost::int64_t get_label_by_location_zyx( DVIDNodeService & nodeService,
                                               std::string datatype_instance,
-                                              PointXYZ point )
+                                              PointXYZ point,
+                                              bool supervoxels)
     {
         // The user gives a python PointZYX, which is converted to C++ PointXYZ for this function.
-        return nodeService.get_label_by_location( datatype_instance, point.x, point.y, point.z );
+        return nodeService.get_label_by_location( datatype_instance, point.x, point.y, point.z, supervoxels );
     }
 
     BinaryDataPtr py_encode_label_block(Labels3D const & label_block)
@@ -787,7 +790,7 @@ namespace libdvid { namespace python {
 
 
             .def("get_labels3D", &get_labels3D_zyx,
-                ( arg("service"), arg("instance_name"), arg("shape_zyx"), arg("offset_zyx"), arg("throttle")=true, arg("compress")=true, arg("roi")=object() ),
+                ( arg("service"), arg("instance_name"), arg("shape_zyx"), arg("offset_zyx"), arg("throttle")=true, arg("compress")=true, arg("roi")=object(), arg("supervoxels")=false ),
                 "Retrieve a 3D 8-byte label volume with the specified \n"
                 "dimension size and spatial offset.  The dimension \n"
                 "sizes and offset default to X,Y,Z (the \n"
@@ -805,11 +808,12 @@ namespace libdvid { namespace python {
                 ":param throttle: allow only one request at time (default: true) \n"
                 ":param compress: enable lz4 compression \n"
                 ":param roi: specify DVID roi to mask GET operation (return 0s outside ROI) \n"
+                ":param supervoxels: Retrieve supervoxel segmentation instead of agglomerated labels (labelmap instances only)\n"
                 ":returns: 3D ``ndarray`` with dtype ``uint64`` \n")
 
 
             .def("get_labelarray_blocks3D", &get_labelarray_blocks3D_zyx,
-                ( arg("service"), arg("instance_name"), arg("shape_zyx"), arg("offset_zyx"), arg("throttle")=true, arg("scale")=0 ),
+                ( arg("service"), arg("instance_name"), arg("shape_zyx"), arg("offset_zyx"), arg("throttle")=true, arg("scale")=0, arg("supervoxels")=false ),
                 "Retrieve a 3D 8-byte labelarray volume with the specified \n"
                 "dimension size and spatial offset.  The dimension \n"
                 "sizes and offset default to X,Y,Z (the \n"
@@ -826,11 +830,12 @@ namespace libdvid { namespace python {
                 ":param offset_zyx: offset in voxel coordinates of whichever scale you are fetching from \n"
                 ":param throttle: allow only one request at time (default: true) \n"
                 ":param scale: Which scale of the pyramid to fetch the blocks from\n"
+                ":param supervoxels: Fetch supervoxel segmentation instead of agglomerated labels (labelmap instances only)\n"
                 ":returns: 3D ``ndarray`` with dtype ``uint64`` \n")
 
 
             .def("get_label_by_location",  &get_label_by_location_zyx,
-                ( arg("service"), arg("instance_name"), arg("point_zyx") ),
+                ( arg("service"), arg("instance_name"), arg("point_zyx"), arg("supervoxels") ),
                 "Retrieve label id at the specified point.  If no ID is found, return 0. \n"
                 "\n"
                 ":param datatype_instance: name of the labelblk type instance \n"
@@ -882,11 +887,12 @@ namespace libdvid { namespace python {
                 )
 
             .def("body_exists", &DVIDNodeService::body_exists,
-                ( arg("labelvol_name"), arg("bodyid") ),
+                ( arg("labelvol_name"), arg("bodyid"), arg("supervoxels")=false ),
                 "Determine whether body exists in labelvolume. \n"
                 "\n"
                 ":param labelvol_name: name of label volume type \n"
                 ":param bodyid: body id being queried (int) \n"
+                ":param supervoxels: Interpret 'bodyid' as a supervoxel ID, not an agglomerated label (labelmap instances only)\n"
                 ":returns: True if in label volume, False otherwise \n")
 
 
@@ -968,13 +974,14 @@ namespace libdvid { namespace python {
                 ":returns: list of ``BlockZYX`` coordinate tuples \n")
 
             .def("get_sparselabelmask", &get_sparselabelmask,
-                ( arg("service"), arg("bodyid"), arg("labelname"), arg("scale") ),
+                ( arg("service"), arg("bodyid"), arg("labelname"), arg("scale"), arg("supervoxels")=false ),
                 "Retrieve a list of block coordinates and masks fora given body. \n"
                 "The blocks returned will be ordered by Z then Y then X. \n"
                 "\n\n"
                 ":param bodyid: sparse body mask to fetch \n"
                 ":param labelname: name of segmentation type \n"
                 ":param scale: resolution level for mask (0=no downsampling) \n"
+                ":param supervoxels: Request supervoxel segmentation, not agglomerated labels \n"
                 ":returns: (2d INT Nx3 array of z, y, x voxel  coordinates for each block, list of 3D 8bit ndarray masks) \n")
 
 

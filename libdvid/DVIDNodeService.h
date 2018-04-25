@@ -306,7 +306,7 @@ class DVIDNodeService {
     */
     Labels3D get_labels3D(std::string datatype_instance, Dims_t dims,
             std::vector<int> offset, bool throttle=true,
-            bool compress=true, std::string roi="");
+            bool compress=true, std::string roi="", bool supervoxels=false);
    
     /*!
      * Retrieve a 3D 8-byte label volume with the specified
@@ -327,12 +327,13 @@ class DVIDNodeService {
      * \param throttle allow only one request at time (default: true)
      * \param compress enable lz4 compression
      * \param roi specify DVID roi to mask GET operation (return 0s outside ROI)
+     * \param supervoxels
      * \return 3D label object that wraps a byte buffer
     */
     Labels3D get_labels3D(std::string datatype_instance, Dims_t dims,
             std::vector<int> offset,
             std::vector<unsigned int> axes, bool throttle=true,
-            bool compress=true, std::string roi="");
+            bool compress=true, std::string roi="", bool supervoxels=false);
 
     /*
      * Retrieve label id at the specified point.  If no ID is found, return 0.
@@ -340,10 +341,14 @@ class DVIDNodeService {
      * \param x x location
      * \param y y location
      * \param z z location
+     * \param supervoxels
      * \return body id for given location (0 if none found)
     */
-    uint64 get_label_by_location(std::string datatype_instance, unsigned int x,
-            unsigned int y, unsigned int z);
+    uint64 get_label_by_location(std::string datatype_instance,
+                                 unsigned int x,
+                                 unsigned int y,
+                                 unsigned int z,
+                                 bool supervoxels=false);
 
     /*!
      * Put a 3D 1-byte grayscale volume to DVID with the specified
@@ -472,7 +477,8 @@ class DVIDNodeService {
                                       Dims_t sizes,
                                       std::vector<int> offset,
                                       bool throttle,
-                                      int scale );
+                                      int scale,
+                                      bool supervoxels=false );
 
 
     /*!
@@ -788,7 +794,7 @@ class DVIDNodeService {
      * \param bodyid body id being queried
      * \return true if in label volume, false otherwise
     */
-    bool body_exists(std::string labelvol_name, uint64 bodyid);
+    bool body_exists(std::string labelvol_name, uint64 bodyid, bool supervoxels=false);
 
     /*!
      * Find a point in the center of the  body (currently an
@@ -834,7 +840,7 @@ class DVIDNodeService {
      * \param scale downsample level (0 highest resolution)
     */
     void get_specificblocks3D(std::string datatype_instance, std::vector<int>& blockcoords, bool gray, 
-        std::vector<DVIDCompressedBlock>& c_blocks, int scale=0, bool uncompressed=false);
+        std::vector<DVIDCompressedBlock>& c_blocks, int scale=0, bool uncompressed=false, bool supervoxels=false);
 
     /*!
      * Prefetch specific blocks from DVID (non-blocking)
@@ -853,7 +859,12 @@ class DVIDNodeService {
      * \param maxsize the maximum size body size allowed to trigger downsampling (0 = no limit)
      * \return scale resolution of mask
     */
-    int get_sparselabelmask(std::uint64_t bodyid, std::string labelname, std::vector<DVIDCompressedBlock>& maskblocks, int scale=-1, unsigned long long maxsize=0);
+    int get_sparselabelmask(std::uint64_t bodyid,
+                            std::string labelname,
+                            std::vector<DVIDCompressedBlock>& maskblocks,
+                            int scale=-1,
+                            unsigned long long maxsize=0,
+                            bool supervoxels=false);
 
     /*!
      * Fetches sparse label volume as a series of block masks using labelarray interface.
@@ -960,11 +971,14 @@ class DVIDNodeService {
      * \param compress enable lz4 compression
      * \param roi specify DVID roi to mask GET operation (return 0s outside ROI)
      * \param is_mask Use this when requesting ROI mask data as 3D voxels.
+     * \param supervoxels If true, pass supervoxels=true in the query string to dvid
+     *                    (beware: not valid for all instance types)
      * \return byte buffer corresponding to volume
     */
     BinaryDataPtr get_volume3D(std::string datatype_inst, Dims_t sizes,
         std::vector<int> offset, std::vector<unsigned int> axes,
-        bool throttle, bool compress, std::string roi, bool is_mask=false);
+        bool throttle, bool compress, std::string roi, bool is_mask=false,
+        bool supervoxels=false);
 
 
     /*!
@@ -977,11 +991,13 @@ class DVIDNodeService {
      * \param throttle allow only one request at time (default: false)
      * \param gray indicates whether a grayscale datatype is being accessed 
      * \param c_blocks array of lz4/jpeg compressed label blocks
+     * \param supervoxels If true, pass supervoxels=true in the query string to dvid
+     *                    (beware: not valid for all instance types)
     */
     void get_subvolblocks3D(std::string datatype_instance, Dims_t sizes,
         std::vector<int> offset, bool throttle, bool gray, 
         std::vector<DVIDCompressedBlock>& c_blocks,
-        DVIDCompressedBlock::CompressType ctype, int scale=0);
+        DVIDCompressedBlock::CompressType ctype, int scale=0, bool supervoxels=false);
 
     /*!
      * Helper function to construct a REST endpoint string for
@@ -995,12 +1011,14 @@ class DVIDNodeService {
      * \param roi specify DVID roi to mask operation (default: empty)
      * \param is_mask Use this when requesting ROI mask data as 3D voxels.
      * \param mutate set true if overwriting previous segmentation (default: false)
+     * \param supervoxels If true, pass supervoxels=true in the query string to dvid
+     *                    (beware: not valid for all instance types)
     */
     std::string construct_volume_uri(std::string datatype_inst, Dims_t sizes,
             std::vector<int> offset,
             std::vector<unsigned int> axes, bool throttle, bool compress,
             std::string roi,
-            bool is_mask=false, bool mutate=false);
+            bool is_mask=false, bool mutate=false, bool supervoxels=false);
 };
 
 }
