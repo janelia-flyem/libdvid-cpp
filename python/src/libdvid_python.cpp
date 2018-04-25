@@ -840,6 +840,7 @@ namespace libdvid { namespace python {
                 "\n"
                 ":param datatype_instance: name of the labelblk type instance \n"
                 ":param point_zyx: tuple: ``(z,y,x)`` of the point to inspect\n"
+                ":param supervoxels: Fetch supervoxel segmentation value of agglomerated label value (labelmap instances only)\n"
                 ":returns: body id for given location (0 if none found) \n")
 
             .def("put_labels3D", &put_labels3D_zyx,
