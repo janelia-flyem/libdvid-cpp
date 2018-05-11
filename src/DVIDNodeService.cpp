@@ -401,7 +401,7 @@ Labels3D DVIDNodeService::get_labels3D(string datatype_instance, Dims_t sizes,
         bool throttle, bool compress, string roi, bool supervoxels)
 {
     BinaryDataPtr data = get_volume3D(datatype_instance,
-            sizes, offset, axes, throttle, compress, roi, supervoxels);
+            sizes, offset, axes, throttle, compress, roi, false, supervoxels);
    
     // decompress using lz4
     if (compress) {
@@ -2543,7 +2543,7 @@ BinaryDataPtr DVIDNodeService::get_volume3D(string datatype_inst, Dims_t sizes,
     }
 
     string endpoint = construct_volume_uri(datatype_inst, sizes, offset,
-                axes, throttle, compress, roi, is_mask, supervoxels);
+                axes, throttle, compress, roi, is_mask, false, supervoxels);
 
     // try get until DVID is available (no contention)
     while (waiting) {
