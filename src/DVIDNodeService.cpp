@@ -907,7 +907,7 @@ void DVIDNodeService::get_subvolblocks3D(string datatype_instance, Dims_t sizes,
     while (waiting) {
         binary_result = BinaryData::create_binary_data();
         int status_code = connection.make_request(sstr.str(), GET, BinaryDataPtr(),
-                binary_result, respdata, BINARY, false);
+                binary_result, respdata, BINARY);
        
         // wait if server is busy
         if (status_code == 503) {
