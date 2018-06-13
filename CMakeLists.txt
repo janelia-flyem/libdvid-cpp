@@ -24,6 +24,23 @@ set (CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -D_GLIBCXX_DEBUG")
 # (Note: 0 means "most checks" and 1 means "even more". Leave it undefined to disable it entirely.)
 set (CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -D_LIBCPP_DEBUG=0")
 
+
+# When using gcc, specify whether or not to enable the C++11 ABI.
+# Our default is to disable it.
+# If we didn't specify it, gcc-5 enables the C++11 ABI by default,
+# which is ABI-incompatible with libraries built with gcc-4.
+if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+    set(GLIBCXX_USE_CXX11_ABI 0 CACHE BOOL
+        "Passed to gcc as a preprocessor definition. See gcc docs for GLIBCXX_USE_CXX11_ABI")
+    
+    if (GLIBCXX_USE_CXX11_ABI)
+        add_definitions("-DGLIBCXX_USE_CXX11_ABI=1")
+    else()
+        add_definitions("-DGLIBCXX_USE_CXX11_ABI=0")
+    endif()
+endif()
+
+
 ################################################################################
 ## RPATH settings
 ## https://cmake.org/Wiki/CMake_RPATH_handling
