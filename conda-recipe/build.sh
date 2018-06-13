@@ -6,9 +6,11 @@ if [[ $(uname) == 'Darwin' ]]; then
     CXXFLAGS="-I${PREFIX}/include -stdlib=libc++"
 else
     DYLIB_EXT=so
-    CC=gcc
-    CXX=g++
     CXXFLAGS="-I${PREFIX}/include"
+
+    # Don't specify these -- let conda-build do it.
+    #CC=gcc
+    #CXX=g++
 fi
 
 PY_VER=$(python -c "import sys; print('{}.{}'.format(*sys.version_info[:2]))")

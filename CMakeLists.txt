@@ -30,13 +30,13 @@ set (CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -D_LIBCPP_DEBUG=0")
 # If we didn't specify it, gcc-5 enables the C++11 ABI by default,
 # which is ABI-incompatible with libraries built with gcc-4.
 if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
-    set(GLIBCXX_USE_CXX11_ABI 0 CACHE BOOL
-        "Passed to gcc as a preprocessor definition. See gcc docs for GLIBCXX_USE_CXX11_ABI")
+    set(_GLIBCXX_USE_CXX11_ABI 0 CACHE BOOL
+        "Passed to gcc as a preprocessor definition. See gcc docs for _GLIBCXX_USE_CXX11_ABI")
     
-    if (GLIBCXX_USE_CXX11_ABI)
-        add_definitions("-DGLIBCXX_USE_CXX11_ABI=1")
+    if (_GLIBCXX_USE_CXX11_ABI)
+        add_definitions("-D_GLIBCXX_USE_CXX11_ABI=1")
     else()
-        add_definitions("-DGLIBCXX_USE_CXX11_ABI=0")
+        add_definitions("-D_GLIBCXX_USE_CXX11_ABI=0")
     endif()
 endif()
 

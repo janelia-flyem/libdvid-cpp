@@ -24,7 +24,9 @@ build:
   
 requirements:
   build:
+    - gxx_linux-64 # [linux]
     - cmake
+  host:
     - boost 1.64.*
     - jsoncpp 1.6.2
     - lz4-c >=1.7.5,<100 # Old versions of lz4 used a different versioning scheme, e.g. 'r116'
