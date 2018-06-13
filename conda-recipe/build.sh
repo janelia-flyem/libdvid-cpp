@@ -55,18 +55,43 @@ cmake ..\
 ##
 
 if [[ $CONFIGURE_ONLY == 0 ]]; then
-    # BUILD
+    ##
+    ## BUILD
+    ##
     make -j${CPU_COUNT}
-
+    
+    ##
+    ## INSTALL
+    ##
     # "install" to the build prefix (conda will relocate these files afterwards)
     make install
     
     # For debug builds, this symlink can be useful...
     #cd ${PREFIX}/lib && ln -s libdvidcpp-g.${DYLIB_EXT} libdvidcpp.${DYLIB_EXT} && cd -
 
+    ##
+    ## TEST
+    ##
     if [[ -z "$SKIP_LIBDVID_TESTS" || "$SKIP_LIBDVID_TESTS" == "0" ]]; then
         echo "Running build tests.  To skip, set SKIP_LIBDVID_TESTS=1"
-    
+
+	    # Launch dvid
+	    echo "Starting test DVID server..."
+	    dvid -verbose serve ${RECIPE_DIR}/dvid-testserver-config.toml &
+	    DVID_PID=$!
+	
+	    sleep 5;
+	    if [ ! pgrep -x > /dev/null ]; then
+	        2>&1 echo "*****************************************************"
+	        2>&1 echo "Unable to start test DVID server!                    "
+	        2>&1 echo "Do you already have a server runnining on port :8000?"
+	        2>&1 echo "*****************************************************"
+	        exit 2
+	    fi 
+	    
+	    # Kill the DVID server when this script exits
+	    trap 'kill -TERM $DVID_PID' EXIT
+	    
         # This script runs 'make test', which uses the build artifacts in the build directory, not the installed files.
         # Therefore, they haven't been post-processed by conda to automatically locate their dependencies.
         # We'll set LD_LIBRARY_PATH to avoid errors from ld

@@ -38,6 +38,9 @@ requirements:
     - numpy >=1.9,{{NPY_VER}}*
     - scikit-image
 
+    # DVID is included as a build dependency so we can run 'make test'
+    - dvid
+        
   run:
     - boost 1.64.*
     - jsoncpp 1.6.2
