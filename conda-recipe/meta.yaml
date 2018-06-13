@@ -36,7 +36,8 @@ requirements:
     - python >=2.7
     - python {{PY_VER}}*
     - numpy >=1.9,{{NPY_VER}}*
-    
+    - scikit-image
+
   run:
     - boost 1.64.*
     - jsoncpp 1.6.2
@@ -49,6 +50,7 @@ requirements:
     - curl 7.59*
     - python {{PY_VER}}*
     - numpy  {{NPY_VER}}*
+    - scikit-image
 
 test:
   # Python imports
