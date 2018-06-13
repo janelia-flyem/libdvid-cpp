@@ -49,184 +49,117 @@ IF("${isSystemDir}" STREQUAL "-1")
 ENDIF("${isSystemDir}" STREQUAL "-1")
 ################################################################################
 
-################################################################################
-# Check if BUILDEM_DIR has already been assigned.  If not, create a default.
-set (BUILDEM_DIR "None" CACHE TYPE STRING)
-
-if (${BUILDEM_DIR} STREQUAL "None")
-    message ("WARNING: To use Buildem, Buildem directory (for all downloads & builds) should be specified via -DBUILDEM_DIR=<path> on cmake command line.")
-    message ("Builds will be placed here: ${CMAKE_SOURCE_DIR}/bin")
-else()
-    message ("FlyEM downloads and builds will be placed here: ${BUILDEM_DIR}")
-endif ()
-###############################################################################
-
-if (${BUILDEM_DIR} STREQUAL "None")
-    set (BUILDLOC ${CMAKE_SOURCE_DIR})
-else()
-    set (BUILDLOC ${BUILDEM_DIR})
-endif()
+set (BUILDLOC ${CMAKE_SOURCE_DIR})
 
 
 set (LIBDVID_WRAP_PYTHON NO CACHE BOOL "Build the libdvid python bindings (requires boost_python)")
 
-if (NOT ${BUILDEM_DIR} STREQUAL "None")
-    ###############################################################################
-    # Download and install buildem, if it isn't already in BUILDEM_DIR.
-    set (BUILDEM_REPO_DIR ${BUILDEM_DIR}/src/buildem)
-    if (NOT EXISTS ${BUILDEM_REPO_DIR}/python.cmake)
-        message ("Installing buildem repo...")
-        ExternalProject_Add(buildem
-            PREFIX ${BUILDEM_DIR}
-            GIT_REPOSITORY http://github.com/janelia-flyem/buildem.git
-            UPDATE_COMMAND ""
-            PATCH_COMMAND ""
-            CONFIGURE_COMMAND "" 
-            BUILD_COMMAND ""
-            BUILD_IN_SOURCE 1
-            INSTALL_COMMAND ""
-        )
-        message ("\n**********************************************************\n")
-        message ("\nAfter running make, you must re-run the cmake command once")
-        message ("buildem has been downloaded!\n")
-        message ("\n***********************************************************\n")
-        return()
-    endif() 
-    ###############################################################################
 
-    # Use modules from the downloaded buildem
-    set (CMAKE_MODULE_PATH ${BUILDEM_REPO_DIR})
-    message("Using cmake modules from ${BUILDEM_REPO_DIR}")
+# python is intentionally omitted here, in favor of the more reliable detection, below.
+FIND_PACKAGE(Boost REQUIRED COMPONENTS thread system)
 
-    include (jsoncpp)
-    include (libpng)
-    include (libjpeg)
-    include (libcurl)
-    include (lz4)
-    include (boost)
-    
-    set (LIBDVID_DEPS ${jsoncpp_NAME} ${libpng_NAME} ${libcurl_NAME}
-        ${libjpeg_NAME} ${lz4_NAME} ${boost_NAME})
-    set (boost_LIBS ${BUILDEM_LIB_DIR}/libboost_thread.${BUILDEM_PLATFORM_DYLIB_EXTENSION} ${BUILDEM_LIB_DIR}/libboost_system.${BUILDEM_PLATFORM_DYLIB_EXTENSION})
-    if (LIBDVID_WRAP_PYTHON)
-        include (python)
-        include (numpy)
-        set (LIBDVID_DEPS ${LIBDVID_DEPS} ${python_NAME} ${numpy_NAME})
-        set(Boost_PYTHON_LIBRARY ${BUILDEM_LIB_DIR}/libboost_python.${BUILDEM_PLATFORM_DYLIB_EXTENSION})
-    endif()
-    set (support_LIBS ${json_LIB} 
-                      ${boost_LIBS} 
-                      ${BUILDEM_LIB_DIR}/libpng.${BUILDEM_PLATFORM_DYLIB_EXTENSION} 
-                      ${BUILDEM_LIB_DIR}/libcurl.${BUILDEM_PLATFORM_DYLIB_EXTENSION} 
-                      ${BUILDEM_LIB_DIR}/libjpeg.${BUILDEM_PLATFORM_DYLIB_EXTENSION} 
-                      ${BUILDEM_LIB_DIR}/liblz4.${BUILDEM_PLATFORM_DYLIB_EXTENSION} )
-else ()
-    # python is intentionally omitted here, in favor of the more reliable detection, below.
-    FIND_PACKAGE(Boost REQUIRED COMPONENTS thread system)
+if (LIBDVID_WRAP_PYTHON)
 
-    if (LIBDVID_WRAP_PYTHON)
-    
-        FIND_PACKAGE(PythonInterp)
+    FIND_PACKAGE(PythonInterp)
 
-        ######################################################################
-        #
-        #  Find boost::python library
-        #
-        #  (Copied from vigra/config/FindVIGRANUMPY_DEPENDENCIES.cmake)
-        #
-        # 'FIND_PACKAGE(Boost COMPONENTS python)' is unreliable because it often selects
-        # boost_python for the wrong Python version
-        #
-        ######################################################################
-        IF(Boost_FOUND)
+    ######################################################################
+    #
+    #  Find boost::python library
+    #
+    #  (Copied from vigra/config/FindVIGRANUMPY_DEPENDENCIES.cmake)
+    #
+    # 'FIND_PACKAGE(Boost COMPONENTS python)' is unreliable because it often selects
+    # boost_python for the wrong Python version
+    #
+    ######################################################################
+    IF(Boost_FOUND)
 
-            IF(Boost_USE_MULTITHREADED)
-                # define names for thread-safe library variants
-                SET(BOOST_PYTHON_NAMES
-                        boost_python-py${PYTHON_VERSION_MAJOR}${PYTHON_VERSION_MINOR}-mt
-                        boost_python-${PYTHON_VERSION_MAJOR}.${PYTHON_VERSION_MINOR}-mt
-                        boost_python${PYTHON_VERSION_MAJOR}-mt
-                        boost_python-mt)
-            ENDIF()
-
-            IF(Boost_LIB_SUFFIX)
-                SET(BOOST_PYTHON_NAMES ${BOOST_PYTHON_NAMES}
-                    # Windows with mangled library names
-                    boost_python${PYTHON_VERSION_MAJOR}${Boost_LIB_SUFFIX}
-                    boost_python${Boost_LIB_SUFFIX})
-            ENDIF()
-    
-            # define names for boost_python library variants
-            # (may or may not be thread-safe)
-            SET(BOOST_PYTHON_NAMES ${BOOST_PYTHON_NAMES}
-                    # Linux with multiple Python versions
-                    boost_python-py${PYTHON_VERSION_MAJOR}${PYTHON_VERSION_MINOR}
-                    # Gentoo
-                    boost_python-${PYTHON_VERSION_MAJOR}.${PYTHON_VERSION_MINOR}
-                    # Mac with Python 3
-                    boost_python${PYTHON_VERSION_MAJOR}
-                    # default
-                    boost_python)
-    
-            FIND_LIBRARY(Boost_PYTHON_LIBRARY
-                         NAMES ${BOOST_PYTHON_NAMES}
-                         NAMES_PER_DIR
-                         HINTS "${Boost_LIBRARY_DIR}"
-                         DOC "boost_python libraries")
+        IF(Boost_USE_MULTITHREADED)
+            # define names for thread-safe library variants
+            SET(BOOST_PYTHON_NAMES
+                    boost_python-py${PYTHON_VERSION_MAJOR}${PYTHON_VERSION_MINOR}-mt
+                    boost_python-${PYTHON_VERSION_MAJOR}.${PYTHON_VERSION_MINOR}-mt
+                    boost_python${PYTHON_VERSION_MAJOR}-mt
+                    boost_python-mt)
         ENDIF()
-    
-        if(Boost_PYTHON_LIBRARY)
-            MESSAGE(STATUS "Found boost_python library: ${Boost_PYTHON_LIBRARY}")
-        else()
-            MESSAGE(FATAL_ERROR "Could NOT find boost_python library")
-        endif()
-    endif()
 
-    include_directories(AFTER ${Boost_INCLUDE_DIR})
-    if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
-        set (PLATFORM_DYLIB_EXTENSION "dylib")
+        IF(Boost_LIB_SUFFIX)
+            SET(BOOST_PYTHON_NAMES ${BOOST_PYTHON_NAMES}
+                # Windows with mangled library names
+                boost_python${PYTHON_VERSION_MAJOR}${Boost_LIB_SUFFIX}
+                boost_python${Boost_LIB_SUFFIX})
+        ENDIF()
+
+        # define names for boost_python library variants
+        # (may or may not be thread-safe)
+        SET(BOOST_PYTHON_NAMES ${BOOST_PYTHON_NAMES}
+                # Linux with multiple Python versions
+                boost_python-py${PYTHON_VERSION_MAJOR}${PYTHON_VERSION_MINOR}
+                # Gentoo
+                boost_python-${PYTHON_VERSION_MAJOR}.${PYTHON_VERSION_MINOR}
+                # Mac with Python 3
+                boost_python${PYTHON_VERSION_MAJOR}
+                # default
+                boost_python)
+
+        FIND_LIBRARY(Boost_PYTHON_LIBRARY
+                     NAMES ${BOOST_PYTHON_NAMES}
+                     NAMES_PER_DIR
+                     HINTS "${Boost_LIBRARY_DIR}"
+                     DOC "boost_python libraries")
+    ENDIF()
+
+    if(Boost_PYTHON_LIBRARY)
+        MESSAGE(STATUS "Found boost_python library: ${Boost_PYTHON_LIBRARY}")
     else()
-        set (PLATFORM_DYLIB_EXTENSION "so")
+        MESSAGE(FATAL_ERROR "Could NOT find boost_python library")
     endif()
-    if (NOT Boost_LIBRARY_DIR_RELEASE)
-        set(Boost_LIBRARY_DIR_RELEASE ${Boost_LIBRARY_DIR})
-    endif()
-    set (boost_LIBS ${Boost_LIBRARY_DIR_RELEASE}/libboost_thread.${PLATFORM_DYLIB_EXTENSION} ${Boost_LIBRARY_DIR_RELEASE}/libboost_system.${PLATFORM_DYLIB_EXTENSION})
+endif()
 
-    #set(JPEGTURBO ON)
-    FIND_PACKAGE(PNG REQUIRED)
-    if (JPEGTURBO)
-        FIND_LIBRARY(JPEG2 turbojpeg)
-    endif()
-    FIND_PACKAGE(JPEG REQUIRED)
-    FIND_PACKAGE(CURL REQUIRED)
-    FIND_LIBRARY(ZEROMQ_LIBRARIES zmq)
-    FIND_LIBRARY(LZ4_LIBRARY lz4)
+include_directories(AFTER ${Boost_INCLUDE_DIR})
+if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+    set (PLATFORM_DYLIB_EXTENSION "dylib")
+else()
+    set (PLATFORM_DYLIB_EXTENSION "so")
+endif()
+if (NOT Boost_LIBRARY_DIR_RELEASE)
+    set(Boost_LIBRARY_DIR_RELEASE ${Boost_LIBRARY_DIR})
+endif()
+set (boost_LIBS ${Boost_LIBRARY_DIR_RELEASE}/libboost_thread.${PLATFORM_DYLIB_EXTENSION} ${Boost_LIBRARY_DIR_RELEASE}/libboost_system.${PLATFORM_DYLIB_EXTENSION})
 
-    if (NOT LZ4_LIBRARY)
-        message(FATAL_ERROR "*** Could not find lz4 library ***")
-    endif()
+#set(JPEGTURBO ON)
+FIND_PACKAGE(PNG REQUIRED)
+if (JPEGTURBO)
+    FIND_LIBRARY(JPEG2 turbojpeg)
+endif()
+FIND_PACKAGE(JPEG REQUIRED)
+FIND_PACKAGE(CURL REQUIRED)
+FIND_LIBRARY(ZEROMQ_LIBRARIES zmq)
+FIND_LIBRARY(LZ4_LIBRARY lz4)
 
-    FIND_LIBRARY(JSON_LIBRARIES jsoncpp)
-    if (NOT JSON_LIBRARIES AND UNIX AND NOT APPLE)
-        # Try again with pkg-config
-        # Explanation can be found here:
-        # https://github.com/janelia-flyem/libdvid-cpp/pull/19
-        include (FindPkgConfig)
-        PKG_SEARCH_MODULE(JSON REQUIRED jsoncpp)
-        include_directories(BEFORE ${JSON_INCLUDE_DIRS})
+if (NOT LZ4_LIBRARY)
+    message(FATAL_ERROR "*** Could not find lz4 library ***")
+endif()
 
-        if (NOT JSON_LIBRARIES)
-            message(FATAL_ERROR "*** Could not find jsoncpp library ***")
-        endif()
-    endif()
+FIND_LIBRARY(JSON_LIBRARIES jsoncpp)
+if (NOT JSON_LIBRARIES AND UNIX AND NOT APPLE)
+    # Try again with pkg-config
+    # Explanation can be found here:
+    # https://github.com/janelia-flyem/libdvid-cpp/pull/19
+    include (FindPkgConfig)
+    PKG_SEARCH_MODULE(JSON REQUIRED jsoncpp)
+    include_directories(BEFORE ${JSON_INCLUDE_DIRS})
 
-    if (JPEGTURBO)
-        set (support_LIBS ${JSON_LIBRARIES} ${boost_LIBS} ${ZEROMQ_LIBRARIES} ${PNG_LIBRARIES} ${CURL_LIBRARIES} ${JPEG_LIBRARIES} ${LZ4_LIBRARY} ${JPEG2})
-    else()
-        set (support_LIBS ${JSON_LIBRARIES} ${boost_LIBS} ${ZEROMQ_LIBRARIES} ${PNG_LIBRARIES} ${CURL_LIBRARIES} ${JPEG_LIBRARIES} ${LZ4_LIBRARY})
+    if (NOT JSON_LIBRARIES)
+        message(FATAL_ERROR "*** Could not find jsoncpp library ***")
     endif()
-endif (NOT ${BUILDEM_DIR} STREQUAL "None")
+endif()
+
+if (JPEGTURBO)
+    set (support_LIBS ${JSON_LIBRARIES} ${boost_LIBS} ${ZEROMQ_LIBRARIES} ${PNG_LIBRARIES} ${CURL_LIBRARIES} ${JPEG_LIBRARIES} ${LZ4_LIBRARY} ${JPEG2})
+else()
+    set (support_LIBS ${JSON_LIBRARIES} ${boost_LIBS} ${ZEROMQ_LIBRARIES} ${PNG_LIBRARIES} ${CURL_LIBRARIES} ${JPEG_LIBRARIES} ${LZ4_LIBRARY})
+endif()
 
 include_directories (BEFORE ${CMAKE_SOURCE_DIR}/libdvid ${CMAKE_SOURCE_DIR})
 
@@ -251,10 +184,6 @@ add_library (dvidcpp SHARED
 
 target_link_libraries (dvidcpp ${support_LIBS})
 
-if (NOT ${BUILDEM_DIR} STREQUAL "None")
-    add_dependencies (dvidcpp ${LIBDVID_DEPS})
-endif()
-
 # config file for CMake FIND_PACKAGE command
 set (libdvidcpp_version "0.1.0")
 set(CONF_INCLUDE_DIRS "${PROJECT_SOURCE_DIR}")
@@ -267,29 +196,18 @@ CONFIGURE_FILE(${PROJECT_SOURCE_DIR}/config/libdvidcppConfigVersion.cmake.in
     ${PROJECT_BINARY_DIR}/libdvidcppConfigVersion.cmake
     @ONLY IMMEDIATE)
 
-# installation for library (make install not needed for a buildem install)
-if (${BUILDEM_DIR} STREQUAL "None")
-    INSTALL(DIRECTORY ${PROJECT_SOURCE_DIR}/libdvid DESTINATION include)
-    INSTALL(DIRECTORY ${PROJECT_SOURCE_DIR}/png++ DESTINATION include)
-    INSTALL(TARGETS dvidcpp DESTINATION lib)
+# installation for library
+INSTALL(DIRECTORY ${PROJECT_SOURCE_DIR}/libdvid DESTINATION include)
+INSTALL(DIRECTORY ${PROJECT_SOURCE_DIR}/png++ DESTINATION include)
+INSTALL(TARGETS dvidcpp DESTINATION lib)
 
-    ## Apparently the config files generated here aren't relocatable,
-    ## which we need if we want to use the package in a conda environment.
-    #INSTALL(FILES ${PROJECT_BINARY_DIR}/libdvidcppConfig.cmake
-    #              ${PROJECT_BINARY_DIR}/libdvidcppConfigVersion.cmake
-    #              ${PROJECT_BINARY_DIR}/libdvidcppTargets.cmake
-    #        DESTINATION lib${LIB_SUFFIX}/libdvidcpp)
-else()
-    add_custom_command (
-    TARGET dvidcpp
-    POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy_directory ${PROJECT_SOURCE_DIR}/libdvid ${BUILDEM_DIR}/include/libdvid
-    COMMAND ${CMAKE_COMMAND} -E copy_directory ${PROJECT_SOURCE_DIR}/png++ ${BUILDEM_DIR}/include/png++
-    COMMAND ${CMAKE_COMMAND} -E copy ${PROJECT_BINARY_DIR}/libdvidcppConfigVersion.cmake ${BUILDEM_DIR}/lib/libdvidcpp/libdvidcppConfigVersion.cmake
-    COMMAND ${CMAKE_COMMAND} -E copy ${PROJECT_BINARY_DIR}/libdvidcppConfig.cmake ${BUILDEM_DIR}/lib/libdvidcpp/libdvidcppConfig.cmake
-    COMMAND ${CMAKE_COMMAND} -E copy ${PROJECT_BINARY_DIR}/libdvidcppTargets.cmake ${BUILDEM_DIR}/lib/libdvidcpp/libdvidcppTargets.cmake
-    )
-endif()
+## Apparently the config files generated here aren't relocatable,
+## which we need if we want to use the package in a conda environment.
+#INSTALL(FILES ${PROJECT_BINARY_DIR}/libdvidcppConfig.cmake
+#              ${PROJECT_BINARY_DIR}/libdvidcppConfigVersion.cmake
+#              ${PROJECT_BINARY_DIR}/libdvidcppTargets.cmake
+#        DESTINATION lib${LIB_SUFFIX}/libdvidcpp)
+
 
 if (LIBDVID_WRAP_PYTHON)
     add_subdirectory(python)    
