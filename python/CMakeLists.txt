@@ -223,5 +223,5 @@ add_test(
 
 add_test(
     test_mask_codec
-    ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/tests/test_mas_codec.py
+    ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/tests/test_mask_codec.py
 )
