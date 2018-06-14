@@ -1,3 +1,5 @@
+[![Travis CI Status](https://travis-ci.com/janelia-flyem/libdvid-cpp.svg?branch=master)](https://travis-ci.com/janelia-flyem/libdvid-cpp)
+
 # libdvid-cpp [![Picture](https://raw.github.com/janelia-flyem/janelia-flyem.github.com/master/images/HHMI_Janelia_Color_Alternate_180x40.png)](http://www.janelia.org)
 
 libdvid-cpp provides a c++ wrapper to HTTP calls to
