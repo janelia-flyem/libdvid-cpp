@@ -107,7 +107,7 @@ class DVIDConnection {
     }
 
     //! default timeout in seconds
-    static const int DEFAULT_TIMEOUT = 120;
+    static const int DEFAULT_TIMEOUT = 0; // FIXME: INFINITE TIMEOUT!
 
   private:
     /*!
