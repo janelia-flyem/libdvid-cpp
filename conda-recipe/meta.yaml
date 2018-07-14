@@ -40,8 +40,9 @@ requirements:
     - numpy >=1.9,{{NPY_VER}}*
     - scikit-image
 
-    # DVID is included as a build dependency so we can run 'make test'
+    # These are necessary for 'make test'
     - dvid
+    - requests
         
   run:
     - boost 1.64.*

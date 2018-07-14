@@ -317,7 +317,7 @@ namespace libdvid { namespace python {
     }
 
     Labels3D get_labelarray_blocks3D_zyx( DVIDNodeService & nodeService,
-                                         std::string datatype_instance,
+                                         std::string instance_name,
                                          Dims_t sizes,
                                          std::vector<int> offset,
                                          bool throttle,
@@ -330,10 +330,24 @@ namespace libdvid { namespace python {
 
         // Result is automatically converted to ZYX order thanks
         // to DVIDVoxels converter logic in converters.hpp
-        return nodeService.get_labelarray_blocks3D(datatype_instance, sizes, offset, throttle, scale, supervoxels);
+        return nodeService.get_labelarray_blocks3D(instance_name, sizes, offset, throttle, scale, supervoxels);
     }
 
-
+    /*
+     * Inflate a raw labelmap /blocks response into a full Labels3D volume.
+     */
+    Labels3D inflate_labelarray_blocks3D_from_raw_zyx( BinaryDataPtr raw_block_data,
+                                                       Dims_t sizes,
+                                                       std::vector<int> offset,
+                                                       size_t blocksize )
+    {
+        // Reverse offset and sizes
+        std::reverse(offset.begin(), offset.end());
+        std::reverse(sizes.begin(), sizes.end());
+        
+        return DVIDNodeService::inflate_labelarray_blocks3D_from_raw(raw_block_data, sizes, offset, blocksize);
+    }
+    
     void put_labels3D_zyx( DVIDNodeService & nodeService,
                            std::string datatype_instance,
                            Labels3D const & volume,
@@ -834,6 +848,18 @@ namespace libdvid { namespace python {
                 ":param supervoxels: Fetch supervoxel segmentation instead of agglomerated labels (labelmap instances only)\n"
                 ":returns: 3D ``ndarray`` with dtype ``uint64`` \n")
 
+            .def("inflate_labelarray_blocks3D_from_raw", &inflate_labelarray_blocks3D_from_raw_zyx,
+                 ( arg("raw_block_data"), arg("shape_zyx"), arg("offset_zyx"), arg("blocksize")=64 ),
+                 "Given a bytes object as obtained from the `.../blocks` endpoint, \n"
+                 "inflate it to an ndarray of uint64 labels. \n"
+                 "\n"
+                 ":param raw_block_data: A bytes object as obtained from the `.../blocks` endpoint \n"
+                 ":param shape_zyx: size of X, Y, Z dimensions in voxel coordinates \n"
+                 ":param offset_zyx: offset in voxel coordinates of whichever scale you are fetching from \n"
+                 ":param blocksize: The blocksize of the instance from which these bytes came.  Usually 64. \n"
+                 ":returns: 3D ``ndarray`` with dtype ``uint64`` \n")
+            .staticmethod("inflate_labelarray_blocks3D_from_raw")
+        
 
             .def("get_label_by_location",  &get_label_by_location_zyx,
                 ( arg("service"), arg("instance_name"), arg("point_zyx"), arg("supervoxels") ),

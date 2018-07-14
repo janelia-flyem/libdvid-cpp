@@ -481,6 +481,39 @@ class DVIDNodeService {
                                       bool supervoxels=false );
 
 
+    /*
+     * Fetch the data for a /blocks (or /subvolblocks) call,
+     * and return the content without processing it.
+     */
+    BinaryDataPtr get_subvolblocks3D_rawbuffer( std::string datatype_instance,
+                                               Dims_t sizes,
+                                               std::vector<int> offset,
+                                               bool throttle,
+                                               bool gray,
+                                               DVIDCompressedBlock::CompressType ctype,
+                                               int scale,
+                                               bool supervoxels );
+    
+    /*
+     * Convert the rawbuffer from get_subvolblocks3D_rawbuffer() into
+     * a vector of DVIDCompressedBlock entries.
+     */
+     static std::vector<DVIDCompressedBlock> load_compressed_blocks( BinaryDataPtr block_data,
+                                                            size_t blocksize,
+                                                            bool gray,
+                                                            DVIDCompressedBlock::CompressType ctype );
+    
+    /*
+     * Inflate a vector of DVIDCompressedBlock objects into a full Labels3D volume.
+     */
+    static Labels3D inflate_compressedblock_labels3D(std::vector<DVIDCompressedBlock> const & c_blocks, Dims_t const & sizes, std::vector<int> offset);
+    
+    /*
+     * Inflate a raw labelmap /blocks response into a full Labels3D volume.
+     */
+    static Labels3D inflate_labelarray_blocks3D_from_raw(BinaryDataPtr raw_block_data, Dims_t sizes, std::vector<int> offset, size_t blocksize=64);
+    
+    
     /*!
      * Fetch label blocks from DVID with teh specified dimension
      * size and spatial offset.  The request must be block aligned.

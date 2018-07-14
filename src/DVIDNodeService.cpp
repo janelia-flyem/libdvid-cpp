@@ -662,12 +662,28 @@ void overwrite_label_subvol( Labels3D & vol,
     }
 }
 
-Labels3D DVIDNodeService::get_labelarray_blocks3D(string datatype_instance, Dims_t sizes,
-        vector<int> offset, bool throttle, int scale, bool supervoxels)
-    {
+
+    
+Labels3D DVIDNodeService::get_labelarray_blocks3D(string datatype_instance,
+                                                  Dims_t sizes,
+                                                  std::vector<int> offset,
+                                                  bool throttle,
+                                                  int scale,
+                                                  bool supervoxels)
+{
     vector<DVIDCompressedBlock> c_blocks;
     get_subvolblocks3D(datatype_instance, sizes, offset, throttle, false, c_blocks, DVIDCompressedBlock::gzip_labelarray, scale, supervoxels);
+    return inflate_compressedblock_labels3D(c_blocks, sizes, offset);
+}
 
+Labels3D DVIDNodeService::inflate_labelarray_blocks3D_from_raw(BinaryDataPtr raw_block_data, Dims_t sizes, std::vector<int> offset, size_t blocksize)
+{
+    auto c_blocks = load_compressed_blocks(raw_block_data, blocksize, false, DVIDCompressedBlock::gzip_labelarray);
+    return inflate_compressedblock_labels3D(c_blocks, sizes, offset);
+}
+    
+Labels3D DVIDNodeService::inflate_compressedblock_labels3D(std::vector<DVIDCompressedBlock> const & c_blocks, Dims_t const & sizes, std::vector<int> offset)
+{
     BinaryDataPtr full_volume_data = BinaryData::create_binary_data( sizeof(uint64_t) * sizes[0] * sizes[1] * sizes[2] );
     Labels3D full_volume(full_volume_data, sizes);
 
@@ -840,27 +856,20 @@ void DVIDNodeService::put_labelblocks3D(string datatype_instance, Labels3D const
 }
 
 
-void DVIDNodeService::get_subvolblocks3D(string datatype_instance, Dims_t sizes,
-        vector<int> offset, bool throttle, bool gray, vector<DVIDCompressedBlock>& c_blocks,
-        DVIDCompressedBlock::CompressType ctype, int scale, bool supervoxels)
+BinaryDataPtr DVIDNodeService::get_subvolblocks3D_rawbuffer(string datatype_instance,
+                                                            Dims_t sizes,
+                                                            vector<int> offset,
+                                                            bool throttle,
+                                                            bool gray,
+                                                            DVIDCompressedBlock::CompressType ctype,
+                                                            int scale,
+                                                            bool supervoxels)
 {
     // make sure volume specified is legal and block aligned
     if ((sizes.size() != 3) || (offset.size() != 3)) {
         throw ErrMsg("Did not correctly specify 3D volume");
     }
    
-    size_t blocksize = get_blocksize(datatype_instance);
-
-    if ((offset[0] % blocksize != 0) || (offset[1] % blocksize != 0)
-            || (offset[2] % blocksize != 0)) {
-        throw ErrMsg("Label block GET error: Not block aligned");
-    }
-
-    if ((sizes[0] % blocksize != 0) || (sizes[1] % blocksize != 0)
-            || (sizes[2] % blocksize != 0)) {
-        throw ErrMsg("Label block GET error: Region is not a multiple of block size");
-    }
-
      // construct query string
     string uri = "/node/" + uuid + "/"
                     + datatype_instance;
@@ -924,9 +933,18 @@ void DVIDNodeService::get_subvolblocks3D(string datatype_instance, Dims_t sizes,
 
     // put compressed blocks into vector
     //int num_blocks = (sizes[0]/blocksize)*(sizes[1]/blocksize)*(sizes[2]/blocksize);
+    return binary_result;
+}
 
-    const unsigned char * head = binary_result->get_raw();
-    int buffer_size = binary_result->length();
+std::vector<DVIDCompressedBlock> DVIDNodeService::load_compressed_blocks( BinaryDataPtr block_data,
+                                                                          size_t blocksize,
+                                                                          bool gray,
+                                                                          DVIDCompressedBlock::CompressType ctype )
+{
+    std::vector<DVIDCompressedBlock> c_blocks;
+    
+    const unsigned char * head = block_data->get_raw();
+    int buffer_size = block_data->length();
 
     // it is possible to have less blocks than requested if they are blank
     while (buffer_size) {
@@ -958,8 +976,38 @@ void DVIDNodeService::get_subvolblocks3D(string datatype_instance, Dims_t sizes,
         head += lz4_bytes;
         buffer_size -= lz4_bytes;
     }
+    return c_blocks;
 }
 
+void DVIDNodeService::get_subvolblocks3D(string datatype_instance, Dims_t sizes,
+                                         vector<int> offset, bool throttle, bool gray, vector<DVIDCompressedBlock>& c_blocks,
+                                         DVIDCompressedBlock::CompressType ctype, int scale, bool supervoxels)
+{
+    size_t blocksize = get_blocksize(datatype_instance);
+    
+    if (   (offset[0] % blocksize != 0)
+        || (offset[1] % blocksize != 0)
+        || (offset[2] % blocksize != 0) ) {
+        throw ErrMsg("Label block GET error: Not block aligned");
+    }
+    
+    if (   (sizes[0] % blocksize != 0)
+        || (sizes[1] % blocksize != 0)
+        || (sizes[2] % blocksize != 0) ) {
+        throw ErrMsg("Label block GET error: Region is not a multiple of block size");
+    }
+
+    BinaryDataPtr raw_data = get_subvolblocks3D_rawbuffer( datatype_instance,
+                                                           sizes,
+                                                           offset,
+                                                           throttle,
+                                                           gray,
+                                                           ctype,
+                                                           scale,
+                                                           supervoxels );
+
+    c_blocks = load_compressed_blocks(raw_data, blocksize, gray, ctype);
+}
 
 
 Labels3D DVIDNodeService::get_labels3D(string datatype_instance, Dims_t sizes,

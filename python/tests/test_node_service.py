@@ -5,6 +5,8 @@ import weakref
 import numpy
 import json
 
+import requests
+
 from libdvid import DVIDNodeService, ConnectionMethod, Slice2D, BlockZYX, SubstackZYX, PointZYX, ErrMsg
 from _test_utils import TEST_DVID_SERVER, get_testrepo_root_uuid, delete_all_data_instances, bb_to_slicing
 from skimage.util.shape import view_as_blocks
@@ -170,6 +172,12 @@ class Test_DVIDNodeService(unittest.TestCase):
     
         retrieved_data = node_service.get_labelarray_blocks3D( "test_labelarray64_get", (128,128,128), (0,0,0) )
         assert (retrieved_data == data).all()
+
+        # Try the requests-based alternative (request raw via requests.get, then inflate afterwards)
+        r = requests.get(f'http://{TEST_DVID_SERVER}/api/node/{self.uuid}/test_labelarray64_get/blocks/128_128_128/0_0_0?compression=blocks')
+        r.raise_for_status()
+        inflated_data = DVIDNodeService.inflate_labelarray_blocks3D_from_raw(r.content, (128, 128, 128), (0,0,0))
+        assert (inflated_data == data).all()
 
         # What happens if we request a block that doesn't exist on the server?
         missing = node_service.get_labelarray_blocks3D( "test_labelarray64_get", (128,128,128), (1024, 1024, 1024), scale=6 )
