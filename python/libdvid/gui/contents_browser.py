@@ -7,8 +7,8 @@ $ python contents_browser.py
 import json
 import collections
 
-from PyQt4.QtCore import Qt, QStringList, QSize, QEvent
-from PyQt4.QtGui import QPushButton, QDialog, QVBoxLayout, QGroupBox, QTreeWidget, \
+from PyQt5.QtCore import Qt, QSize, QEvent
+from PyQt5.QtWidgets import QPushButton, QDialog, QVBoxLayout, QGroupBox, QTreeWidget, \
                         QTreeWidgetItem, QSizePolicy, QListWidget, QListWidgetItem, \
                         QDialogButtonBox, QLineEdit, QLabel, QComboBox, QMessageBox, \
                         QHBoxLayout, QTableWidget, QTableWidgetItem
@@ -323,7 +323,7 @@ class ContentsBrowser(QDialog):
             repo_column_dict["Details"] = "Created: " + repo_info["Created"]
             repo_column_dict["UUID"] = repo_uuid
             repo_column_values = [repo_column_dict[k] for k in TREEVIEW_COLUMNS]
-            repo_item = QTreeWidgetItem( self._repo_treewidget, QStringList( repo_column_values ) )
+            repo_item = QTreeWidgetItem( self._repo_treewidget, repo_column_values )
             repo_item.setData( 0, Qt.UserRole, (repo_uuid, "", "") )
             for data_name, data_info in repo_info["DataInstances"].items():
                 data_instance_dict = collections.defaultdict(str)
@@ -375,7 +375,7 @@ class ContentsBrowser(QDialog):
         if not selected_items:
             return None
         item = selected_items[0]
-        item_data = item.data(0, Qt.UserRole).toPyObject()
+        item_data = item.data(0, Qt.UserRole)
         if not item_data:
             return
         repo_uuid, data_name, typename = item_data
@@ -416,7 +416,7 @@ class ContentsBrowser(QDialog):
             return None
         selected_node_item = selected_items[0]
         node_item_data = selected_node_item.data(Qt.UserRole)
-        return str( node_item_data.toString() )
+        return str( node_item_data )
         
     def _get_selected_data(self):
         """
@@ -426,7 +426,7 @@ class ContentsBrowser(QDialog):
         if not selected_items:
             return None, None
         selected_data_item = selected_items[0]
-        data_item_data = selected_data_item.data(0, Qt.UserRole).toPyObject()
+        data_item_data = selected_data_item.data(0, Qt.UserRole)
         if selected_data_item:
             repo_uuid, data_name, typename = data_item_data
         else:
@@ -441,7 +441,7 @@ class ContentsBrowser(QDialog):
         def select_repotree_item(repo_uuid):
             for row in range(self._repo_treewidget.topLevelItemCount()):
                 repo_item = self._repo_treewidget.topLevelItem(row)
-                if repo_uuid == repo_item.data(0, Qt.UserRole).toPyObject()[0]:
+                if repo_uuid == repo_item.data(0, Qt.UserRole)[0]:
                     self._repo_treewidget.setCurrentItem(repo_item)
                     repo_item.setExpanded(True)
                     self._repo_treewidget.scrollTo( self._repo_treewidget.selectedIndexes()[0],
@@ -451,7 +451,7 @@ class ContentsBrowser(QDialog):
         def select_nodelist_item(node_uuid):
             for row in range(self._node_listwidget.count()):
                 item = self._node_listwidget.item(row)
-                if node_uuid == item.data(Qt.UserRole).toPyObject():
+                if node_uuid == item.data(Qt.UserRole):
                     self._node_listwidget.setCurrentItem( item )
                     break
         
@@ -482,7 +482,7 @@ def main():
     import signal
     signal.signal(signal.SIGINT, signal.SIG_DFL)
 
-    from PyQt4.QtGui import QApplication    
+    from PyQt5.QtWidgets import QApplication
     app = QApplication([])
     browser = ContentsBrowser(["localhost:8000", "emdata2:7000"],
                               default_nodes={ "localhost:8000" : '57c4c6a0740d4509a02da6b9453204cb'},
