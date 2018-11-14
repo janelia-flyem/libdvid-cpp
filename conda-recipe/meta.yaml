@@ -52,8 +52,7 @@ requirements:
     - libpng 1.6.28
     - curl 7.59*
     - krb5 1.14.6 # See note above
-    - python >=2.7
-    - python {{PY_VER}}*
+    - python >=2.7,<={{PY_VER}}
     - numpy >=1.9,{{NPY_VER}}*
     - scikit-image
 
@@ -72,7 +71,7 @@ requirements:
                             # See: https://github.com/conda-forge/libpng-feedstock/issues/10
     - curl 7.59*
     - krb5 1.14.6 # See note above
-    - python {{PY_VER}}*
+    - python >=2.7,<={{PY_VER}}
     - numpy  {{NPY_VER}}*
     - scikit-image
 
