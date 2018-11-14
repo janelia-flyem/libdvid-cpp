@@ -44,7 +44,7 @@ requirements:
     - krb5 1.14.6 # See note above
   host:
     - boost 1.64.*
-    - jsoncpp 1.6.2
+    - jsoncpp 1.8.*
     - lz4-c >=1.7.5,<100 # Old versions of lz4 used a different versioning scheme, e.g. 'r116'
     - zeromq 4.2.5
     - jpeg >=9b,<10a0 # JPEG's versioning schema (9a, 9b, 9c, etc.) confuses conda's versioning logic,
@@ -63,7 +63,7 @@ requirements:
         
   run:
     - boost 1.64.*
-    - jsoncpp 1.6.2
+    - jsoncpp 1.8.*
     - lz4-c >=1.7.5,<2 # Old versions of lz4 used a different versioning scheme, e.g. 'r116'
     - zeromq 4.2.5
     - jpeg >=9b,<10a0 # JPEG's versioning schema (9a, 9b, 9c, etc.) confuses conda's versioning logic,

@@ -3,6 +3,7 @@
 #include "DVIDLabelCodec.h"
 
 #include <png++/png.hpp>
+#include <json/json.h>
 
 #include <cstdint>
 
@@ -576,4 +577,17 @@ BinaryDataPtr BinaryData::decompress_gzip_labelarray_block(const BinaryDataPtr g
     return inflated_block.get_binary();
 }
 
+Json::Value BinaryData::get_json_value() {
+    Json::CharReaderBuilder builder;
+    std::unique_ptr<Json::CharReader> const reader(builder.newCharReader());
+    Json::Value json_val;
+    std::string errs;
+
+    if (!reader->parse(data.c_str(), data.c_str() + data.size(), &json_val, &errs)) {
+        throw ErrMsg("Could not decode json");
+    }
+
+    return json_val;
 }
+
+} // namespace: libdvid
