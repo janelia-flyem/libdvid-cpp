@@ -755,14 +755,18 @@ void DVIDNodeService::put_labelblocks3D(string datatype_instance, Labels3D const
                         BinaryDataPtr encoded_block_before_gzip = BinaryData::compress_labelarray_block(subvol.get_binary(), blocksize);
                         uint32_t table_size = reinterpret_cast<uint32_t const *>(encoded_block_before_gzip->get_raw())[3];
 
-                        // Re-scan the entire block to count the number of unique labels.
-                        std::unordered_set<uint64_t> unique_voxels( subvol.get_raw(), subvol.get_raw() + subvol.count() );
-                        if (unique_voxels.size() != table_size)
-                        {
-                            std::ostringstream ss;
-                            ss << "Block has " << unique_voxels.size() << " unique labels, but the encoded block table has " << table_size << " entries.";
-                            throw std::runtime_error(ss.str());
-                        }
+                        //
+                        // This consistency check was helpful for ironing out some bugs in libdvid and/or dvid,
+                        // but it is expensive and it's no longer necessary, so it's commented out.
+                        //
+                        // // Re-scan the entire block to count the number of unique labels.
+                        // std::unordered_set<uint64_t> unique_voxels( subvol.get_raw(), subvol.get_raw() + subvol.count() );
+                        // if (unique_voxels.size() != table_size)
+                        // {
+                        //    std::ostringstream ss;
+                        //    ss << "Block has " << unique_voxels.size() << " unique labels, but the encoded block table has " << table_size << " entries.";
+                        //    throw std::runtime_error(ss.str());
+                        // }
 
                         encoded_block = BinaryData::compress_gzip(encoded_block_before_gzip);
                     }
