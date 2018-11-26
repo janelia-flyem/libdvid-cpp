@@ -37,6 +37,29 @@ init_numpy()
 
 namespace libdvid { namespace python {
 
+    class PyAllowThreads
+    // copied from vigra/python_utility.hxx
+    // https://github.com/ukoethe/vigra
+    // License: MIT
+    {
+        PyThreadState * save_;
+
+        // make it non-copyable
+        PyAllowThreads(PyAllowThreads const &);
+        PyAllowThreads & operator=(PyAllowThreads const &);
+
+      public:
+        PyAllowThreads()
+        : save_(PyEval_SaveThread())
+        {}
+
+        ~PyAllowThreads()
+        {
+            PyEval_RestoreThread(save_);
+        }
+    };
+
+
     //! Python wrapper function for DVIDConnection::make_request().
     //! (Since "return-by-reference" is not an option in Python, boost::python can't provide an automatic wrapper.)
     //! Returns a tuple: (status, result_body, error_msg)
@@ -48,12 +71,16 @@ namespace libdvid { namespace python {
                                        unsigned long long datasize,
                                        bool checkHttpErrors)
     {
-        using namespace boost::python;
-
-        BinaryDataPtr results = BinaryData::create_binary_data();
+        int status_code;
         std::string err_msg ;
+        BinaryDataPtr results = BinaryData::create_binary_data();
 
-        int status_code = connection.make_request(endpoint, method, payload_data, results, err_msg, DEFAULT, timeout, datasize, checkHttpErrors);
+        {
+            PyAllowThreads no_gil; // Permit other Python threads.
+            status_code = connection.make_request(endpoint, method, payload_data, results, err_msg, DEFAULT, timeout, datasize, checkHttpErrors);
+        }
+
+        using namespace boost::python;
         return boost::python::make_tuple(status_code, object(results), err_msg);
     }
 
@@ -64,9 +91,13 @@ namespace libdvid { namespace python {
     {
         using namespace boost::python;
 
-        // Retrieve from DVID
         std::vector<BlockXYZ> result_vector;
-        nodeService.get_roi( roi_name, result_vector );
+        {
+            PyAllowThreads no_gil; // Permit other Python threads.
+
+            // Retrieve from DVID
+            nodeService.get_roi( roi_name, result_vector );
+        }
 
         // Convert to Python list
         list result_list;
@@ -87,10 +118,15 @@ namespace libdvid { namespace python {
     {
         using namespace boost::python;
 
-        // Retrieve from DVID
-        std::vector<DVIDCompressedBlock> maskblocks;
         int maxsize = 0; // FIXME: get_sparselabelmask() doesn't actually support the 'maxsize' feature yet.
-        nodeService.get_sparselabelmask(bodyid, labelname, maskblocks, scale, maxsize, supervoxels);
+        std::vector<DVIDCompressedBlock> maskblocks;
+
+        {
+            PyAllowThreads no_gil; // Permit other Python threads.
+
+            // Retrieve from DVID
+            nodeService.get_sparselabelmask(bodyid, labelname, maskblocks, scale, maxsize, supervoxels);
+        }
 
         // if there are no blocks, there should be an exception
         assert(maskblocks.size() > 0);
@@ -145,7 +181,12 @@ namespace libdvid { namespace python {
 
         // Retrieve from DVID
         std::vector<SubstackXYZ> result_substacks;
-        double packing_factor = nodeService.get_roi_partition( roi_name, result_substacks, partition_size );
+        double packing_factor;
+
+        {
+            PyAllowThreads no_gil; // Permit other Python threads.
+            packing_factor = nodeService.get_roi_partition( roi_name, result_substacks, partition_size );
+        }
 
         // Convert to Python list
         list result_list;
@@ -171,9 +212,13 @@ namespace libdvid { namespace python {
     {
         using namespace boost::python;
 
-        // Retrieve from DVID
         std::vector<bool> result_vector;
-        nodeService.roi_ptquery( roi_name, points, result_vector );
+        {
+            PyAllowThreads no_gil; // Permit other Python threads.
+
+            // Retrieve from DVID
+            nodeService.roi_ptquery( roi_name, points, result_vector );
+        }
 
         // Convert to Python list
         list result_list;
@@ -192,6 +237,8 @@ namespace libdvid { namespace python {
                                 bool compress,
                                 std::string roi )
     {
+        PyAllowThreads no_gil; // Permit other Python threads.
+
         // Reverse offset and sizes
         std::reverse(offset.begin(), offset.end());
         std::reverse(sizes.begin(), sizes.end());
@@ -203,6 +250,8 @@ namespace libdvid { namespace python {
                                 Dims_t sizes,
                                 std::vector<int> offset, bool islabels)
     {
+        PyAllowThreads no_gil; // Permit other Python threads.
+
         // Reverse offset and sizes
         std::reverse(offset.begin(), offset.end());
         std::reverse(sizes.begin(), sizes.end());
@@ -214,6 +263,8 @@ namespace libdvid { namespace python {
                                 Dims_t sizes,
                                 std::vector<int> offset, bool islabels)
     {
+        PyAllowThreads no_gil; // Permit other Python threads.
+
         // Reverse offset and sizes
         std::reverse(offset.begin(), offset.end());
         std::reverse(sizes.begin(), sizes.end());
@@ -225,6 +276,8 @@ namespace libdvid { namespace python {
                                 Dims_t sizes,
                                 std::vector<int> offset, bool islabels)
     {
+        PyAllowThreads no_gil; // Permit other Python threads.
+
         // Reverse offset and sizes
         std::reverse(offset.begin(), offset.end());
         std::reverse(sizes.begin(), sizes.end());
@@ -236,6 +289,8 @@ namespace libdvid { namespace python {
                                 Dims_t sizes,
                                 std::vector<int> offset, bool islabels)
     {
+        PyAllowThreads no_gil; // Permit other Python threads.
+
         // Reverse offset and sizes
         std::reverse(offset.begin(), offset.end());
         std::reverse(sizes.begin(), sizes.end());
@@ -248,6 +303,8 @@ namespace libdvid { namespace python {
                          std::vector<int> offset,
                          bool islabels )
     {
+        PyAllowThreads no_gil; // Permit other Python threads.
+
         // Reverse offset
         std::reverse(offset.begin(), offset.end());
         nodeService.put_array8bit3D(datatype_instance, volume, offset, islabels);
@@ -259,6 +316,8 @@ namespace libdvid { namespace python {
                          std::vector<int> offset,
                          bool islabels )
     {
+        PyAllowThreads no_gil; // Permit other Python threads.
+
         // Reverse offset
         std::reverse(offset.begin(), offset.end());
         nodeService.put_array16bit3D(datatype_instance, volume, offset, islabels);
@@ -270,6 +329,8 @@ namespace libdvid { namespace python {
                          std::vector<int> offset,
                          bool islabels )
     {
+        PyAllowThreads no_gil; // Permit other Python threads.
+
         // Reverse offset
         std::reverse(offset.begin(), offset.end());
         nodeService.put_array32bit3D(datatype_instance, volume, offset, islabels);
@@ -281,6 +342,8 @@ namespace libdvid { namespace python {
                          std::vector<int> offset,
                          bool islabels )
     {
+        PyAllowThreads no_gil; // Permit other Python threads.
+
         // Reverse offset
         std::reverse(offset.begin(), offset.end());
         nodeService.put_array64bit3D(datatype_instance, volume, offset, islabels);
@@ -293,6 +356,8 @@ namespace libdvid { namespace python {
                          bool throttle,
                          bool compress )
     {
+        PyAllowThreads no_gil; // Permit other Python threads.
+
         // Reverse offset
         std::reverse(offset.begin(), offset.end());
         nodeService.put_gray3D(datatype_instance, volume, offset, throttle, compress);
@@ -307,6 +372,8 @@ namespace libdvid { namespace python {
                                   std::string roi,
                                   bool supervoxels)
     {
+        PyAllowThreads no_gil; // Permit other Python threads.
+
         // Reverse offset and sizes
         std::reverse(offset.begin(), offset.end());
         std::reverse(sizes.begin(), sizes.end());
@@ -324,6 +391,8 @@ namespace libdvid { namespace python {
                                          int scale,
                                          bool supervoxels)
     {
+        PyAllowThreads no_gil; // Permit other Python threads.
+
         // Reverse offset and sizes
         std::reverse(offset.begin(), offset.end());
         std::reverse(sizes.begin(), sizes.end());
@@ -341,6 +410,8 @@ namespace libdvid { namespace python {
                                                        std::vector<int> offset,
                                                        size_t blocksize )
     {
+        PyAllowThreads no_gil; // Permit other Python threads.
+
         // Reverse offset and sizes
         std::reverse(offset.begin(), offset.end());
         std::reverse(sizes.begin(), sizes.end());
@@ -357,6 +428,8 @@ namespace libdvid { namespace python {
                            std::string roi,
                            bool mutate )
     {
+        PyAllowThreads no_gil; // Permit other Python threads.
+
         // Reverse offset
         std::reverse(offset.begin(), offset.end());
 
@@ -373,6 +446,8 @@ namespace libdvid { namespace python {
                                 int scale,
                                 bool noindexing)
     {
+        PyAllowThreads no_gil; // Permit other Python threads.
+
         // Reverse offset
         std::reverse(offset.begin(), offset.end());
 
@@ -386,18 +461,24 @@ namespace libdvid { namespace python {
                                               PointXYZ point,
                                               bool supervoxels)
     {
+        PyAllowThreads no_gil; // Permit other Python threads.
+
         // The user gives a python PointZYX, which is converted to C++ PointXYZ for this function.
         return nodeService.get_label_by_location( datatype_instance, point.x, point.y, point.z, supervoxels );
     }
 
     BinaryDataPtr py_encode_label_block(Labels3D const & label_block)
     {
+        PyAllowThreads no_gil; // Permit other Python threads while we inflate.
+
         EncodedData encoded_block = encode_label_block(label_block);
         return BinaryData::create_binary_data( reinterpret_cast<char *>(&encoded_block[0]), encoded_block.size() );
     }
 
     Labels3D py_decode_label_block(BinaryDataPtr encoded_data)
     {
+        PyAllowThreads no_gil; // Permit other Python threads while we inflate.
+
         return decode_label_block( reinterpret_cast<char const *>(encoded_data->get_raw()), encoded_data->length() );
     }
 
@@ -408,6 +489,8 @@ namespace libdvid { namespace python {
                         bool throttle,
                         bool compress )
     {
+        PyAllowThreads no_gil; // Permit other Python threads.
+
         // Reverse offset and sizes
         std::reverse(offset.begin(), offset.end());
         std::reverse(dims.begin(), dims.end());
