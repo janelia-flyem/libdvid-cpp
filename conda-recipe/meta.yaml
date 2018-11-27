@@ -23,9 +23,25 @@ build:
     - SKIP_LIBDVID_TESTS
   
 requirements:
+  ##
+  ## A note about krb5:
+  ## ------------------
+  ## At the time of this writing, the newest version of krb5 is 1.16.2,
+  ## but if I permit the 'build' environment to (implicitly) pull in that version,
+  ## then something goes haywire and linker uses it when creating libdvid, despite the 'host'
+  ## environment having an older version (due to the older 'curl').
+  ##
+  ## For the record, the error is:
+  ##   ImportError: /opt/conda/conda-bld/libdvid-cpp_1543299620664/_build_env/lib/./libcom_err.so.3: symbol k5_os_mutex_destroy, version krb5support_0_MIT not defined in file libkrb5support.so.0 with link time reference
+  ##
+  ## To avoid that, I'm explicitly pinning the version of krb5 here in 'build' and in 'host',
+  ## but surely that will need to change at some point, once we eventually update 'curl'.
+  ##
   build:
     - gxx_linux-64 # [linux]
     - cmake
+    - curl 7.59.*
+    - krb5 1.14.6 # See note above
   host:
     - boost 1.64.*
     - jsoncpp 1.6.2
@@ -35,6 +51,7 @@ requirements:
                       # so we must be careful about how this requirement is specified.
     - libpng 1.6.28
     - curl 7.59*
+    - krb5 1.14.6 # See note above
     - python >=2.7
     - python {{PY_VER}}*
     - numpy >=1.9,{{NPY_VER}}*
@@ -54,6 +71,7 @@ requirements:
     - libpng >=1.6.28,<1.7  # On Mac, libpng versions are not backwards compatible, unfortunately.
                             # See: https://github.com/conda-forge/libpng-feedstock/issues/10
     - curl 7.59*
+    - krb5 1.14.6 # See note above
     - python {{PY_VER}}*
     - numpy  {{NPY_VER}}*
     - scikit-image
