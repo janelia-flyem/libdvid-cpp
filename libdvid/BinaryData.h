@@ -11,8 +11,10 @@
 #define BINARYDATA
 
 #include <boost/shared_ptr.hpp>
+#include <json/json.h>
 #include <fstream>
 #include <string>
+
 
 namespace libdvid {
 
@@ -153,6 +155,12 @@ class BinaryData {
     {
         return data;
     }
+
+    /*!
+     * Parse data and return json value
+     * throws error on failure to parse json
+     */
+    Json::Value get_json_value();
 
     /*!
      * Returns the length of the array.

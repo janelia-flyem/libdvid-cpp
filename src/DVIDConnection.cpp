@@ -296,10 +296,10 @@ int DVIDConnection::make_request(string endpoint, ConnectionMethod method,
             if (payload) {
                 payload_size = (unsigned long long)(payload->length());
             }
-            request["datasize"] = payload_size; 
+            request["datasize"] = static_cast<Json::UInt64>(payload_size);
         } else {
             request["read"] = true;
-            request["datasize"] = datasize; // need to pass if read unless really tiny 
+            request["datasize"] = static_cast<Json::UInt64>(datasize); // need to pass if read unless really tiny
         }
         stringstream ss;
         ss << request;

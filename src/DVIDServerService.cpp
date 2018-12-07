@@ -34,12 +34,7 @@ std::string DVIDServerService::create_new_repo(std::string alias, std::string de
     int status_code = connection.make_request(endpoint, POST, payload, result,
             respdata, JSON);
 
-    // parse return binary
-    Json::Reader json_reader;
-    Json::Value jdata;
-    if (!json_reader.parse(result->get_data(), jdata)) {
-        throw ErrMsg("Could not decode JSON");
-    }
+    Json::Value jdata = result->get_json_value();
 
     return jdata["root"].asString();
 }

@@ -92,13 +92,8 @@ Json::Value DVIDNodeService::get_typeinfo(string datatype_name)
 {
     BinaryDataPtr binary = custom_request("/" + datatype_name + "/info", BinaryDataPtr(), GET);
    
-    // read into json from binary string 
-    Json::Value data;
-    Json::Reader json_reader;
-    if (!json_reader.parse(binary->get_data(), data)) {
-        throw ErrMsg("Could not decode JSON");
-    }
-    return data;
+    // read into json from binary string
+    return binary->get_json_value();
 }
     
 size_t DVIDNodeService::get_blocksize(string datatype_name)
@@ -111,12 +106,8 @@ size_t DVIDNodeService::get_blocksize(string datatype_name)
     BinaryDataPtr binary = custom_request("/" + datatype_name + "/info", BinaryDataPtr(), GET);
    
     // read into json from binary string 
-    Json::Value data;
-    Json::Reader json_reader;
-    if (!json_reader.parse(binary->get_data(), data)) {
-        throw ErrMsg("Could not decode JSON");
-    }
-  
+    Json::Value data = binary->get_json_value();
+
     // retrieve block information if it exists 
     Json::Value extended_data = data["Extended"];
     if (!extended_data) {
@@ -1128,14 +1119,7 @@ BinaryDataPtr DVIDNodeService::get(string keyvalue, string key)
 Json::Value DVIDNodeService::get_json(string keyvalue, string key)
 {
     BinaryDataPtr binary = get(keyvalue, key);
-   
-    // read into json from binary string 
-    Json::Value data;
-    Json::Reader json_reader;
-    if (!json_reader.parse(binary->get_data(), data)) {
-        throw ErrMsg("Could not decode JSON");
-    }
-    return data;
+    return binary->get_json_value();
 }
 
 vector<string> DVIDNodeService::get_keys(std::string keyvalue)
@@ -1143,11 +1127,7 @@ vector<string> DVIDNodeService::get_keys(std::string keyvalue)
     BinaryDataPtr response_binary = custom_request("/" + keyvalue + "/keys", BinaryDataPtr(), GET);
 
     // read into json from binary string
-    Json::Value response_json;
-    Json::Reader json_reader;
-    if (!json_reader.parse(response_binary->get_data(), response_json)) {
-        throw ErrMsg("Could not decode JSON");
-    }
+    Json::Value response_json = response_binary->get_json_value();
 
     vector<string> keys;
     std::transform(response_json.begin(), response_json.end(),
@@ -1177,11 +1157,7 @@ void DVIDNodeService::get_subgraph(string graph_name,
            binary_data, GET);
 
     // read json from binary string into graph    
-    Json::Reader json_reader;
-    Json::Value returned_data;
-    if (!json_reader.parse(binary->get_data(), returned_data)) {
-        throw ErrMsg("Could not decode JSON");
-    }
+    Json::Value returned_data = binary->get_json_value();
     graph.import_json(returned_data);
 }
 
@@ -1195,11 +1171,7 @@ void DVIDNodeService::get_vertex_neighbors(string graph_name, Vertex vertex,
             BinaryDataPtr(), GET);
     
     // read into json from binary string 
-    Json::Reader json_reader;
-    Json::Value data;
-    if (!json_reader.parse(binary->get_data(), data)) {
-        throw ErrMsg("Could not decode JSON");
-    }
+    Json::Value data = binary->get_json_value();
     graph.import_json(data);
 }
 
@@ -1654,11 +1626,7 @@ void DVIDNodeService::get_roi(std::string roi_name,
             BinaryDataPtr(), GET);
 
     // read json from binary string  
-    Json::Reader json_reader;
-    Json::Value returned_data;
-    if (!json_reader.parse(binary->get_data(), returned_data)) {
-        throw ErrMsg("Could not decode JSON");
-    }
+    Json::Value returned_data = binary->get_json_value();
 
     // insert blocks from JSON (decode block run lengths)
     for (unsigned int i = 0; i < returned_data.size(); ++i) {
@@ -1705,12 +1673,8 @@ double DVIDNodeService::get_roi_partition(std::string roi_name,
             BinaryDataPtr(), GET);
 
     // read json from binary string  
-    Json::Reader json_reader;
-    Json::Value returned_data;
-    if (!json_reader.parse(binary->get_data(), returned_data)) {
-        throw ErrMsg("Could not decode JSON");
-    }
-    
+    Json::Value returned_data = binary->get_json_value();
+
     size_t blocksize = get_blocksize(roi_name);
 
     // order the substacks (might be redundant depending on DVID output order)
@@ -1765,11 +1729,7 @@ void DVIDNodeService::roi_ptquery(std::string roi_name,
 
     
     // read json from binary string  
-    Json::Reader json_reader;
-    Json::Value returned_data;
-    if (!json_reader.parse(binary->get_data(), returned_data)) {
-        throw ErrMsg("Could not decode JSON");
-    }
+    Json::Value returned_data = binary->get_json_value();
 
     // insert status of each point (true if in ROI) (true if in ROI) (true if in ROI) 
     for (unsigned int i = 0; i < returned_data.size(); ++i) {
@@ -2145,11 +2105,7 @@ int DVIDNodeService::get_sparselabelmask(uint64_t bodyid,
         auto binary = custom_request(ss_uri.str(), BinaryDataPtr(), GET);
         
         // fetch result 
-        Json::Value data;
-        Json::Reader json_reader;
-        if (!json_reader.parse(binary->get_data(), data)) {
-            throw ErrMsg("Could not decode JSON");
-        }
+        Json::Value data = binary->get_json_value();
         scale = data["LabelSize"].asInt();
     }
     
