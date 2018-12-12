@@ -15,7 +15,7 @@ if BENCHMARKING:
     import os
     import lz4
     import gzip
-    from skimage.util import view_as_blocks
+    from libdvid.util import view_as_blocks
     import DVIDSparkServices
     ACTUAL_DATA_512_PATH = os.path.dirname(DVIDSparkServices.__file__) + '/../integration_tests/resources/labels.bin'
     
@@ -165,7 +165,7 @@ if BENCHMARKING:
         _test_block(labels, "10px stripes")
     
     def test_solid_subblocks():
-        from skimage.util import view_as_blocks
+        from libdvid.util import view_as_blocks
         shape = (512,512,512)
         #shape = (256,256,256)
         labels = np.zeros(shape, dtype=np.uint8)

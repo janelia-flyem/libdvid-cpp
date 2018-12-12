@@ -172,6 +172,7 @@ install(FILES libdvid/__init__.py
 
 install(FILES libdvid/util/__init__.py
               libdvid/util/roi_utils.py
+              libdvid/util/view_as_blocks.py
         DESTINATION ${LIBDVID_PYTHON_INSTALL_DIR}/libdvid/util)
 
 install(FILES libdvid/gui/__init__.py

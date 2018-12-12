@@ -55,7 +55,6 @@ requirements:
     - python >=2.7
     - python {{PY_VER}}*
     - numpy >=1.9,{{NPY_VER}}*
-    - scikit-image
 
     # These are necessary for 'make test'
     - dvid
@@ -74,7 +73,6 @@ requirements:
     - krb5 1.14.6 # See note above
     - python {{PY_VER}}*
     - numpy  {{NPY_VER}}*
-    - scikit-image
 
 test:
   # Python imports

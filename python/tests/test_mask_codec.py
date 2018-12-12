@@ -1,9 +1,9 @@
 import unittest
 
 import numpy as np
-from skimage.util import view_as_blocks
 
 from libdvid import encode_mask_blocks, decode_mask_blocks, encode_mask_array, decode_mask_array
+from libdvid.util import view_as_blocks
 from libdvid.mask_codec import ndrange, box_to_slicing
 
 class TestMaskCodec(unittest.TestCase):

@@ -7,9 +7,8 @@ import json
 
 import requests
 
-from libdvid import DVIDNodeService, ConnectionMethod, Slice2D, BlockZYX, SubstackZYX, PointZYX, ErrMsg
+from libdvid import DVIDNodeService, ConnectionMethod, Slice2D, SubstackZYX, ErrMsg
 from _test_utils import TEST_DVID_SERVER, get_testrepo_root_uuid, delete_all_data_instances, bb_to_slicing
-from skimage.util.shape import view_as_blocks
 
 
 class Test_DVIDNodeService(unittest.TestCase):
