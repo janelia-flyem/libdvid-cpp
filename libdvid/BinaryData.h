@@ -177,12 +177,18 @@ class BinaryData {
     */ 
     const byte * get_raw() const
     {
+        if (data.size() == 0) {
+            return nullptr;
+        }
         return reinterpret_cast<const byte *>(data.c_str());
     }
 
     //! Same as above, but returns char instead of byte (signed vs. unsigned)
     const char * get_raw_char() const
     {
+        if (data.size() == 0) {
+            return nullptr;
+        }
         return reinterpret_cast<const char *>(data.c_str());
     }
     

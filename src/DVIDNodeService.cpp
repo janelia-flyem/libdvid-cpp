@@ -545,13 +545,17 @@ void DVIDNodeService::get_specificblocks3D(string datatype_instance,
         head += 4;
         buffer_size -= 4;
 
-        BinaryDataPtr blockdata = BinaryData::create_binary_data((const char*) head, lz4_bytes);
+        // DVID is supposed to omit blocks that are not present,
+        // but in some old versions it returns the header anyway, followed by 0 bytes of data.
+        if (lz4_bytes > 0) {
+            BinaryDataPtr blockdata = BinaryData::create_binary_data((const char*) head, lz4_bytes);
 
-        DVIDCompressedBlock c_block(blockdata, offset, blocksize, datasize, ctype);
+            DVIDCompressedBlock c_block(blockdata, offset, blocksize, datasize, ctype);
 
-        c_blocks.push_back(c_block);
-        head += lz4_bytes;
-        buffer_size -= lz4_bytes;
+            c_blocks.push_back(c_block);
+            head += lz4_bytes;
+            buffer_size -= lz4_bytes;
+        }
     }
 }
 
@@ -958,18 +962,20 @@ std::vector<DVIDCompressedBlock> DVIDNodeService::load_compressed_blocks( Binary
         head += 4;
         buffer_size -= 4;
 
-        BinaryDataPtr blockdata = BinaryData::create_binary_data((const char*) head, lz4_bytes);
+        if (lz4_bytes > 0) {
+            BinaryDataPtr blockdata = BinaryData::create_binary_data((const char*) head, lz4_bytes);
 
-        size_t datasize = sizeof(uint64);
-        if (gray) {
-            datasize = 1;
+            size_t datasize = sizeof(uint64);
+            if (gray) {
+                datasize = 1;
+            }
+
+            DVIDCompressedBlock c_block(blockdata, offset, blocksize, datasize, ctype);
+
+            c_blocks.push_back(c_block);
+            head += lz4_bytes;
+            buffer_size -= lz4_bytes;
         }
-
-        DVIDCompressedBlock c_block(blockdata, offset, blocksize, datasize, ctype);
-
-        c_blocks.push_back(c_block);
-        head += lz4_bytes;
-        buffer_size -= lz4_bytes;
     }
     return c_blocks;
 }

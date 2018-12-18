@@ -154,6 +154,12 @@ class Test_DVIDNodeService(unittest.TestCase):
         data = numpy.random.randint(0, 10, (128,128,128)).astype(numpy.uint64)
         assert data.flags['C_CONTIGUOUS']
 
+        # Try reading from empty data (before anything is loaded in the instance)
+        # Should be all zeros
+        retrieved_data = node_service.get_labels3D( "test_labelarray64_get", (64,128,128), (0,0,0) )
+        assert (retrieved_data == 0).all()
+    
+        # Now populate the instance with some data
         node_service.put_labelblocks3D( "test_labelarray64_get", data, (0,0,0) )
         retrieved_data = node_service.get_labels3D( "test_labelarray64_get", (30,31,32), (20,20,20) )
         assert (retrieved_data == data[20:50, 20:51, 20:52]).all()

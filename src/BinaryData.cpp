@@ -281,6 +281,10 @@ namespace libdvid {
 BinaryDataPtr BinaryData::decompress_gzip( const BinaryDataPtr compressed_data,
                                            int max_uncompressed_size )
 {
+    if (compressed_data->length() == 0) {
+        throw ErrMsg("Cannot decompress empty buffer");
+    }
+    
     std::vector<uint8_t> destination;
     destination.resize(max_uncompressed_size);
 
@@ -338,8 +342,12 @@ BinaryDataPtr BinaryData::compress_gzip(const BinaryDataPtr uncompressed_data)
 BinaryDataPtr BinaryData::decompress_lz4(const BinaryDataPtr lz4binary,
         int uncompressed_size, char* buffer, int bufsize)
 {
-    const char* lz4_source = (char*) lz4binary->get_raw();
+    if (lz4binary->length() == 0) {
+        throw ErrMsg("Cannot decompress empty buffer");
+    }
 
+    const char* lz4_source = (char*) lz4binary->get_raw();
+    
     if (!buffer) {
         BinaryDataPtr binary(new BinaryData());
         // create a string buffer to fit the uncompressed result
@@ -434,6 +442,10 @@ BinaryDataPtr BinaryData::compress_gzip_labelarray_block(const BinaryDataPtr ful
 BinaryDataPtr BinaryData::decompress_png8(const BinaryDataPtr pngbinary,
         unsigned int& width, unsigned int& height)
 {
+    if (pngbinary->length() == 0) {
+        throw ErrMsg("Cannot decompress empty buffer");
+    }
+    
     // ?! currently no check if it is grayscale
     
     // retrieve PNG
@@ -463,7 +475,10 @@ BinaryDataPtr BinaryData::decompress_png8(const BinaryDataPtr pngbinary,
 BinaryDataPtr BinaryData::decompress_jpeg(const BinaryDataPtr jpegbinary,
         unsigned int& width, unsigned int& height)
 {
-
+    if (jpegbinary->length() == 0) {
+        throw ErrMsg("Cannot decompress empty buffer");
+    }
+    
 #if JPEGTURBO
     long unsigned int _jpegSize = jpegbinary->length();
     unsigned char* _compressedImage = (unsigned char*) jpegbinary->get_raw();
