@@ -33,6 +33,8 @@ fi
 CMAKE_GENERATOR=${CMAKE_GENERATOR-Unix Makefiles}
 CMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE-Release}
 
+export MACOSX_DEPLOYMENT_TARGET=10.9
+
 # CONFIGURE
 mkdir -p "${BUILD_DIR}" # Using -p here is convenient for calling this script outside of conda.
 cd "${BUILD_DIR}"
@@ -45,6 +47,7 @@ cmake ..\
     -DCMAKE_PREFIX_PATH="${PREFIX}" \
     -DCMAKE_CXX_FLAGS="${CXXFLAGS}" \
     -DCMAKE_OSX_SYSROOT="${CONDA_BUILD_SYSROOT}" \
+    -DCMAKE_OSX_DEPLOYMENT_TARGET="${MACOSX_DEPLOYMENT_TARGET}" \
     -DCMAKE_SHARED_LINKER_FLAGS="-Wl,-rpath,${PREFIX}/lib -L${PREFIX}/lib" \
     -DCMAKE_EXE_LINKER_FLAGS="-Wl,-rpath,${PREFIX}/lib -L${PREFIX}/lib" \
     -DBOOST_ROOT="${PREFIX}" \
