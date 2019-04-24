@@ -93,11 +93,23 @@ include_directories(${Python_INCLUDE_DIRS} ${PYTHON_NUMPY_INCLUDE_DIR})
 
 add_library( _dvid_python SHARED src/libdvid_python.cpp )
 
-target_link_libraries( _dvid_python dvidcpp ${support_LIBS} ${Boost_PYTHON_LIBRARY} ${PYTHON_LIBRARIES} )
+#
+# DO NOT LINK AGAINST libpython
+# Instead, assume that bin/python has been statically linked and
+# thus all needed symbols will be available during execution.
+# Use -undefined dynamic_lookup to avoid linker errors at build time (and defer them to runtime).
+# https://github.com/conda-forge/boost-feedstock/issues/70#issuecomment-486398688
+# 
+target_link_libraries( _dvid_python dvidcpp
+                       ${support_LIBS}
+                       #${Python_LIBRARIES} # do not link against libpython
+                       ${Boost_PYTHON_LIBRARY}  )
+
 set_target_properties( _dvid_python PROPERTIES PREFIX  ""
                                                DEBUG_POSTFIX "" )
 
 if (APPLE)
+    set_property(TARGET _dvid_python APPEND_STRING PROPERTY LINK_FLAGS "-undefined dynamic_lookup") # See above note about libpython
     set_target_properties( _dvid_python PROPERTIES SUFFIX  ".so")
 endif()
 
