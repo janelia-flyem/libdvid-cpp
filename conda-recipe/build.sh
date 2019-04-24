@@ -54,9 +54,7 @@ cmake ..\
     -DBoost_LIBRARY_DIR="${PREFIX}/lib" \
     -DBoost_INCLUDE_DIR="${PREFIX}/include" \
     -DCMAKE_MACOSX_RPATH=ON \
-    -DPYTHON_EXECUTABLE="${PYTHON}" \
-    -DPYTHON_LIBRARY="${PREFIX}/lib/libpython${PY_ABI}.${DYLIB_EXT}" \
-    -DPYTHON_INCLUDE_DIR="${PREFIX}/include/python${PY_ABI}" \
+    -DPython_ROOT_DIR="${PREFIX}" \
     -DLIBDVID_WRAP_PYTHON=1 \
 ##
 

@@ -61,7 +61,8 @@ FIND_PACKAGE(Boost REQUIRED COMPONENTS thread system)
 
 if (LIBDVID_WRAP_PYTHON)
 
-    FIND_PACKAGE(PythonInterp)
+    find_package(Python REQUIRED COMPONENTS Interpreter Development)
+    include_directories(${Python_INCLUDE_DIRS})
 
     ######################################################################
     #
@@ -74,38 +75,37 @@ if (LIBDVID_WRAP_PYTHON)
     #
     ######################################################################
     IF(Boost_FOUND)
-
         IF(Boost_USE_MULTITHREADED)
             # define names for thread-safe library variants
             SET(BOOST_PYTHON_NAMES
-                    boost_python-py${PYTHON_VERSION_MAJOR}${PYTHON_VERSION_MINOR}-mt
-                    boost_python-${PYTHON_VERSION_MAJOR}.${PYTHON_VERSION_MINOR}-mt
-                    boost_python${PYTHON_VERSION_MAJOR}-mt
-                    boost_python${PYTHON_VERSION_MAJOR}${PYTHON_VERSION_MINOR}-mt
+                    boost_python-py${Python_VERSION_MAJOR}${Python_VERSION_MINOR}-mt
+                    boost_python-${Python_VERSION_MAJOR}.${Python_VERSION_MINOR}-mt
+                    boost_python${Python_VERSION_MAJOR}-mt
+                    boost_python${Python_VERSION_MAJOR}${Python_VERSION_MINOR}-mt
                     boost_python-mt)
         ENDIF()
-
+    
         IF(Boost_LIB_SUFFIX)
             SET(BOOST_PYTHON_NAMES ${BOOST_PYTHON_NAMES}
                 # Windows with mangled library names
-                boost_python${PYTHON_VERSION_MAJOR}${Boost_LIB_SUFFIX}
+                boost_python${Python_VERSION_MAJOR}${Boost_LIB_SUFFIX}
                 boost_python${Boost_LIB_SUFFIX})
         ENDIF()
-
+    
         # define names for boost_python library variants
         # (may or may not be thread-safe)
         SET(BOOST_PYTHON_NAMES ${BOOST_PYTHON_NAMES}
-                # Linux with multiple Python versions
-                boost_python-py${PYTHON_VERSION_MAJOR}${PYTHON_VERSION_MINOR}
-                # Gentoo
-                boost_python-${PYTHON_VERSION_MAJOR}.${PYTHON_VERSION_MINOR}
-                # Mac with Python 3
-                boost_python${PYTHON_VERSION_MAJOR}
-                # conda-forge
-                boost_python${PYTHON_VERSION_MAJOR}${PYTHON_VERSION_MINOR}
-                # default
-                boost_python)
-
+                    # Linux with multiple Python versions
+                    boost_python-py${Python_VERSION_MAJOR}${Python_VERSION_MINOR}
+                    # Gentoo
+                    boost_python-${Python_VERSION_MAJOR}.${Python_VERSION_MINOR}
+                    # Mac with Python 3
+                    boost_python${Python_VERSION_MAJOR}
+                    # conda-forge
+                    boost_python${Python_VERSION_MAJOR}${Python_VERSION_MINOR}
+                    # default
+                    boost_python)
+    
         FIND_LIBRARY(Boost_PYTHON_LIBRARY
                      NAMES ${BOOST_PYTHON_NAMES}
                      NAMES_PER_DIR
@@ -120,7 +120,7 @@ if (LIBDVID_WRAP_PYTHON)
     endif()
 endif()
 
-include_directories(AFTER ${Boost_INCLUDE_DIR})
+include_directories(AFTER ${Boost_INCLUDE_DIRS})
 if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
     set (PLATFORM_DYLIB_EXTENSION "dylib")
 else()
