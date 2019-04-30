@@ -6,18 +6,10 @@ from libdvid import DVIDConnection, ConnectionMethod
 TEST_DVID_SERVER = os.getenv("TEST_DVID_SERVER", "127.0.0.1:8000")
 
 def get_testrepo_root_uuid():
-    connection = DVIDConnection(TEST_DVID_SERVER, "test1@blah.com", "myapp")
-    status, body, _error_message = connection.make_request( "/repos/info", ConnectionMethod.GET)
-    repos_info = json.loads(body)
-    test_repos = [uuid_repo_info for uuid_repo_info in list(repos_info.items()) if uuid_repo_info[1] and uuid_repo_info[1]['Alias'] == 'testrepo']
-    if test_repos:
-        uuid = test_repos[0][0]
-        return str(uuid)
-    else:
-        from libdvid import DVIDServerService
-        server = DVIDServerService(TEST_DVID_SERVER)
-        uuid = server.create_new_repo("testrepo", "This repo is for unit tests to use and abuse.");
-        return str(uuid)
+    from libdvid import DVIDServerService
+    server = DVIDServerService(TEST_DVID_SERVER)
+    uuid = server.create_new_repo("testrepo", "This repo is for unit tests to use and abuse.");
+    return str(uuid)
 
 def delete_all_data_instances(uuid):
     connection = DVIDConnection(TEST_DVID_SERVER, "test1@blah.com", "myapp")
