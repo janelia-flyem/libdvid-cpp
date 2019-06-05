@@ -1,0 +1,38 @@
+#
+# This is a conda build config file.
+#
+# For details on these settings, see:
+# https://docs.conda.io/projects/conda-build/en/latest/resources/variants.html
+#
+# To use this file in conjunction with the 'publish-conda-stack' tool,
+# your specs file should start with these lines:
+#
+#   shared-config:
+#     master-conda-build-config: master-conda-build-config.yaml
+#
+
+boost:
+  - 1.68
+boost_cpp:
+  - 1.68
+hdf5:
+  - 1.10.4
+numpy:
+  - 1.16
+python:
+  - 3.7
+pyqt:
+  - 5.6
+qt:
+  - 5.6
+
+pin_run_as_build:
+  boost: x.x
+  hdf5: x.x.x
+  numpy: x.x
+  python: x.x
+  pyqt: x.x
+  qt: x.x
+
+CONDA_BUILD_SYSROOT:
+  - /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.9.sdk

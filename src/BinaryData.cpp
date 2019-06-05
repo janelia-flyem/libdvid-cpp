@@ -388,7 +388,7 @@ BinaryDataPtr BinaryData::compress_lz4(const BinaryDataPtr lz4binary)
     char *temp_buffer = new char[max_compressed_size];
 
     int lz4_size = 
-        LZ4_compress(orig_data, temp_buffer, input_size);
+        LZ4_compress_default(orig_data, temp_buffer, input_size, max_compressed_size);
 
     if (lz4_size <= 0) {
         throw ErrMsg("Compression of LZ4 failed");

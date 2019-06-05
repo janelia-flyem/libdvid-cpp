@@ -12,6 +12,10 @@ endif ()
 
 set (CMAKE_CXX_LINK_FLAGS "-O3")
 set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+if (UNIX AND NOT APPLE)
+    set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread")
+endif()
+
 set (CMAKE_CXX_FLAGS_RELEASE "-O3")
 
 set (CMAKE_CXX_FLAGS_DEBUG "-g")
@@ -23,22 +27,6 @@ set (CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -D_GLIBCXX_DEBUG")
 # Also enable bounds-checking if using -stdlib=libc++
 # (Note: 0 means "most checks" and 1 means "even more". Leave it undefined to disable it entirely.)
 set (CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -D_LIBCPP_DEBUG=0")
-
-
-# When using gcc, specify whether or not to enable the C++11 ABI.
-# Our default is to disable it.
-# If we didn't specify it, gcc-5 enables the C++11 ABI by default,
-# which is ABI-incompatible with libraries built with gcc-4.
-if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
-    set(_GLIBCXX_USE_CXX11_ABI 0 CACHE BOOL
-        "Passed to gcc as a preprocessor definition. See gcc docs for _GLIBCXX_USE_CXX11_ABI")
-    
-    if (_GLIBCXX_USE_CXX11_ABI)
-        add_definitions("-D_GLIBCXX_USE_CXX11_ABI=1")
-    else()
-        add_definitions("-D_GLIBCXX_USE_CXX11_ABI=0")
-    endif()
-endif()
 
 
 ################################################################################
@@ -77,7 +65,8 @@ FIND_PACKAGE(Boost REQUIRED COMPONENTS thread system)
 
 if (LIBDVID_WRAP_PYTHON)
 
-    FIND_PACKAGE(PythonInterp)
+    find_package(Python REQUIRED COMPONENTS Interpreter Development)
+    include_directories(${Python_INCLUDE_DIRS})
 
     ######################################################################
     #
@@ -90,35 +79,37 @@ if (LIBDVID_WRAP_PYTHON)
     #
     ######################################################################
     IF(Boost_FOUND)
-
         IF(Boost_USE_MULTITHREADED)
             # define names for thread-safe library variants
             SET(BOOST_PYTHON_NAMES
-                    boost_python-py${PYTHON_VERSION_MAJOR}${PYTHON_VERSION_MINOR}-mt
-                    boost_python-${PYTHON_VERSION_MAJOR}.${PYTHON_VERSION_MINOR}-mt
-                    boost_python${PYTHON_VERSION_MAJOR}-mt
+                    boost_python-py${Python_VERSION_MAJOR}${Python_VERSION_MINOR}-mt
+                    boost_python-${Python_VERSION_MAJOR}.${Python_VERSION_MINOR}-mt
+                    boost_python${Python_VERSION_MAJOR}-mt
+                    boost_python${Python_VERSION_MAJOR}${Python_VERSION_MINOR}-mt
                     boost_python-mt)
         ENDIF()
-
+    
         IF(Boost_LIB_SUFFIX)
             SET(BOOST_PYTHON_NAMES ${BOOST_PYTHON_NAMES}
                 # Windows with mangled library names
-                boost_python${PYTHON_VERSION_MAJOR}${Boost_LIB_SUFFIX}
+                boost_python${Python_VERSION_MAJOR}${Boost_LIB_SUFFIX}
                 boost_python${Boost_LIB_SUFFIX})
         ENDIF()
-
+    
         # define names for boost_python library variants
         # (may or may not be thread-safe)
         SET(BOOST_PYTHON_NAMES ${BOOST_PYTHON_NAMES}
-                # Linux with multiple Python versions
-                boost_python-py${PYTHON_VERSION_MAJOR}${PYTHON_VERSION_MINOR}
-                # Gentoo
-                boost_python-${PYTHON_VERSION_MAJOR}.${PYTHON_VERSION_MINOR}
-                # Mac with Python 3
-                boost_python${PYTHON_VERSION_MAJOR}
-                # default
-                boost_python)
-
+                    # Linux with multiple Python versions
+                    boost_python-py${Python_VERSION_MAJOR}${Python_VERSION_MINOR}
+                    # Gentoo
+                    boost_python-${Python_VERSION_MAJOR}.${Python_VERSION_MINOR}
+                    # Mac with Python 3
+                    boost_python${Python_VERSION_MAJOR}
+                    # conda-forge
+                    boost_python${Python_VERSION_MAJOR}${Python_VERSION_MINOR}
+                    # default
+                    boost_python)
+    
         FIND_LIBRARY(Boost_PYTHON_LIBRARY
                      NAMES ${BOOST_PYTHON_NAMES}
                      NAMES_PER_DIR
@@ -133,7 +124,7 @@ if (LIBDVID_WRAP_PYTHON)
     endif()
 endif()
 
-include_directories(AFTER ${Boost_INCLUDE_DIR})
+include_directories(AFTER ${Boost_INCLUDE_DIRS})
 if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
     set (PLATFORM_DYLIB_EXTENSION "dylib")
 else()
