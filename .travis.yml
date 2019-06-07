@@ -1,6 +1,6 @@
 language: python
 python:
-  - "3.6"
+  - "3.7"
 
 cache:
   directories: /home/travis/miniconda
@@ -36,4 +36,4 @@ install:
   - conda info -a
 
 script:
-  conda build --python=3.6 --numpy=1.13 conda-recipe
+  conda build conda-recipe
