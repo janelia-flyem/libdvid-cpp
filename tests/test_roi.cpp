@@ -22,7 +22,7 @@ using std::vector;
 int main(int argc, char** argv)
 {
     if (argc != 2) {
-        cout << "Usage: <program> <server_name> <uuid>" << endl;
+        cout << "Usage: <program> <server_name>" << endl;
         return -1;
     }
     try {

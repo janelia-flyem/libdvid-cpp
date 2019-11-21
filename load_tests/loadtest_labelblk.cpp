@@ -40,7 +40,7 @@ int SMALLFETCH = 128;
 int main(int argc, char** argv)
 {
     if (argc != 3) {
-        cout << "Usage: <program> <server_name>" << endl;
+        cout << "Usage: <program> <server_name> <segmentation_binary_lz4_file>" << endl;
         return -1;
     }
     try {
