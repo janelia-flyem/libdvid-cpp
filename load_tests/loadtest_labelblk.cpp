@@ -67,7 +67,7 @@ int main(int argc, char** argv)
             dims.push_back(VOLDIM); dims.push_back(VOLDIM); dims.push_back(VOLDIM); 
 
             // read a representative segmentation
-            ifstream fin(argv[2]);
+            ifstream fin(argv[2], std::ios_base::in | std::ios_base::binary);
             BinaryDataPtr binary = BinaryData::create_binary_data(fin);
             binary = BinaryData::decompress_lz4(binary, VOLDIM*VOLDIM*VOLDIM*sizeof(uint64));
             Labels3D labelbin = Labels3D(binary, dims);
