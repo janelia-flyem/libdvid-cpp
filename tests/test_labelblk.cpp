@@ -103,7 +103,14 @@ int main(int argc, char** argv)
 
         // check block return
         vector<DVIDCompressedBlock> lblocks  = dvid_node.get_labelblocks3D(label_datatype_name, lsizes, start);
-        labeldatacomp = (uint64*) lblocks[0].get_uncompressed_data()->get_raw();
+
+        // keep the returned shared pointer in scope; directly calling
+        // get_uncompressed_data()->get_raw() might end up deallocating the
+        // uncompressed data at the end of the statement, leaving a dangling
+        // pointer
+        auto uncompressed_data = lblocks[0].get_uncompressed_data();
+        labeldatacomp = reinterpret_cast<const uint64*>(uncompressed_data->get_raw());
+
         for (int i = 0; i < BLK_SIZE*BLK_SIZE*BLK_SIZE; ++i) {
             if (labeldatacomp[i] != img_labels[i]) {
                 cerr << "Read/write mismatch using block request" << endl;
