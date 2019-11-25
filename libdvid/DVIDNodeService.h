@@ -22,6 +22,7 @@
 
 #include <json/value.h>
 #include <vector>
+#include <random>
 #include <fstream>
 #include <string>
 
@@ -64,6 +65,10 @@ class NodeBuffer {
  * Class that helps access different DVID version node actions.
 */
 class DVIDNodeService {
+  protected:
+    //! Random number generator
+    std::default_random_engine rng;
+
   public:
     /*!
      * Constructor sets up a http connection and checks

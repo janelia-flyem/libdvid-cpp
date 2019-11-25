@@ -1,16 +1,15 @@
 #ifndef SCOPETIME_H
 #define SCOPETIME_H
 
-#include <sys/time.h>
+#include <chrono>
 #include <iostream>
 
 class ScopeTime {
+  using clock = std::chrono::high_resolution_clock;
+
   public:
-    ScopeTime(bool debug_ = true) : debug(debug_)
+    ScopeTime(bool debug_ = true) : debug(debug_), initial_time(clock::now())
     {
-        struct timeval tv;
-        gettimeofday(&tv, NULL);
-        initial_time = tv.tv_sec + tv.tv_usec / 1000000.0;
     }
     ~ScopeTime()
     {
@@ -20,13 +19,12 @@ class ScopeTime {
     }
     double getElapsed()
     {
-        struct timeval tv;
-        gettimeofday(&tv, NULL);
-        double final_time = tv.tv_sec + tv.tv_usec / 1000000.0;
-        return (final_time - initial_time);
+        auto final_time = clock::now();
+        std::chrono::duration<double> diff = (final_time - initial_time);
+        return diff.count();
     }
   private:
-    double initial_time;
+    std::chrono::time_point<clock> initial_time;
     bool debug;
 };
 

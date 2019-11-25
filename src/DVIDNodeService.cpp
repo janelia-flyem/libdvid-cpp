@@ -8,12 +8,12 @@
 #include <set>
 #include <algorithm>
 #include <cstdlib>
+#include <random>
 #include <unordered_set>
 #include <unordered_map>
 #include <json/json.h>
 #include <boost/assign/list_of.hpp>
 #include <boost/bind.hpp>
-#include <sys/time.h>
 #include <boost/thread/thread.hpp>
 using std::tuple; using std::make_tuple;
 #include <thread>
@@ -35,7 +35,8 @@ namespace libdvid {
 
 DVIDNodeService::DVIDNodeService(string web_addr_, UUID uuid_,
         string user, string app, string resource_server_, int resource_port_) :
-    connection(web_addr_, user, app, resource_server_, resource_port_), uuid(uuid_) 
+    connection(web_addr_, user, app, resource_server_, resource_port_), uuid(uuid_),
+    rng(std::random_device{}())
 {
     string endpoint = "/repo/" + uuid + "/info";
     string respdata;
@@ -789,13 +790,6 @@ void DVIDNodeService::put_labelblocks3D(string datatype_instance, Labels3D const
 
     BinaryDataPtr payload = BinaryData::create_binary_data( &full_data[0], full_data.size() );
 
-    if (throttle) {
-        // set random number
-        timeval t1;
-        gettimeofday(&t1, NULL);
-        srand(t1.tv_usec * t1.tv_sec);
-    }
-
     bool waiting = true;
     int status_code;
     string respdata;
@@ -817,16 +811,9 @@ void DVIDNodeService::put_labelblocks3D(string datatype_instance, Labels3D const
 
     std::string endpoint = ss_uri.str();
 
-    // make instance random (create random seed based on time of day)
+    // make instance random
     int timeout = 20;
     int timeout_max = 600;
-
-    if (throttle) {
-        // set random number
-        timeval t1;
-        gettimeofday(&t1, NULL);
-        srand(t1.tv_usec * t1.tv_sec);
-    }
 
     // try posting until DVID is available (no contention)
     BinaryDataPtr binary_response;
@@ -838,7 +825,8 @@ void DVIDNodeService::put_labelblocks3D(string datatype_instance, Labels3D const
         // wait if server is busy
         if (status_code == 503) {
             // random backoff
-            sleep(rand()%timeout);
+            std::uniform_int_distribution<> dist(0, timeout - 1);
+            std::this_thread::sleep_for(std::chrono::seconds(dist(rng)));
             // capped exponential backoff
             if (timeout < timeout_max) {
                 timeout *= 2;
@@ -920,7 +908,8 @@ BinaryDataPtr DVIDNodeService::get_subvolblocks3D_rawbuffer(string datatype_inst
         // wait if server is busy
         if (status_code == 503) {
             // random backoff
-            sleep(rand()%timeout);
+            std::uniform_int_distribution<> dist(0, timeout - 1);
+            std::this_thread::sleep_for(std::chrono::seconds(dist(rng)));
             // capped exponential backoff
             if (timeout < timeout_max) {
                 timeout *= 2;
@@ -2389,16 +2378,9 @@ void DVIDNodeService::put_volume(string datatype_instance, BinaryDataPtr volume,
         volume = BinaryData::compress_lz4(volume);
     }
 
-    // make instance random (create random seed based on time of day)
+    // make instance random
     int timeout = 20;
     int timeout_max = 600;
-
-    if (throttle) {
-        // set random number
-        timeval t1;
-        gettimeofday(&t1, NULL);
-        srand(t1.tv_usec * t1.tv_sec);
-    }
 
     // try posting until DVID is available (no contention)
     while (waiting) {
@@ -2409,7 +2391,8 @@ void DVIDNodeService::put_volume(string datatype_instance, BinaryDataPtr volume,
         // wait if server is busy
         if (status_code == 503) {
             // random backoff
-            sleep(rand()%timeout);
+            std::uniform_int_distribution<> dist(0, timeout - 1);
+            std::this_thread::sleep_for(std::chrono::seconds(dist(rng)));
             // capped exponential backoff
             if (timeout < timeout_max) {
                 timeout *= 2;
@@ -2531,17 +2514,9 @@ BinaryDataPtr DVIDNodeService::get_volume3D(string datatype_inst, Dims_t sizes,
     BinaryDataPtr binary_result; 
     string respdata;
     
-    // make instance random (create random seed based on time of day)
+    // make instance random
     int timeout = 20;
     int timeout_max = 600;
-
-    if (throttle) {
-        // set random number
-        timeval t1;
-        gettimeofday(&t1, NULL);
-        srand(t1.tv_usec * t1.tv_sec);
-    }
-
 
     // ensure volume is 3D
     if ((sizes.size() != 3) || (offset.size() != 3) ||
@@ -2567,11 +2542,12 @@ BinaryDataPtr DVIDNodeService::get_volume3D(string datatype_inst, Dims_t sizes,
         // by the number of IOPs)
         status_code = connection.make_request(endpoint, GET, BinaryDataPtr(),
                 binary_result, respdata, BINARY, DVIDConnection::DEFAULT_TIMEOUT, total_size, false);
-       
+
         // wait if server is busy
         if (status_code == 503) {
             // random backoff
-            sleep(rand()%timeout);
+            std::uniform_int_distribution<> dist(0, timeout - 1);
+            std::this_thread::sleep_for(std::chrono::seconds(dist(rng)));
             // capped exponential backoff
             if (timeout < timeout_max) {
                 timeout *= 2;
