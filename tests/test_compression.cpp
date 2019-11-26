@@ -60,7 +60,7 @@ int main(int argc, char** argv)
     }
     try {
         // read jpeg
-        ifstream fin(argv[1]);
+        ifstream fin(argv[1], std::ios_base::in | std::ios_base::binary);
         BinaryDataPtr jpgbinary = BinaryData::create_binary_data(fin);
         fin.close();
 
@@ -72,7 +72,7 @@ int main(int argc, char** argv)
 
         // read png
         unsigned int width2, height2;
-        ifstream fin2(argv[2]);
+        ifstream fin2(argv[2], std::ios_base::in | std::ios_base::binary);
         BinaryDataPtr pngbinary = BinaryData::create_binary_data(fin2);
         fin2.close();
         binary = BinaryData::decompress_png8(pngbinary, width2, height2); 
@@ -87,7 +87,7 @@ int main(int argc, char** argv)
         }
         
          // read binary (assume dims)
-        ifstream fin3(argv[3]);
+        ifstream fin3(argv[3], std::ios_base::in | std::ios_base::binary);
         binary = BinaryData::create_binary_data(fin3);
         fin3.close();
         Grayscale2D graybin(binary, dims);
