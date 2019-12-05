@@ -39,10 +39,10 @@ DVIDNodeService::DVIDNodeService(string web_addr_, UUID uuid_,
     rng(std::random_device{}())
 {
     string endpoint = "/repo/" + uuid + "/info";
-    string respdata;
+    string error_msg;
     BinaryDataPtr binary = BinaryData::create_binary_data();
     int status_code = connection.make_request(endpoint, GET, BinaryDataPtr(),
-            binary, respdata, DEFAULT);
+            binary, error_msg, DEFAULT);
 }
 
 BinaryDataPtr DVIDNodeService::custom_request(string endpoint,
@@ -66,17 +66,17 @@ BinaryDataPtr DVIDNodeService::custom_request(string endpoint,
         }
     } 
 
-    string respdata;
+    string error_msg;
     string node_endpoint = "/node/" + uuid + endpoint;
     BinaryDataPtr resp_binary = BinaryData::create_binary_data();
     int status_code = connection.make_request(node_endpoint, method, payload,
-            resp_binary, respdata, BINARY, DVIDConnection::DEFAULT_TIMEOUT, datasize, false);
+            resp_binary, error_msg, BINARY, DVIDConnection::DEFAULT_TIMEOUT, datasize, false);
 
     // FIXME: For some reason, DVID sometimes returns status 206 for ROI requests.
     //        For now, treat 206 as if it were 200.
     //if (status_code != 200) {
     if (status_code != 200 && status_code != 206) {
-        throw DVIDException("DVIDException for " + node_endpoint + "\n" + respdata + "\n" + resp_binary->get_data(), status_code);
+        throw DVIDException("DVIDException for " + node_endpoint + "\n" + error_msg + "\n" + resp_binary->get_data(), status_code);
     }
 
     if (compress) {
@@ -792,7 +792,7 @@ void DVIDNodeService::put_labelblocks3D(string datatype_instance, Labels3D const
 
     bool waiting = true;
     int status_code;
-    string respdata;
+    string error_msg;
 
      // construct query string
     std::ostringstream ss_uri;
@@ -820,7 +820,7 @@ void DVIDNodeService::put_labelblocks3D(string datatype_instance, Labels3D const
     while (waiting) {
         binary_response = BinaryData::create_binary_data();
         status_code = connection.make_request(endpoint, POST, payload,
-                binary_response, respdata, BINARY, DVIDConnection::DEFAULT_TIMEOUT, 1, false);
+                binary_response, error_msg, BINARY, DVIDConnection::DEFAULT_TIMEOUT, 1, false);
 
         // wait if server is busy
         if (status_code == 503) {
@@ -837,7 +837,7 @@ void DVIDNodeService::put_labelblocks3D(string datatype_instance, Labels3D const
     }
 
     if (status_code != 200) {
-        throw DVIDException("DVIDException for " + endpoint + "\n" + respdata + "\n" + binary_response->get_data(),
+        throw DVIDException("DVIDException for " + endpoint + "\n" + error_msg + "\n" + binary_response->get_data(),
                 status_code);
     }
 }
@@ -896,14 +896,14 @@ BinaryDataPtr DVIDNodeService::get_subvolblocks3D_rawbuffer(string datatype_inst
  
     // try get until DVID is available (no contention)
     BinaryDataPtr binary_result; 
-    string respdata;
+    string error_msg;
     bool waiting = true;
     int timeout = 20;
     int timeout_max = 600;
     while (waiting) {
         binary_result = BinaryData::create_binary_data();
         int status_code = connection.make_request(sstr.str(), GET, BinaryDataPtr(),
-                binary_result, respdata, BINARY);
+                binary_result, error_msg, BINARY);
        
         // wait if server is busy
         if (status_code == 503) {
@@ -2363,7 +2363,7 @@ void DVIDNodeService::put_volume(string datatype_instance, BinaryDataPtr volume,
 
     bool waiting = true;
     int status_code;
-    string respdata;
+    string error_msg;
     vector<unsigned int> axes;
     axes.push_back(0); axes.push_back(1); axes.push_back(2);
     
@@ -2386,7 +2386,7 @@ void DVIDNodeService::put_volume(string datatype_instance, BinaryDataPtr volume,
     while (waiting) {
         binary_result = BinaryData::create_binary_data();
         status_code = connection.make_request(endpoint, POST, volume,
-                binary_result, respdata, BINARY, DVIDConnection::DEFAULT_TIMEOUT, 1, false);
+                binary_result, error_msg, BINARY, DVIDConnection::DEFAULT_TIMEOUT, 1, false);
 
         // wait if server is busy
         if (status_code == 503) {
@@ -2403,7 +2403,7 @@ void DVIDNodeService::put_volume(string datatype_instance, BinaryDataPtr volume,
     }
 
     if (status_code != 200) {
-        throw DVIDException("DVIDException for " + endpoint + "\n" + respdata + "\n" + binary_result->get_data(),
+        throw DVIDException("DVIDException for " + endpoint + "\n" + error_msg + "\n" + binary_result->get_data(),
                 status_code);
     } 
 }
@@ -2444,7 +2444,7 @@ bool DVIDNodeService::create_datatype(string datatype, string datatype_name, siz
     }
 
     string endpoint = "/repo/" + uuid + "/instance";
-    string respdata;
+    string error_msg;
 
     // serialize as a JSON string
     string data = "{\"typename\": \"" + datatype + "\", \"dataname\": \"" + 
@@ -2464,7 +2464,7 @@ bool DVIDNodeService::create_datatype(string datatype, string datatype_name, siz
     BinaryDataPtr binary = BinaryData::create_binary_data();
     
     int status_code = connection.make_request(endpoint,
-            POST, payload, binary, respdata, JSON);
+            POST, payload, binary, error_msg, JSON);
 
     return true;
 }
@@ -2477,10 +2477,10 @@ bool DVIDNodeService::sync(string datatype_name, string sync_name)
     BinaryDataPtr payload =
         BinaryData::create_binary_data(data.c_str(), data.length());
     BinaryDataPtr binary = BinaryData::create_binary_data();
-    string response;
+    string error_msg;
 
     int status = connection.make_request(
-        endpoint, POST, payload, binary, response, JSON);
+        endpoint, POST, payload, binary, error_msg, JSON);
 
     return true;
 }
@@ -2488,10 +2488,10 @@ bool DVIDNodeService::sync(string datatype_name, string sync_name)
 bool DVIDNodeService::exists(string datatype_endpoint)
 { 
     try {
-        string respdata;
+        string error_msg;
         BinaryDataPtr binary = BinaryData::create_binary_data();
         int status_code = connection.make_request(datatype_endpoint,
-                GET, BinaryDataPtr(), binary, respdata, DEFAULT,
+                GET, BinaryDataPtr(), binary, error_msg, DEFAULT,
                 DVIDConnection::DEFAULT_TIMEOUT, 1, false);
 
         // FIXME: Shouldn't this check for a specific code, like 404?
@@ -2512,7 +2512,7 @@ BinaryDataPtr DVIDNodeService::get_volume3D(string datatype_inst, Dims_t sizes,
     bool waiting = true;
     int status_code;
     BinaryDataPtr binary_result; 
-    string respdata;
+    string error_msg;
     
     // make instance random
     int timeout = 20;
@@ -2541,7 +2541,7 @@ BinaryDataPtr DVIDNodeService::get_volume3D(string datatype_inst, Dims_t sizes,
         // use total size as an estimate of server payload (it might be better to limit
         // by the number of IOPs)
         status_code = connection.make_request(endpoint, GET, BinaryDataPtr(),
-                binary_result, respdata, BINARY, DVIDConnection::DEFAULT_TIMEOUT, total_size, false);
+                binary_result, error_msg, BINARY, DVIDConnection::DEFAULT_TIMEOUT, total_size, false);
 
         // wait if server is busy
         if (status_code == 503) {
@@ -2558,7 +2558,7 @@ BinaryDataPtr DVIDNodeService::get_volume3D(string datatype_inst, Dims_t sizes,
     }
     
     if (status_code != 200) {
-        throw DVIDException("DVIDException for " + endpoint + "\n" + respdata + "\n" + binary_result->get_data(),
+        throw DVIDException("DVIDException for " + endpoint + "\n" + error_msg + "\n" + binary_result->get_data(),
                 status_code);
     }
 
