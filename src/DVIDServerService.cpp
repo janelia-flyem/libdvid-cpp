@@ -12,10 +12,10 @@ DVIDServerService::DVIDServerService(std::string addr_, string user, string app)
     connection(addr_, user, app)
 {
     string endpoint = "/server/info";
-    string respdata;
+    string error_msg;
     BinaryDataPtr binary = BinaryData::create_binary_data();
     int status_code = connection.make_request(endpoint, GET, BinaryDataPtr(),
-            binary, respdata, DEFAULT);
+            binary, error_msg, DEFAULT);
 }
 
 std::string DVIDServerService::create_new_repo(std::string alias, std::string description)
@@ -24,7 +24,7 @@ std::string DVIDServerService::create_new_repo(std::string alias, std::string de
     string string_data = "{\"alias\": \"" + alias + "\", \"description\": \""
         + description + "\"}";
     
-    string respdata;
+    string error_msg;
     BinaryDataPtr payload = BinaryData::create_binary_data(string_data.c_str(),
             string_data.length());
     BinaryDataPtr result = BinaryData::create_binary_data();
@@ -32,7 +32,7 @@ std::string DVIDServerService::create_new_repo(std::string alias, std::string de
     // create new repo 
     string endpoint = string("/repos");
     int status_code = connection.make_request(endpoint, POST, payload, result,
-            respdata, JSON);
+            error_msg, JSON);
 
     Json::Value jdata = result->get_json_value();
 

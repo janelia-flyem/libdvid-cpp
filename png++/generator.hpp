@@ -138,8 +138,7 @@ namespace png
 #ifdef PNG_WRITE_SWAP_SUPPORTED
                 wr.set_swap();
 #else
-                throw error("Cannot write 16-bit image:"
-                            " recompile with PNG_WRITE_SWAP_SUPPORTED.");
+                throw error("Cannot write 16-bit image: recompile with PNG_WRITE_SWAP_SUPPORTED.");
 #endif
             }
 #endif
@@ -154,12 +153,10 @@ namespace png
                 }
                 else
                 {
-                    throw std::logic_error("Cannot write interlaced image:"
-                                           " generator does not support it.");
+                    throw std::logic_error("Cannot write interlaced image: generator does not support it.");
                 }
 #else
-                throw error("Cannot write interlaced image:"
-                            " interlace handling disabled.");
+                throw error("Cannot write interlaced image: interlace handling disabled.");
 #endif
             }
             else

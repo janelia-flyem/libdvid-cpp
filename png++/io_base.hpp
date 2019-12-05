@@ -362,8 +362,7 @@ namespace png
             if (get_color_type() != color_type_gray
                 || get_color_type() != color_type_gray_alpha)
             {
-                throw error("set_shift: expected Gray or Gray+Alpha"
-                            " color type");
+                throw error("set_shift: expected Gray or Gray+Alpha color type");
             }
             color_info bits;
             bits.gray = gray_bits;

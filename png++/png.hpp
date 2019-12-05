@@ -54,6 +54,7 @@
 #include "generator.hpp"
 #include "consumer.hpp"
 #include "pixel_buffer.hpp"
+#include "solid_pixel_buffer.hpp"
 #include "require_color_space.hpp"
 #include "convert_color_space.hpp"
 #include "image.hpp"
@@ -262,10 +263,10 @@
  *
  * Also, you can check out sources directly from SVN repository:
  * svn://svn.sv.nongnu.org/pngpp/trunk/ or
- * http://svn.sv.nongnu.org/pngpp/trunk/ (for people w/o outgoing svn).
+ * http://svn.sv.nongnu.org/svn/pngpp/trunk/ (for people w/o outgoing svn).
  *
  * Online version of this documentation can be found here:
- * http://www.nongnu.org/pngpp/doc/0.2.3/index.html
+ * http://www.nongnu.org/pngpp/doc/@VERSION@/index.html
  *
  * \section sec_bugs Bugs
  *
