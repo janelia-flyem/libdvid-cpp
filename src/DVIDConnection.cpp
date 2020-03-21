@@ -12,6 +12,7 @@ extern "C" {
 
 using std::string;
 using std::stringstream;
+using std::ostringstream;
 
 /*!
  * Initializes libcurl libraries.  This could probably be a singleton
@@ -159,7 +160,7 @@ void DVIDConnection::setup_0mq()
 {
     zmq_context = zmq_ctx_new();
     zmq_commsocket = zmq_socket(zmq_context, ZMQ_REQ);
-    stringstream addr0mq;
+    ostringstream addr0mq;
     addr0mq << "tcp://" << resource_server << ":" << resource_port;
     zmq_connect(zmq_commsocket, addr0mq.str().c_str()); 
 }
@@ -301,7 +302,7 @@ int DVIDConnection::make_request(string endpoint, ConnectionMethod method,
             request["read"] = true;
             request["datasize"] = static_cast<Json::UInt64>(datasize); // need to pass if read unless really tiny
         }
-        stringstream ss;
+        ostringstream ss;
         ss << request;
         string request_str = ss.str();
    
@@ -321,9 +322,9 @@ int DVIDConnection::make_request(string endpoint, ConnectionMethod method,
         if (!resp_val) {
             // if not availabe, create SUB, filter on port, wait for message
             void* zmq_sub = zmq_socket(zmq_context, ZMQ_SUB);
-            stringstream addr0mq;
+            ostringstream addr0mq;
             addr0mq << "tcp://" << resource_server << ":" << resource_port + 1;
-            stringstream cidstream;
+            ostringstream cidstream;
             cidstream << client_id;
             zmq_setsockopt(zmq_sub, ZMQ_SUBSCRIBE, cidstream.str().c_str(), cidstream.str().length());
             zmq_connect(zmq_sub, addr0mq.str().c_str());
@@ -333,7 +334,7 @@ int DVIDConnection::make_request(string endpoint, ConnectionMethod method,
             zmq_close(zmq_sub);
 
             // when message is received, send reservation requst
-            stringstream holdstream;
+            ostringstream holdstream;
             holdstream << "{\"type\": \"hold\", \"id\": " << client_id << '}';
             string holdstr = holdstream.str();
             zmq_send(zmq_commsocket, holdstr.c_str(), holdstr.length(), 0);
@@ -348,7 +349,7 @@ int DVIDConnection::make_request(string endpoint, ConnectionMethod method,
 
     // release resource if resource server is available 
     if (resource_server != "") {
-        stringstream cidstream;
+        ostringstream cidstream;
         cidstream << "{\"type\": \"release\", \"id\": " << client_id << '}';
         string cidstr = cidstream.str();
         zmq_send(zmq_commsocket, cidstr.c_str(), cidstr.length(), 0);
