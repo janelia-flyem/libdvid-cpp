@@ -1,12 +1,10 @@
 # Depending on our platform, shared libraries end with either .so or .dylib
 if [[ $(uname) == 'Darwin' ]]; then
     DYLIB_EXT=dylib
-    CC=clang
-    CXX=clang++
-    CXXFLAGS="-I${PREFIX}/include -stdlib=libc++"
+    CXXFLAGS="${CXXFLAGS} -I${PREFIX}/include -stdlib=libc++"
 else
     DYLIB_EXT=so
-    CXXFLAGS="-I${PREFIX}/include"
+    CXXFLAGS="${CXXFLAGS} -I${PREFIX}/include"
 
     # Don't specify these -- let conda-build do it.
     #CC=gcc
