@@ -15,11 +15,11 @@
 #include <boost/bind.hpp>
 #include <sys/time.h>
 #include <boost/thread/thread.hpp>
-using std::tuple; using std::make_tuple;
+#include <tuple>
 #include <thread>
 
+using std::tuple; using std::make_tuple;
 using std::string; using std::vector;
-
 using std::ifstream; using std::set; using std::stringstream;
 //Json::Reader json_reader;
 
