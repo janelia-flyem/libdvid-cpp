@@ -53,7 +53,9 @@ requirements:
                       # so we must be careful about how this requirement is specified.
     - libpng 1.6.28
 
-    - curl
+    # In 7.62.0, CURL_HTTP_VERSION_2TLS became the default setting for CURLOPT_HTTP_VERSION
+    - curl >=7.62.0
+    
     #- krb5 1.14.6 # See note above
 
     # These are necessary for 'make test'
@@ -71,7 +73,10 @@ requirements:
                       # so we must be careful about how this requirement is specified.
     - libpng >=1.6.28,<1.7  # On Mac, libpng versions are not backwards compatible, unfortunately.
                             # See: https://github.com/conda-forge/libpng-feedstock/issues/10
-    - curl
+
+    # In 7.62.0, CURL_HTTP_VERSION_2TLS became the default setting for CURLOPT_HTTP_VERSION
+    - curl >=7.62.0
+    
     #- krb5 1.14.6 # See note above
 
 test:
