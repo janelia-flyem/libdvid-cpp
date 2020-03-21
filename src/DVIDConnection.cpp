@@ -232,18 +232,22 @@ int DVIDConnection::make_request(string endpoint, ConnectionMethod method,
     if (method == HEAD) {
         curl_easy_setopt(curl_connection, CURLOPT_CUSTOMREQUEST, "HEAD");
     }
-    if (method == GET) {
+    else if (method == GET) {
         curl_easy_setopt(curl_connection, CURLOPT_CUSTOMREQUEST, "GET");
     }
-    if (method == POST) {
+    else if (method == POST) {
         curl_easy_setopt(curl_connection, CURLOPT_CUSTOMREQUEST, "POST");
     }
-    if (method == PUT) {
+    else if (method == PUT) {
         curl_easy_setopt(curl_connection, CURLOPT_CUSTOMREQUEST, "PUT");
     }
-    if (method == DELETE) {
+    else if (method == DELETE) {
         curl_easy_setopt(curl_connection, CURLOPT_CUSTOMREQUEST, "DELETE");
     }
+    else {
+        throw std::runtime_error("Bad connection method");
+    }
+
 
     // HEAD request has no body.
     curl_easy_setopt(curl_connection, CURLOPT_NOBODY, long(method == HEAD));
