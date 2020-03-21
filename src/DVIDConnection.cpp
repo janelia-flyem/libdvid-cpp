@@ -170,7 +170,6 @@ DVIDConnection::DVIDConnection(const DVIDConnection& copy_connection)
     addr = copy_connection.addr;
     username = copy_connection.username;
     appname = copy_connection.appname;
-    directaddress = copy_connection.directaddress;
     resource_server = copy_connection.resource_server;
     resource_port = copy_connection.resource_port;
     curl_connection = curl_easy_init();
@@ -289,11 +288,7 @@ int DVIDConnection::make_request(string endpoint, ConnectionMethod method,
     if (resource_server != "") {
         Json::Value request;
         request["type"] = "request"; 
-        if (directaddress == "") {
-            request["resource"] = addr; 
-        } else {
-            request["resource"] = directaddress; 
-        }
+        request["resource"] = addr;
         request["numopts"] = 1;
         if ((method == POST) || (method == PUT)) {
             unsigned long long payload_size = 0;
@@ -364,19 +359,6 @@ int DVIDConnection::make_request(string endpoint, ConnectionMethod method,
     long http_code = 0;
     curl_easy_getinfo (curl_connection, CURLINFO_RESPONSE_CODE, &http_code);
    
-    if (directaddress == "") {
-        // get IP address to bypass dns on first invocation
-        char *ipaddr = 0;
-        curl_easy_getinfo (curl_connection, CURLINFO_PRIMARY_IP, &ipaddr);
-        stringstream tempstr;
-        tempstr << ipaddr << ":";        
-        long port = 0;
-        curl_easy_getinfo (curl_connection, CURLINFO_PRIMARY_PORT, &port);
-        tempstr << port;
-
-        directaddress = tempstr.str();
-    }
-
     // throw exception if connection doesn't work
     if (result != CURLE_OK) {
         curl_free(user_enc);

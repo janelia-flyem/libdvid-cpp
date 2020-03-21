@@ -99,11 +99,7 @@ class DVIDConnection {
     */
     std::string get_uri_root() const
     {
-        if (directaddress == "") {
-            return (addr + DVID_PREFIX);
-        } else {
-            return (directaddress + DVID_PREFIX);
-        }
+        return (addr + DVID_PREFIX);
     }
 
     //! default timeout in seconds
@@ -126,8 +122,10 @@ class DVIDConnection {
 
     //! DVID address
     std::string addr;
-    
-    //! DVID address to bypass DNS (IP + port)
+
+    //! Not used anymore, but kept here for now to avoid breaking the ABI.
+    //! FIXME: The next time you're making ABI-breaking changes to libdvid,
+    //!        go ahead and delete this while you're at it.
     std::string directaddress;
 
     //! Name of user making request
