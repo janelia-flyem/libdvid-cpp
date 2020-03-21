@@ -37,11 +37,6 @@ DVIDNodeService::DVIDNodeService(string web_addr_, UUID uuid_,
         string user, string app, string resource_server_, int resource_port_) :
     connection(web_addr_, user, app, resource_server_, resource_port_), uuid(uuid_) 
 {
-    string endpoint = "/repo/" + uuid + "/info";
-    string respdata;
-    BinaryDataPtr binary = BinaryData::create_binary_data();
-    int status_code = connection.make_request(endpoint, GET, BinaryDataPtr(),
-            binary, respdata, DEFAULT);
 }
 
 BinaryDataPtr DVIDNodeService::custom_request(string endpoint,
