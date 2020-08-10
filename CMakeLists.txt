@@ -5,7 +5,6 @@ include (ExternalProject)
 
 enable_testing()
 
-set (RUN_ENVIRONMENT "Workstation" CACHE TYPE STRING)
 if (NOT CMAKE_BUILD_TYPE)
     set (CMAKE_BUILD_TYPE Release)
 endif ()
@@ -33,6 +32,11 @@ set (CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -D_LIBCPP_DEBUG=0")
 ## RPATH settings
 ## https://cmake.org/Wiki/CMake_RPATH_handling
 ##
+
+# MACOSX_RPATH policy
+if(POLICY CMP0042)
+    cmake_policy(SET CMP0042 NEW)
+endif()
 
 # use, i.e. don't skip the full RPATH for the build tree
 SET(CMAKE_SKIP_BUILD_RPATH  FALSE)
@@ -65,8 +69,8 @@ FIND_PACKAGE(Boost REQUIRED COMPONENTS thread system)
 
 if (LIBDVID_WRAP_PYTHON)
 
-    find_package(Python REQUIRED COMPONENTS Interpreter Development)
-    include_directories(${Python_INCLUDE_DIRS})
+    find_package(Python3 REQUIRED COMPONENTS Interpreter Development)
+    include_directories(${Python3_INCLUDE_DIRS})
 
     ######################################################################
     #
@@ -82,10 +86,10 @@ if (LIBDVID_WRAP_PYTHON)
         IF(Boost_USE_MULTITHREADED)
             # define names for thread-safe library variants
             SET(BOOST_PYTHON_NAMES
-                    boost_python-py${Python_VERSION_MAJOR}${Python_VERSION_MINOR}-mt
-                    boost_python-${Python_VERSION_MAJOR}.${Python_VERSION_MINOR}-mt
-                    boost_python${Python_VERSION_MAJOR}-mt
-                    boost_python${Python_VERSION_MAJOR}${Python_VERSION_MINOR}-mt
+                    boost_python-py${Python3_VERSION_MAJOR}${Python3_VERSION_MINOR}-mt
+                    boost_python-${Python3_VERSION_MAJOR}.${Python3_VERSION_MINOR}-mt
+                    boost_python${Python3_VERSION_MAJOR}-mt
+                    boost_python${Python3_VERSION_MAJOR}${Python3_VERSION_MINOR}-mt
                     boost_python-mt)
         ENDIF()
     
@@ -100,13 +104,13 @@ if (LIBDVID_WRAP_PYTHON)
         # (may or may not be thread-safe)
         SET(BOOST_PYTHON_NAMES ${BOOST_PYTHON_NAMES}
                     # Linux with multiple Python versions
-                    boost_python-py${Python_VERSION_MAJOR}${Python_VERSION_MINOR}
+                    boost_python-py${Python3_VERSION_MAJOR}${Python3_VERSION_MINOR}
                     # Gentoo
-                    boost_python-${Python_VERSION_MAJOR}.${Python_VERSION_MINOR}
+                    boost_python-${Python3_VERSION_MAJOR}.${Python3_VERSION_MINOR}
                     # Mac with Python 3
-                    boost_python${Python_VERSION_MAJOR}
+                    boost_python${Python3_VERSION_MAJOR}
                     # conda-forge
-                    boost_python${Python_VERSION_MAJOR}${Python_VERSION_MINOR}
+                    boost_python${Python3_VERSION_MAJOR}${Python3_VERSION_MINOR}
                     # default
                     boost_python)
     

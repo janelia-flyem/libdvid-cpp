@@ -11,6 +11,8 @@ else
     #CXX=g++
 fi
 
+CONDA_PY=${CONDA_PY-$(python -c "import sys; print('{}{}'.format(*sys.version_info[:2]))")}
+
 PY_VER=$(python -c "import sys; print('{}.{}'.format(*sys.version_info[:2]))")
 PY_ABIFLAGS=$(python -c "import sys; print('' if sys.version_info.major == 2 else sys.abiflags)")
 PY_ABI=${PY_VER}${PY_ABIFLAGS}
@@ -51,8 +53,11 @@ cmake ..\
     -DBOOST_ROOT="${PREFIX}" \
     -DBoost_LIBRARY_DIR="${PREFIX}/lib" \
     -DBoost_INCLUDE_DIR="${PREFIX}/include" \
+    -DBoost_PYTHON_LIBRARY="${PREFIX}/lib/libboost_python${CONDA_PY}.dylib" \
     -DCMAKE_MACOSX_RPATH=ON \
-    -DPython_ROOT_DIR="${PREFIX}" \
+    -DPython3_ROOT_DIR="${PREFIX}" \
+    -DPython3_LIBRARY_RELEASE="${PREFIX}/lib/libpython${PY_ABI}.dylib" \
+    -DPython3_FIND_VIRTUALENV=ONLY \
     -DLIBDVID_WRAP_PYTHON=1 \
 ##
 
