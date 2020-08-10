@@ -5,3 +5,7 @@ build
 .pydevproject
 *.pyc
 .settings
+*~
+.vscode
+build-*/
+*.so
