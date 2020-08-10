@@ -71,7 +71,7 @@ cmake ..\
     -DBOOST_ROOT="${PREFIX}" \
     -DBoost_LIBRARY_DIR="${PREFIX}/lib" \
     -DBoost_INCLUDE_DIR="${PREFIX}/include" \
-    -DBoost_PYTHON_LIBRARY="${PREFIX}/lib/libboost_python${CONDA_PY}.dylib" \
+    -DBoost_PYTHON_LIBRARY="${PREFIX}/lib/libboost_python${CONDA_PY}.${DYLIB_EXT}" \
     ${PYTHON_CMAKE_SETTINGS[@]} \
     -DLIBDVID_WRAP_PYTHON=1 \
 ##
