@@ -8,6 +8,7 @@ export PYTHON="${PREFIX}/bin/python"
 export CPU_COUNT=`python -c "import multiprocessing; print(multiprocessing.cpu_count())"`
 export PATH="${PREFIX}/bin":$PATH
 export NPY_VER=$(python -c 'import numpy; print(numpy.version.version[:3])')
+export RECIPE_DIR=$(pwd)/conda-recipe
 
 # Start in the same directory as this script.
 cd `dirname $0`
@@ -27,3 +28,4 @@ if [[ -e "${BUILD_DIR}/CMakeCache.txt" ]]; then
 fi
 
 BUILD_DIR="${BUILD_DIR}" NPY_VER=$NPY_VER bash -x -e - ./conda-recipe/build.sh --configure-only
+#BUILD_DIR="${BUILD_DIR}" NPY_VER=$NPY_VER bash -x -e - ./conda-recipe/build.sh
