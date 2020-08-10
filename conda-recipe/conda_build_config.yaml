@@ -17,16 +17,30 @@ boost_cpp:
   - 1.72
 hdf5:
   - 1.10.5
+lz4_c:
+  - 1.9.2
 numpy:
   - 1.17
 python:
   - 3.7
+zeromq:
+  - 4.3.2
 
 pin_run_as_build:
-  boost: x.x
-  hdf5: x.x.x
-  numpy: x.x
-  python: x.x
+  boost:
+    max_pin: x.x
+  boost_cpp:
+    max_pin: x.x
+  hdf5:
+    max_pin: x.x.x
+  lz4-c:
+    max_pin: x.x.x
+  numpy:
+    max_pin: x.x
+  python:
+    max_pin: x.x
+  zeromq:
+    max_pin: x.x
 
 CONDA_BUILD_SYSROOT:
   - /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.9.sdk

@@ -43,12 +43,12 @@ requirements:
     #- curl 7.59.*
     #- krb5 1.14.6 # See note above
   host:
-    - python {{ python }}*
-    - numpy {{ numpy }}*
-    - boost {{ boost }}*
+    - python {{ python }}
+    - numpy {{ numpy }}
+    - boost {{ boost }}
     - jsoncpp 1.8.*
-    - lz4-c >=1.7.5,<100 # Old versions of lz4 used a different versioning scheme, e.g. 'r116'
-    - zeromq 4.3.1
+    - lz4-c {{ lz4_c }}
+    - zeromq {{ zeromq }}
     - jpeg >=9b,<10a0 # JPEG's versioning schema (9a, 9b, 9c, etc.) confuses conda's versioning logic,
                       # so we must be careful about how this requirement is specified.
     - libpng 1.6.28
@@ -63,12 +63,12 @@ requirements:
     - requests
         
   run:
-    - python {{ python }}*
-    - numpy {{ numpy }}*
-    - boost {{ boost }}*
+    - python {{ python }}
+    - numpy {{ numpy }}
+    - boost {{ boost }}
     - jsoncpp 1.8.*
-    - lz4-c >=1.7.5,<2 # Old versions of lz4 used a different versioning scheme, e.g. 'r116'
-    - zeromq 4.3.1
+    - lz4-c {{ lz4_c }}
+    - zeromq {{ zeromq }}
     - jpeg >=9b,<10a0 # JPEG's versioning schema (9a, 9b, 9c, etc.) confuses conda's versioning logic,
                       # so we must be careful about how this requirement is specified.
     - libpng >=1.6.28,<1.7  # On Mac, libpng versions are not backwards compatible, unfortunately.
