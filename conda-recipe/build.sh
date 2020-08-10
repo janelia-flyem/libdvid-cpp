@@ -1,3 +1,5 @@
+set -x
+
 # Depending on our platform, shared libraries end with either .so or .dylib
 if [[ $(uname) == 'Darwin' ]]; then
     DYLIB_EXT=dylib
@@ -35,6 +37,22 @@ CMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE-Release}
 
 export MACOSX_DEPLOYMENT_TARGET=10.9
 
+#
+# For some reason cmake's FindPython3 module seems
+# to not work properly at all, at least on macOS-10.15 with cmake-3.18.
+# WTF? OK, I'm just overriding everything.
+#
+PYTHON_CMAKE_SETTINGS=(
+    -DPython3_ROOT_DIR=${PREFIX}
+    -DPython3_FIND_FRAMEWORK=NEVER
+    -DPython3_FIND_VIRTUALENV=ONLY
+    -DPython3_EXECUTABLE=${PREFIX}/bin/python3
+    -DPython3_INCLUDE_DIR=${PREFIX}/include/python${PY_ABI}
+    -DPython3_NumPy_INCLUDE_DIR=${PREFIX}/lib/python${PY_VER}/site-packages/numpy/core/include
+    -DPython3_LIBRARY=${PREFIX}/lib/libpython${PY_ABI}.${DYLIB_EXT}
+    -DPython3_LIBRARY_RELEASE=${PREFIX}/lib/libpython${PY_ABI}.${DYLIB_EXT}
+)
+
 # CONFIGURE
 mkdir -p "${BUILD_DIR}" # Using -p here is convenient for calling this script outside of conda.
 cd "${BUILD_DIR}"
@@ -48,18 +66,16 @@ cmake ..\
     -DCMAKE_CXX_FLAGS="${CXXFLAGS}" \
     -DCMAKE_OSX_SYSROOT="${CONDA_BUILD_SYSROOT}" \
     -DCMAKE_OSX_DEPLOYMENT_TARGET="${MACOSX_DEPLOYMENT_TARGET}" \
-    -DCMAKE_SHARED_LINKER_FLAGS="-Wl,-rpath,${PREFIX}/lib -L${PREFIX}/lib" \
-    -DCMAKE_EXE_LINKER_FLAGS="-Wl,-rpath,${PREFIX}/lib -L${PREFIX}/lib" \
+    -DCMAKE_SHARED_LINKER_FLAGS="-L${PREFIX}/lib" \
+    -DCMAKE_EXE_LINKER_FLAGS="-L${PREFIX}/lib" \
     -DBOOST_ROOT="${PREFIX}" \
     -DBoost_LIBRARY_DIR="${PREFIX}/lib" \
     -DBoost_INCLUDE_DIR="${PREFIX}/include" \
     -DBoost_PYTHON_LIBRARY="${PREFIX}/lib/libboost_python${CONDA_PY}.dylib" \
-    -DCMAKE_MACOSX_RPATH=ON \
-    -DPython3_ROOT_DIR="${PREFIX}" \
-    -DPython3_LIBRARY_RELEASE="${PREFIX}/lib/libpython${PY_ABI}.dylib" \
-    -DPython3_FIND_VIRTUALENV=ONLY \
+    ${PYTHON_CMAKE_SETTINGS[@]} \
     -DLIBDVID_WRAP_PYTHON=1 \
 ##
+
 
 if [[ $CONFIGURE_ONLY == 0 ]]; then
     ##

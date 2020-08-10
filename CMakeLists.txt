@@ -45,6 +45,7 @@ SET(CMAKE_SKIP_BUILD_RPATH  FALSE)
 # (but later on when installing)
 SET(CMAKE_BUILD_WITH_INSTALL_RPATH FALSE) 
 
+SET(CMAKE_MACOSX_RPATH ON)
 SET(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
 
 # add the automatically determined parts of the RPATH
@@ -69,7 +70,7 @@ FIND_PACKAGE(Boost REQUIRED COMPONENTS thread system)
 
 if (LIBDVID_WRAP_PYTHON)
 
-    find_package(Python3 REQUIRED COMPONENTS Interpreter Development)
+    find_package(Python3 REQUIRED COMPONENTS Interpreter)
     include_directories(${Python3_INCLUDE_DIRS})
 
     ######################################################################
