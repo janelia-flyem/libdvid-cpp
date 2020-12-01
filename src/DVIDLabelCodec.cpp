@@ -1,3 +1,6 @@
+// Enable assertions, regardless of relase mode
+#undef NDEBUG
+
 #include "DVIDLabelCodec.h"
 #include "DVIDVoxels.h"
 #include "DVIDException.h"
