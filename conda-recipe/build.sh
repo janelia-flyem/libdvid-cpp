@@ -13,6 +13,10 @@ else
     #CXX=g++
 fi
 
+CFLAGS="${CFLAGS} -fsanitize=address"
+CXXFLAGS="${CXXFLAGS} -fsanitize=address"
+LDFLAGS="${LDFLAGS} -fsanitize=address"
+
 CONDA_PY=${CONDA_PY-$(python -c "import sys; print('{}{}'.format(*sys.version_info[:2]))")}
 
 PY_VER=$(python -c "import sys; print('{}.{}'.format(*sys.version_info[:2]))")
