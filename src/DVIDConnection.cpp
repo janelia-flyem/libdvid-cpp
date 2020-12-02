@@ -359,19 +359,18 @@ int DVIDConnection::make_request(string endpoint, ConnectionMethod method,
     long http_code = 0;
     curl_easy_getinfo (curl_connection, CURLINFO_RESPONSE_CODE, &http_code);
    
+    // free allocated string
+    curl_free(user_enc);
+    curl_free(app_enc);
+    curl_slist_free_all(headers);
+
     // throw exception if connection doesn't work
     if (result != CURLE_OK) {
-        curl_free(user_enc);
-        curl_free(app_enc);
         throw DVIDException("DVIDConnection error (" + CurlErrorNames.at(result) + "): " + string(url), http_code);
     }
 
     // load error if there is one
     error_msg = error_buf;
-
-    // free allocated string 
-    curl_free(user_enc);
-    curl_free(app_enc);
 
     if (checkHttpErrors && int(http_code) != 200) {
         throw DVIDException("DVIDException for " + endpoint + "\n" + error_msg + "\n" + raw_data, http_code);
