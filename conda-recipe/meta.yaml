@@ -21,6 +21,7 @@ build:
   
   script_env:
     - SKIP_LIBDVID_TESTS
+    - LD_PRELOAD={{ PREFIX }}/lib/libasan.so.5
   
 requirements:
   ##
