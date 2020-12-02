@@ -97,27 +97,43 @@ install(FILES libdvid/voxels/__init__.py
 #      specify python tests
 #
 ######################################################################
+
+# Sadly, there are so many leaks in the Python code
+# that ASAN leak-detection produces way too much noise right now.
+# Disable leak detection; just use ASAN for bad memory access.
+set(ASAN_OPTIONS="detect_leaks=false")
+
 add_test(
     python_test_connection
     ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/tests/test_connection.py
 )
+set_tests_properties(python_test_connection PROPERTIES
+    ENVIRONMENT ASAN_OPTIONS="${ASAN_OPTIONS}")
 
 add_test(
     python_test_node_service
     ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/tests/test_node_service.py
 )
-        
+set_tests_properties(python_test_node_service PROPERTIES
+    ENVIRONMENT ASAN_OPTIONS="${ASAN_OPTIONS}")
+
 add_test(
     test_roi_utils
     ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/tests/test_roi_utils.py
 )
+set_tests_properties(test_roi_utils PROPERTIES
+    ENVIRONMENT ASAN_OPTIONS="${ASAN_OPTIONS}")
 
 add_test(
     test_label_codec
     ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/tests/test_label_codec.py
 )
+set_tests_properties(test_label_codec PROPERTIES
+    ENVIRONMENT ASAN_OPTIONS="${ASAN_OPTIONS}")
 
 add_test(
     test_mask_codec
     ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/tests/test_mask_codec.py
 )
+set_tests_properties(test_mask_codec PROPERTIES
+    ENVIRONMENT ASAN_OPTIONS="${ASAN_OPTIONS}")
