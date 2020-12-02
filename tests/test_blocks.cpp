@@ -187,9 +187,16 @@ int main(int argc, char** argv)
                  BLK_SIZE*BLK_SIZE*BLK_SIZE)) {
             throw ErrMsg("nD label data does not match block data");
         }
+
+        delete[] buffer1;
+        delete[] buffer2;
+        delete[] label1;
+        delete[] label2;
+
     } catch (std::exception& e) {
         cerr << e.what() << endl;
         return -1;
     }
+
     return 0;
 }
