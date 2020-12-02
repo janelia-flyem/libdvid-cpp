@@ -128,6 +128,8 @@ if [[ $CONFIGURE_ONLY == 0 ]]; then
             export LD_LIBRARY_PATH="${PREFIX}/lib":"${LD_LIBRARY_PATH}"
         fi
 
+        export LD_PRELOAD=${PREFIX}/lib/libasan.so.5
+
         if ! make test; then
             cat Testing/Temporary/LastTest.log
             1>&2 echo "****************************************"
