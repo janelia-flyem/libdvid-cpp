@@ -17,6 +17,12 @@ CFLAGS="${CFLAGS} -fsanitize=address"
 CXXFLAGS="${CXXFLAGS} -fsanitize=address"
 LDFLAGS="${LDFLAGS} -fsanitize=address"
 
+if [[ $(uname) == "Darwin" ]]; then
+    CFLAGS="${CFLAGS} -shared-libasan"
+    CXXFLAGS="${CXXFLAGS} -shared-libasan"
+    LDFLAGS="${LDFLAGS} -shared-libasan"
+fi
+
 CONDA_PY=${CONDA_PY-$(python -c "import sys; print('{}{}'.format(*sys.version_info[:2]))")}
 
 PY_VER=$(python -c "import sys; print('{}.{}'.format(*sys.version_info[:2]))")
@@ -128,7 +134,11 @@ if [[ $CONFIGURE_ONLY == 0 ]]; then
             export LD_LIBRARY_PATH="${PREFIX}/lib":"${LD_LIBRARY_PATH}"
         fi
 
-        export LD_PRELOAD=${PREFIX}/lib/libasan.so.5
+        if [[ $(uname) == "Darwin" ]]; then
+            export LD_PRELOAD=${PREFIX}/lib/$(clang -print-file-name=libclang_rt.asan-x86_64.so)
+        else
+            export LD_PRELOAD=${PREFIX}/lib/libasan.so.5
+        fi
 
         if ! make test; then
             cat Testing/Temporary/LastTest.log
