@@ -44,7 +44,7 @@ requirements:
     #- curl 7.59.*
     #- krb5 1.14.6 # See note above
   host:
-    - python {{ python }}
+    - python 3.7.8
     - numpy {{ numpy }}
     - boost {{ boost }}
     - jsoncpp 1.8.*
@@ -64,7 +64,7 @@ requirements:
     - requests
         
   run:
-    - python {{ python }}
+    - python 3.7.8
     - numpy {{ numpy }}
     - boost {{ boost }}
     - jsoncpp 1.8.*
