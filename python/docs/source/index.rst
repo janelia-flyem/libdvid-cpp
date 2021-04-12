@@ -13,7 +13,7 @@ Installation
 
 .. code-block:: bash
 
-   conda install -c flyem libdvid-cpp
+   conda install -c flyem -c conda-forge libdvid-cpp
 
 Tutorials
 =========
