@@ -572,7 +572,7 @@ Labels3D decode_label_block(char const * encoded_data, size_t num_bytes)
             // Mask out previous bits
             next_bytes &= (0xFFFF >> bit_counter);
 
-            static_assert( SUBBLOCK_WIDTH*SUBBLOCK_WIDTH*SUBBLOCK_WIDTH < (2 << 16),
+            static_assert( SUBBLOCK_WIDTH*SUBBLOCK_WIDTH*SUBBLOCK_WIDTH < (1 << 16),
                           "The type of 'index' below must be modified if SUBBLOCK_WIDTH is greater than 8" );
 
             // Shift the bits we want into place.
