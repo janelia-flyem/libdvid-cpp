@@ -59,7 +59,7 @@ requirements:
     #- krb5 1.14.6 # See note above
 
   {% if not SKIP_LIBDVID_TESTS is defined or SKIP_LIBDVID_TESTS == '0' %}
-    # These are necessary for 'make test'
+    # These are necessary for 'make test', which is run within build.sh
     - dvid
     - requests
   {% endif %}
