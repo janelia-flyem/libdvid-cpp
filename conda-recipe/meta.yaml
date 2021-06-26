@@ -7,7 +7,7 @@ package:
     # If we're using a non-tagged revision, append '.postN' to the version
     version: {{GIT_DESCRIBE_TAG}}.post{{GIT_DESCRIBE_NUMBER}}
   {% endif %}
-  
+
 source:
   path: ../
 
@@ -18,10 +18,10 @@ build:
   # You must build this recipe using 'conda build --python=X.Y --numpy=X.Y'
   #
   string: np{{CONDA_NPY}}py{{CONDA_PY}}_{{PKG_BUILDNUM}}_g{{GIT_FULL_HASH[:7]}}
-  
+
   script_env:
     - SKIP_LIBDVID_TESTS
-  
+
 requirements:
   ##
   ## A note about krb5:
@@ -55,13 +55,15 @@ requirements:
 
     # In 7.62.0, CURL_HTTP_VERSION_2TLS became the default setting for CURLOPT_HTTP_VERSION
     - curl >=7.62.0
-    
+
     #- krb5 1.14.6 # See note above
 
+  {% if not SKIP_LIBDVID_TESTS is defined or SKIP_LIBDVID_TESTS == '0' %}
     # These are necessary for 'make test'
     - dvid
     - requests
-        
+  {% endif %}
+
   run:
     - python {{ python }}
     - numpy {{ numpy }}
@@ -76,7 +78,7 @@ requirements:
 
     # In 7.62.0, CURL_HTTP_VERSION_2TLS became the default setting for CURLOPT_HTTP_VERSION
     - curl >=7.62.0
-    
+
     #- krb5 1.14.6 # See note above
 
 test:
@@ -87,4 +89,4 @@ test:
 about:
   home: http://github.com/janelia-flyem/libdvid-cpp
   license: BSD (3-clause)
-  summary: C++ library for accessing DVID's REST API 
+  summary: C++ library for accessing DVID's REST API
