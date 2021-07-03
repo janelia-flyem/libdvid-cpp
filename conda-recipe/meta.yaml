@@ -46,7 +46,7 @@ requirements:
     - python {{ python }}
     - numpy {{ numpy }}
     - boost {{ boost }}
-    - jsoncpp 1.8.*
+    - jsoncpp {{ jsoncpp }}
     - lz4-c {{ lz4_c }}
     - zeromq {{ zeromq }}
     - jpeg >=9b,<10a0 # JPEG's versioning schema (9a, 9b, 9c, etc.) confuses conda's versioning logic,
