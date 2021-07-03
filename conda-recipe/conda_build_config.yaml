@@ -17,6 +17,8 @@ boost_cpp:
   - 1.74.0
 hdf5:
   - 1.10.6
+jsoncpp:
+  - 1.9.4
 lz4_c:
   - 1.9.3
 numpy:
@@ -32,6 +34,8 @@ pin_run_as_build:
   boost_cpp:
     max_pin: x.x.x
   hdf5:
+    max_pin: x.x.x
+  jsoncpp:
     max_pin: x.x.x
   lz4-c:
     max_pin: x.x.x
