@@ -585,7 +585,13 @@ BinaryDataPtr BinaryData::decompress_lz4_labelarray_block(const BinaryDataPtr lz
 
 BinaryDataPtr BinaryData::decompress_gzip_labelarray_block(const BinaryDataPtr gzip_compressed, unsigned int block_width)
 {
-    int decomp_size = sizeof(uint64_t) * block_width * block_width * block_width;
+    // The theoretical worst-case labelarray block is one where every voxel is unique.
+    // In that case, the global table is 64^3 uint64 entries, and 64^3 uint32 entries (distributed across the sub-blocks),
+    // And then each voxel in the bitstream requires log2(8^3) = 9 bits.
+    // So the worst-case size is:
+    //  (8 + 4 + np.log2(8**3)/8) * 64**3 == 3440640 == (8 * 64**3) * 1.640625
+    // Let's multiply by 2 to be safe.
+    int decomp_size = 2 * sizeof(uint64_t) * block_width * block_width * block_width;
     BinaryDataPtr gzip_inflated = BinaryData::decompress_gzip(gzip_compressed, decomp_size);
 
     Labels3D inflated_block = decode_label_block(gzip_inflated->get_raw_char(), gzip_inflated->length());
