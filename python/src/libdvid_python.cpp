@@ -2,6 +2,7 @@
 #include <boost/python.hpp>
 #include <boost/python/suite/indexing/vector_indexing_suite.hpp>
 #include <boost/assign/list_of.hpp>
+#include <boost/python/numpy.hpp>
 
 #define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
 
@@ -500,6 +501,25 @@ namespace libdvid { namespace python {
         return nodeService.get_roi3D( roi_name, dims, offset, throttle, compress );
     }
 
+    boost::python::numpy::ndarray get_mapping( DVIDNodeService & nodeService,
+                                               std::string instance,
+                                               const std::vector<std::uint64_t> & supervoxels )
+    {
+        using namespace boost::python;
+        namespace np = boost::python::numpy;
+
+        std::vector<uint64_t> bodies = nodeService.get_mapping(instance, supervoxels);
+
+        // Copy to numpy ndarray
+        tuple shape = make_tuple(bodies.size());
+        tuple stride = make_tuple(sizeof(std::uint64_t));
+        np::dtype dtype = np::dtype::get_builtin<std::uint64_t>();
+        np::ndarray result = empty(shape, dtype);
+        std::copy(bodies.begin(), bodies.end(), reinterpret_cast<std::uint64_t *>(result.get_data()));
+
+        return result;
+    }
+
     //! Create a new python Exception type.
     //! Copied from: http://stackoverflow.com/a/9690436/162094
     //! \param name The exception name
@@ -546,10 +566,12 @@ namespace libdvid { namespace python {
     BOOST_PYTHON_MODULE(_dvid_python)
     {
         using namespace boost::python;
+        namespace np = boost::python::numpy;
         docstring_options doc_options(true, true, false);
 
         // http://docs.scipy.org/doc/numpy/reference/c-api.array.html#importing-the-api
         init_numpy();
+        np::initialize();
 
         // Create custom Python exception types for the C++ exceptions defined in DVIDException.h,
         // and register a translator for each
@@ -562,6 +584,7 @@ namespace libdvid { namespace python {
         // Register custom Python -> C++ converters.
         std_vector_from_python_iterable<int>();
         std_vector_from_python_iterable<unsigned int>();
+        std_vector_from_python_iterable<std::uint64_t>();
         std_vector_from_python_iterable<BlockXYZ>();
         std_vector_from_python_iterable<SubstackXYZ>();
         std_vector_from_python_iterable<PointXYZ>();
@@ -690,6 +713,7 @@ namespace libdvid { namespace python {
         bool          (DVIDNodeService::*create_grayscale8)(std::string, size_t)                             = &DVIDNodeService::create_grayscale8;
         bool          (DVIDNodeService::*create_labelblk)(std::string, std::string, size_t)                  = &DVIDNodeService::create_labelblk;
         bool          (DVIDNodeService::*create_labelarray)(std::string, size_t)                             = &DVIDNodeService::create_labelarray;
+        bool          (DVIDNodeService::*create_labelmap)(std::string, size_t)                               = &DVIDNodeService::create_labelmap;
         BinaryDataPtr (DVIDNodeService::*custom_request)(std::string, BinaryDataPtr, ConnectionMethod, bool, unsigned long long) = &DVIDNodeService::custom_request;
 
         // DVIDNodeService python class definition
@@ -886,6 +910,13 @@ namespace libdvid { namespace python {
                 ":param blocksize: size of block chunks \n"
                 ":returns: true if created, false if it already exists \n")
 
+            .def("create_labelmap", create_labelmap,
+                ( arg("instance_name"), arg("blocksize")=DEFBLOCKSIZE ),
+                "Create an instance of uint64 labelmap datatype."
+                "\n"
+                ":param instance_name: name of new labelmap datatype instance \n"
+                ":param blocksize: size of block chunks \n"
+                ":returns: true if created, false if it already exists \n")
 
             .def("get_labels3D", &get_labels3D_zyx,
                 ( arg("service"), arg("instance_name"), arg("shape_zyx"), arg("offset_zyx"), arg("throttle")=true, arg("compress")=true, arg("roi")=object(), arg("supervoxels")=false ),
@@ -941,8 +972,17 @@ namespace libdvid { namespace python {
                  ":param offset_zyx: offset in voxel coordinates of whichever scale you are fetching from \n"
                  ":param blocksize: The blocksize of the instance from which these bytes came.  Usually 64. \n"
                  ":returns: 3D ``ndarray`` with dtype ``uint64`` \n")
+
             .staticmethod("inflate_labelarray_blocks3D_from_raw")
-        
+
+            .def("get_mapping",  &get_mapping,
+                ( arg("service"), arg("instance"), arg("supervoxels") ),
+                "Fetch the /mapping (body label) for a list of supervoxel IDs in a labelmap instance.\n"
+                "\n"
+                ":param instance: name of the labelmap type instance \n"
+                ":param supervoxels: Array of supervoxel IDs\n"
+                ":returns: ndarray of body IDs\n")
+
 
             .def("get_label_by_location",  &get_label_by_location_zyx,
                 ( arg("service"), arg("instance_name"), arg("point_zyx"), arg("supervoxels") ),

@@ -124,6 +124,11 @@ class Test_DVIDNodeService(unittest.TestCase):
         retrieved_data = node_service.get_labels3D( "test_labels_3d2", (30,31,32), (20,20,20) )
         self.assertTrue( (retrieved_data == data[20:50, 20:51, 20:52]).all() )
   
+    def test_labelmap_mapping(self):
+        node_service = DVIDNodeService(TEST_DVID_SERVER, self.uuid, "foo@bar.com", "test_labelmap_mapping")
+        node_service.create_labelmap("test_labelmap", 64)
+        assert (node_service.get_mapping("test_labelmap", [1,2,3]) == [1,2,3]).all()
+
     def test_labelarray_put_single_block(self):
         node_service = DVIDNodeService(TEST_DVID_SERVER, self.uuid, "foo@bar.com", "test_labelarray_put_single_block")
         node_service.create_labelarray("test_labelarray64", 64)

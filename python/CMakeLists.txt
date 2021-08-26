@@ -55,7 +55,7 @@ add_library( _dvid_python SHARED src/libdvid_python.cpp )
 target_link_libraries( _dvid_python dvidcpp
                        ${support_LIBS}
                        #${Python3_LIBRARIES} # do not link against libpython
-                       ${Boost_PYTHON_LIBRARY}  )
+                       ${Boost_PYTHON_LIBRARY} ${Boost_NUMPY_LIBRARY} )
 
 set_target_properties( _dvid_python PROPERTIES PREFIX  ""
                                                DEBUG_POSTFIX "" )

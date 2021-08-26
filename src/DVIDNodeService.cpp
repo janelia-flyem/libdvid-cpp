@@ -166,6 +166,12 @@ bool DVIDNodeService::create_labelarray(string datatype_name, size_t blocksize)
     return is_created;
 }
 
+bool DVIDNodeService::create_labelmap(string datatype_name, size_t blocksize)
+{
+    bool is_created = create_datatype("labelmap", datatype_name, blocksize);
+    return is_created;
+}
+
 bool DVIDNodeService::create_keyvalue(string keyvalue)
 {
     return create_datatype("keyvalue", keyvalue);
@@ -2335,6 +2341,36 @@ void DVIDNodeService::get_sparsegraymask(std::string dataname, const std::vector
         }); 
     }
 }
+
+std::vector<std::uint64_t> DVIDNodeService::get_mapping(std::string instance, std::vector<std::uint64_t> const & supervoxels)
+{
+    // Load supervoxels as JSON data
+    Json::Value sv_json(Json::arrayValue);
+    for (std::uint64_t sv : supervoxels) {
+        sv_json.append(sv);
+    }
+
+    // Serialize JSON
+    stringstream datastr;
+    datastr << sv_json;
+
+    // Load into buffer
+    BinaryDataPtr payload = BinaryData::create_binary_data(
+            datastr.str().c_str(), datastr.str().length());
+
+    // Request from DVID
+    BinaryDataPtr response_body = custom_request("/" + instance + "/mapping", payload, GET);
+
+    // Parse response and copy to result
+    Json::Value response_json = response_body->get_json_value();
+
+    std::vector<std::uint64_t> bodies;
+    for (auto const & m : response_json) {
+        bodies.push_back( m.asInt64() );
+    }
+    return bodies;
+}
+
 
 // ******************** PRIVATE HELPER FUNCTIONS *******************************
 

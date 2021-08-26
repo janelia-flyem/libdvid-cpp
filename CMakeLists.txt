@@ -63,7 +63,7 @@ set (LIBDVID_WRAP_PYTHON NO CACHE BOOL "Build the libdvid python bindings (requi
 
 
 # python is intentionally omitted here, in favor of the more reliable detection, below.
-FIND_PACKAGE(Boost REQUIRED COMPONENTS thread system)
+FIND_PACKAGE(Boost REQUIRED COMPONENTS thread system numpy3)
 
 if (LIBDVID_WRAP_PYTHON)
 
@@ -117,6 +117,24 @@ if (LIBDVID_WRAP_PYTHON)
                      NAMES_PER_DIR
                      HINTS "${Boost_LIBRARY_DIR}"
                      DOC "boost_python libraries")
+
+        SET(BOOST_NUMPY_NAMES ${BOOST_NUMPY_NAMES}
+                    # Linux with multiple Python versions
+                    boost_numpy-py${Python3_VERSION_MAJOR}${Python3_VERSION_MINOR}
+                    # Gentoo
+                    boost_numpy-${Python3_VERSION_MAJOR}.${Python3_VERSION_MINOR}
+                    # Mac with Python 3
+                    boost_numpy${Python3_VERSION_MAJOR}
+                    # conda-forge
+                    boost_numpy${Python3_VERSION_MAJOR}${Python3_VERSION_MINOR}
+                    # default
+                    boost_numpy)
+    
+        FIND_LIBRARY(Boost_NUMPY_LIBRARY
+                     NAMES ${BOOST_NUMPY_NAMES}
+                     NAMES_PER_DIR
+                     HINTS "${Boost_LIBRARY_DIR}"
+                     DOC "boost_numpy libraries")
     ENDIF()
 
     if(Boost_PYTHON_LIBRARY)

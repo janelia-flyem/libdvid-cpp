@@ -81,7 +81,9 @@ the dependencies and libraries stored in /condapath/envs/ENV_NAME.  libdvid-cpp
 includes a simple wrapper script 'configure-for-conda.sh' that simply properly configures
 cmake so that a simple make and install can be performed.  To build libdvid-cpp:
 
-    % ./configure-for-conda.sh CHOOSE_ENV_PATH build
+    % conda create -n ${ENV_NAME} --only-deps libdvid-cpp
+    % conda install -n ${ENV_NAME} clangxx_osx-64  # or gxx_linux-64
+    % ./configure-for-conda.sh $(conda info --base)/${ENV_NAME} build
     % cd build
     % make -j NUM_PROCESSORS
     % make install

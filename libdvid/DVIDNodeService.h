@@ -151,6 +151,8 @@ class DVIDNodeService {
 
     bool create_labelarray(std::string datatype_name, size_t blocksize=64);
 
+    bool create_labelmap(std::string datatype_name, size_t blocksize=64);
+
     /*!
      * Helper function to sync two datatype instances
      * \param datatype_name name of datatype instance to be synced
@@ -911,6 +913,13 @@ class DVIDNodeService {
      * \param isjpeg specfies whether datatype support jpeg encoding
     */
     void get_sparsegraymask(std::string dataname, const std::vector<DVIDCompressedBlock>& maskblocks, std::vector<DVIDCompressedBlock>& grayblocks, int scale, bool usejpeg=false);
+
+    /*!
+     * Fetch the /mapping (body label) for a list of supervoxel IDs in a labelmap instance.
+     * \param instance name of DVID labelmap instance
+     * \param supervoxels A vector of supervoxel IDs
+    */
+    std::vector<std::uint64_t> get_mapping(std::string instance, std::vector<std::uint64_t> const & supervoxels);
 
   private:
     //! HTTP connection with DVID
