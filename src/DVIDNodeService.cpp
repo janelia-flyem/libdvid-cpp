@@ -40,7 +40,8 @@ DVIDNodeService::DVIDNodeService(string web_addr_, UUID uuid_,
 }
 
 BinaryDataPtr DVIDNodeService::custom_request(string endpoint,
-        BinaryDataPtr payload, ConnectionMethod method, bool compress, unsigned long long datasize)
+        BinaryDataPtr payload, ConnectionMethod method, bool compress,
+        unsigned long long datasize, int timeout)
 {
     // append '/' to the endpoint if it is not provided and there is no
     // query string at the end
@@ -64,7 +65,7 @@ BinaryDataPtr DVIDNodeService::custom_request(string endpoint,
     string node_endpoint = "/node/" + uuid + endpoint;
     BinaryDataPtr resp_binary = BinaryData::create_binary_data();
     int status_code = connection.make_request(node_endpoint, method, payload,
-            resp_binary, respdata, BINARY, DVIDConnection::DEFAULT_TIMEOUT, datasize, false);
+            resp_binary, respdata, BINARY, timeout, datasize, false);
 
     // FIXME: For some reason, DVID sometimes returns status 206 for ROI requests.
     //        For now, treat 206 as if it were 200.

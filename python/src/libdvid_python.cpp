@@ -714,7 +714,7 @@ namespace libdvid { namespace python {
         bool          (DVIDNodeService::*create_labelblk)(std::string, std::string, size_t)                  = &DVIDNodeService::create_labelblk;
         bool          (DVIDNodeService::*create_labelarray)(std::string, size_t)                             = &DVIDNodeService::create_labelarray;
         bool          (DVIDNodeService::*create_labelmap)(std::string, size_t)                               = &DVIDNodeService::create_labelmap;
-        BinaryDataPtr (DVIDNodeService::*custom_request)(std::string, BinaryDataPtr, ConnectionMethod, bool, unsigned long long) = &DVIDNodeService::custom_request;
+        BinaryDataPtr (DVIDNodeService::*custom_request)(std::string, BinaryDataPtr, ConnectionMethod, bool, unsigned long long, int) = &DVIDNodeService::custom_request;
 
         // DVIDNodeService python class definition
         class_<DVIDNodeService>("DVIDNodeService",
@@ -754,7 +754,7 @@ namespace libdvid { namespace python {
                 ":returns: block size\n\n")
 
             .def("custom_request", custom_request,
-                ( arg("endpoint"), arg("payload"), arg("method"), arg("compress")=false, arg("datasize")=int(1) ),
+                ( arg("endpoint"), arg("payload"), arg("method"), arg("compress")=false, arg("datasize")=int(1), arg("timeout")=DVIDConnection::DEFAULT_TIMEOUT ),
                 "Allow client to specify a custom http request with an \n"
                 "http endpoint for a given node and uuid.  A request \n"
                 "to ``/node/<uuid>/blah`` should provide the endpoint \n"
@@ -765,6 +765,7 @@ namespace libdvid { namespace python {
                 ":param method: ``libdvid.ConnectionMethod``, (``HEAD``, ``GET``, ``POST``, ``PUT``, ``DELETE``) \n"
                 ":param compress: use lz4 compression if true \n"
                 ":param datasize: estimate payload if GET (only useful if there is a resource manager) \n"
+                ":param timeout: how long to wait for a response from DVID before raising a timeout exception.\n"
                 ":returns: http response as binary data \n")
 
             //

@@ -100,7 +100,8 @@ class DVIDNodeService {
      * \return http response as binary data
     */
     BinaryDataPtr custom_request(std::string endpoint, BinaryDataPtr payload,
-            ConnectionMethod method, bool compress = false, unsigned long long datasize = 1);
+            ConnectionMethod method, bool compress = false, unsigned long long datasize = 1,
+            int timeout = DVIDConnection::DEFAULT_TIMEOUT);
 
     /*!
      * Retrieves meta data for a given datatype instance
