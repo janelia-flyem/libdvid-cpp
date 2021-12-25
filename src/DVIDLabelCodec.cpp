@@ -212,6 +212,8 @@ void write_subblock(uint64_t * block, uint64_t const * subblock_flat, int gz, in
     {
         for (size_t y = 0; y < SBW; ++y)
         {
+            // FIXME: Could this be faster if we memcpy a whole x-row at once, rather than iterating pixel by pixel?
+            // (Granted, it's only 8 pixels, but still...)
             for (size_t x = 0; x < SBW; ++x)
             {
                 int z_slice = gz * SBW + z;
@@ -560,7 +562,10 @@ Labels3D decode_label_block(char const * encoded_data, size_t num_bytes)
             }
             return;
         }
-        
+
+        // Would it be faster to split this into two loops?
+        // - Construct the array of indices (which could usually be uint16 if subblock_index_table is short enough)
+        // - Second pass to perform the lookup for each index
         for (auto & voxel : dense_labels)
         {
             uint16_t next_bytes = decoder.peek_int<uint8_t>(0) << 8;
@@ -581,6 +586,8 @@ Labels3D decode_label_block(char const * encoded_data, size_t num_bytes)
             assert(index < pow(2, bit_length));
             assert(index < subblock_index_table.size());
 
+            // FIXME: We should pre-construct a subblock_label_list above,
+            //        and reduce this from two lookups to one.
             uint32_t global_label_index = subblock_index_table[index];
             assert(global_label_index < global_label_list.size());
 
