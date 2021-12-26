@@ -438,8 +438,11 @@ vector<DVIDCompressedBlock> DVIDNodeService::get_labelblocks3D(string datatype_i
     return c_blocks;
 }
 
-
-
+Grayscale3D DVIDNodeService::get_grayblocks3D_subvol(string datatype_instance, Dims_t sizes, vector<int> offset, bool throttle)
+{
+    auto c_blocks = get_grayblocks3D(datatype_instance, sizes, offset, throttle);
+    return inflate_compressedblocks<uint8_t>(c_blocks, sizes, offset);
+}
 
 void DVIDNodeService::prefetch_specificblocks3D(string datatype_instance,
         vector<int>& blockcoords)
@@ -609,59 +612,7 @@ Labels3D extract_label_subvol( Labels3D const & vol,
     return subvol;
 }
 
-void overwrite_label_subvol( Labels3D & vol,
-                             Labels3D const & subvol,
-                             std::vector<int> const & subvol_offset_xyz )
-{
-    int vol_Z = vol.get_dims()[2];
-    int vol_Y = vol.get_dims()[1];
-    int vol_X = vol.get_dims()[0];
 
-    int sv_Z = subvol.get_dims()[2];
-    int sv_Y = subvol.get_dims()[1];
-    int sv_X = subvol.get_dims()[0];
-
-    int off_z = subvol_offset_xyz[2];
-    int off_y = subvol_offset_xyz[1];
-    int off_x = subvol_offset_xyz[0];
-
-    BinaryDataPtr subvol_binary_data = subvol.get_binary();
-    auto & vol_data = vol.get_binary()->get_data();
-    auto const & subvol_data = subvol_binary_data->get_data();
-
-    size_t sv_offset = 0;
-    for (size_t sv_z = 0; sv_z < sv_Z; ++sv_z)
-    {
-        // Convert from subvol coords to volume coords
-        int z = off_z + sv_z;
-        int z_offset = z * vol_X * vol_Y;
-
-        for (size_t sv_y = 0; sv_y < sv_Y; ++sv_y)
-        {
-            int y = off_y + sv_y;
-            int y_offset = y * vol_X;
-
-            for (size_t sv_x = 0; sv_x < sv_X; ++sv_x)
-            {
-                int x = off_x + sv_x;
-                int x_offset = x;
-
-                // Convert to buffer position
-                auto vol_offset_bytes = sizeof(uint64_t) * (z_offset + y_offset + x_offset);
-                auto subvol_offset_bytes = sizeof(uint64_t) * sv_offset;
-
-                for (auto i = 0; i < sizeof(uint64_t); ++i)
-                {
-                    vol_data[vol_offset_bytes + i] = subvol_data[subvol_offset_bytes + i];
-                }
-                sv_offset += 1;
-            }
-        }
-    }
-}
-
-
-    
 Labels3D DVIDNodeService::get_labelarray_blocks3D(string datatype_instance,
                                                   Dims_t sizes,
                                                   std::vector<int> offset,
@@ -671,33 +622,13 @@ Labels3D DVIDNodeService::get_labelarray_blocks3D(string datatype_instance,
 {
     vector<DVIDCompressedBlock> c_blocks;
     get_subvolblocks3D(datatype_instance, sizes, offset, throttle, false, c_blocks, DVIDCompressedBlock::gzip_labelarray, scale, supervoxels);
-    return inflate_compressedblock_labels3D(c_blocks, sizes, offset);
+    return inflate_compressedblocks<uint64_t>(c_blocks, sizes, offset);
 }
 
 Labels3D DVIDNodeService::inflate_labelarray_blocks3D_from_raw(BinaryDataPtr raw_block_data, Dims_t sizes, std::vector<int> offset, size_t blocksize)
 {
     auto c_blocks = load_compressed_blocks(raw_block_data, blocksize, false, DVIDCompressedBlock::gzip_labelarray);
-    return inflate_compressedblock_labels3D(c_blocks, sizes, offset);
-}
-    
-Labels3D DVIDNodeService::inflate_compressedblock_labels3D(std::vector<DVIDCompressedBlock> const & c_blocks, Dims_t const & sizes, std::vector<int> offset)
-{
-    BinaryDataPtr full_volume_data = BinaryData::create_binary_data( sizeof(uint64_t) * sizes[0] * sizes[1] * sizes[2] );
-    Labels3D full_volume(full_volume_data, sizes);
-
-    Dims_t block_size = {64,64,64};
-    for ( auto const & c_block : c_blocks )
-    {
-        Labels3D label_block( c_block.get_uncompressed_data(), block_size );
-        
-        std::vector<int> local_offset = c_block.get_offset();
-        local_offset[0] -= offset[0];
-        local_offset[1] -= offset[1];
-        local_offset[2] -= offset[2];
-        overwrite_label_subvol( full_volume, label_block, local_offset );
-    }
-
-    return full_volume;
+    return inflate_compressedblocks<uint64_t>(c_blocks, sizes, offset);
 }
 
 void DVIDNodeService::put_labelblocks3D(string datatype_instance, Labels3D const & volume, vector<int> volume_offset_xyz, bool throttle, int scale, bool noindexing)

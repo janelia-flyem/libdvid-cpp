@@ -167,6 +167,58 @@ typedef DVIDVoxels<int32, 2> Coords2D;
 //! 2D 8-bit volume (corresponding to grayscale)
 typedef DVIDVoxels<uint8, 2> Grayscale2D;
 
+template <typename VoxelType>
+void overwrite_subvol( DVIDVoxels<VoxelType, 3> & vol,
+                       DVIDVoxels<VoxelType, 3> const & subvol,
+                       std::vector<int> const & subvol_offset_xyz )
+{
+    int vol_Z = vol.get_dims()[2];
+    int vol_Y = vol.get_dims()[1];
+    int vol_X = vol.get_dims()[0];
+
+    int sv_Z = subvol.get_dims()[2];
+    int sv_Y = subvol.get_dims()[1];
+    int sv_X = subvol.get_dims()[0];
+
+    int off_z = subvol_offset_xyz[2];
+    int off_y = subvol_offset_xyz[1];
+    int off_x = subvol_offset_xyz[0];
+
+    BinaryDataPtr subvol_binary_data = subvol.get_binary();
+    auto & vol_data = vol.get_binary()->get_data();
+    auto const & subvol_data = subvol_binary_data->get_data();
+
+    size_t sv_offset = 0;
+    for (size_t sv_z = 0; sv_z < sv_Z; ++sv_z)
+    {
+        // Convert from subvol coords to volume coords
+        int z = off_z + sv_z;
+        int z_offset = z * vol_X * vol_Y;
+
+        for (size_t sv_y = 0; sv_y < sv_Y; ++sv_y)
+        {
+            int y = off_y + sv_y;
+            int y_offset = y * vol_X;
+
+            for (size_t sv_x = 0; sv_x < sv_X; ++sv_x)
+            {
+                int x = off_x + sv_x;
+                int x_offset = x;
+
+                // Convert to buffer position
+                auto vol_offset_bytes = sizeof(VoxelType) * (z_offset + y_offset + x_offset);
+                auto subvol_offset_bytes = sizeof(VoxelType) * sv_offset;
+
+                for (auto i = 0; i < sizeof(VoxelType); ++i)
+                {
+                    vol_data[vol_offset_bytes + i] = subvol_data[subvol_offset_bytes + i];
+                }
+                sv_offset += 1;
+            }
+        }
+    }
+}
+
 }
 
 #endif

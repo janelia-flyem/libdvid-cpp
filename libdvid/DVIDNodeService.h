@@ -484,6 +484,14 @@ class DVIDNodeService {
                                       bool supervoxels=false );
 
 
+    /*!
+    * Fetch a block-aligned subvolume of grayscale data.
+    * Unlike get_grayblocks3D(), this function returns the inflated 3D volume,
+    * rather than merely the list compressed blocks that were fetched.
+    */
+    Grayscale3D get_grayblocks3D_subvol(std::string datatype_instance, Dims_t sizes, std::vector<int> offset, bool throttle);
+
+
     /*
      * Fetch the data for a /blocks (or /subvolblocks) call,
      * and return the content without processing it.
@@ -505,18 +513,39 @@ class DVIDNodeService {
                                                             size_t blocksize,
                                                             bool gray,
                                                             DVIDCompressedBlock::CompressType ctype );
-    
+
     /*
      * Inflate a vector of DVIDCompressedBlock objects into a full Labels3D volume.
      */
-    static Labels3D inflate_compressedblock_labels3D(std::vector<DVIDCompressedBlock> const & c_blocks, Dims_t const & sizes, std::vector<int> offset);
-    
+    template <typename VoxelType>
+    static DVIDVoxels<VoxelType, 3> inflate_compressedblocks(std::vector<DVIDCompressedBlock> const & c_blocks, Dims_t const & sizes, std::vector<int> offset)
+    {
+        BinaryDataPtr full_volume_data = BinaryData::create_binary_data( sizeof(VoxelType) * sizes[0] * sizes[1] * sizes[2] );
+        DVIDVoxels<VoxelType, 3> full_volume(full_volume_data, sizes);
+
+        Dims_t block_size = {64,64,64};
+        for ( auto const & c_block : c_blocks )
+        {
+            DVIDVoxels<VoxelType, 3> label_block( c_block.get_uncompressed_data(), block_size );
+
+            std::vector<int> local_offset = c_block.get_offset();
+            local_offset[0] -= offset[0];
+            local_offset[1] -= offset[1];
+            local_offset[2] -= offset[2];
+            overwrite_subvol<VoxelType>( full_volume, label_block, local_offset );
+        }
+
+        return full_volume;
+    }
+
+
     /*
      * Inflate a raw labelmap /blocks response into a full Labels3D volume.
      */
     static Labels3D inflate_labelarray_blocks3D_from_raw(BinaryDataPtr raw_block_data, Dims_t sizes, std::vector<int> offset, size_t blocksize=64);
     
     
+
     /*!
      * Fetch label blocks from DVID with teh specified dimension
      * size and spatial offset.  The request must be block aligned.

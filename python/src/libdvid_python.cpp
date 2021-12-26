@@ -246,6 +246,20 @@ namespace libdvid { namespace python {
         return nodeService.get_gray3D(datatype_instance, sizes, offset, throttle, compress, roi);
     }
 
+    Grayscale3D get_grayblocks3D_subvol_zyx( DVIDNodeService & nodeService,
+                                      std::string datatype_instance,
+                                      Dims_t sizes,
+                                      std::vector<int> offset,
+                                      bool throttle )
+    {
+        PyAllowThreads no_gil; // Permit other Python threads.
+
+        // Reverse offset and sizes
+        std::reverse(offset.begin(), offset.end());
+        std::reverse(sizes.begin(), sizes.end());
+        return nodeService.get_grayblocks3D_subvol(datatype_instance, sizes, offset, throttle);
+    }
+
     Array8bit3D get_array8bit3D_zyx( DVIDNodeService & nodeService,
                                 std::string datatype_instance,
                                 Dims_t sizes,
@@ -832,6 +846,18 @@ namespace libdvid { namespace python {
                 ":param compress: enable lz4 compression \n"
                 ":param roi: specify DVID roi to mask GET operation (return 0s outside ROI) \n"
                 ":returns: 3D ``ndarray``, with dtype ``uint8`` \n")
+
+            .def("get_grayblocks3D_subvol", &get_grayblocks3D_subvol_zyx,
+                ( arg("service"), arg("instance_name"), arg("shape_zyx"), arg("offset_zyx"), arg("throttle")=true ),
+                "Fetch a block-aligned subvolume of grayscale data from DVID.\n"
+                "Unlike get_gray3D(), this function fetches the blocks in JPEG-compressed form, "
+                "and decompresses them on the client.\n"
+                ":param instance_name: name of grayscale type instance \n"
+                ":param shape_zyx: volume dimensions in voxel coordinates \n"
+                ":param offset_zyx: volume location in voxel coordinates \n"
+                ":param throttle: permit the server to delay this request by declining it with 503 error,\n"
+                "in which case the function will poll until the 503 errors cease.\n"
+            )
 
             .def("put_gray3D", &put_gray3D_zyx,
                 ( arg("service"), arg("instance_name"), arg("grayscale_vol"), arg("offset_zyx"), arg("throttle")=true, arg("compress")=false),
