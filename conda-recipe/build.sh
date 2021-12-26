@@ -74,6 +74,7 @@ cmake ..\
     -DBoost_PYTHON_LIBRARY="${PREFIX}/lib/libboost_python${CONDA_PY}.${DYLIB_EXT}" \
     ${PYTHON_CMAKE_SETTINGS[@]} \
     -DLIBDVID_WRAP_PYTHON=1 \
+    -DWITH_JPEGTURBO=1 \
 ##
 
 

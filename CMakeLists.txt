@@ -61,6 +61,32 @@ set (BUILDLOC ${CMAKE_SOURCE_DIR})
 
 set (LIBDVID_WRAP_PYTHON NO CACHE BOOL "Build the libdvid python bindings (requires boost_python)")
 
+#
+# https://stackoverflow.com/a/36754678/162094
+#
+function(find_static_library LIB_NAME OUT)
+
+  if (WIN32 OR MSVC)
+        set(CMAKE_FIND_LIBRARY_SUFFIXES ".lib")
+    elseif (UNIX)
+        set(CMAKE_FIND_LIBRARY_SUFFIXES ".a")
+    endif()      
+
+    find_library(
+        FOUND_${LIB_NAME}_STATIC
+        ${LIB_NAME}
+        )
+
+    if (FOUND_${LIB_NAME}_STATIC)
+        get_filename_component(ABS_FILE ${FOUND_${LIB_NAME}_STATIC} ABSOLUTE)
+    else()
+        message(SEND_ERROR "Unable to find library ${LIB_NAME}")
+    endif()
+
+    set(${OUT} ${ABS_FILE} PARENT_SCOPE)
+
+endfunction()
+
 
 # python is intentionally omitted here, in favor of the more reliable detection, below.
 FIND_PACKAGE(Boost REQUIRED COMPONENTS thread system numpy3)
@@ -155,12 +181,27 @@ if (NOT Boost_LIBRARY_DIR_RELEASE)
 endif()
 set (boost_LIBS ${Boost_LIBRARY_DIR_RELEASE}/libboost_thread.${PLATFORM_DYLIB_EXTENSION} ${Boost_LIBRARY_DIR_RELEASE}/libboost_system.${PLATFORM_DYLIB_EXTENSION})
 
-#set(JPEGTURBO ON)
-FIND_PACKAGE(PNG REQUIRED)
-if (JPEGTURBO)
-    FIND_LIBRARY(JPEG2 turbojpeg)
+if (WITH_JPEGTURBO)
+    # We MUST use the static version of the jpeg-turbo libraries,
+    # since we don't want the user to install jpeg-turbo in their runtime environments.
+    # Furthermore, we'll be careful to hide symbols from the jpeg-turbo library,
+    # so they can't conflict with symbols from libjpeg, if the user's final program links with libjpeg.
+    find_static_library(turbojpeg TURBOJPEG)
+    find_static_library(jpeg JPEG)
+    if (APPLE)
+        # Ensure that all jpeg-related symbols are hidden
+        # target_link_libraries() permits custom linker syntax to be placed here in this way.
+        set(TURBOJPEG -load_hidden ${TURBOJPEG})
+        set(JPEG -load_hidden ${JPEG})
+
+    elseif(UNIX)
+        add_link_options("--exclude-libs libturbojpeg.a,libjpeg.a")
+    endif()
+else()
+    FIND_PACKAGE(JPEG REQUIRED)
 endif()
-FIND_PACKAGE(JPEG REQUIRED)
+
+FIND_PACKAGE(PNG REQUIRED)
 FIND_PACKAGE(CURL REQUIRED)
 FIND_LIBRARY(ZEROMQ_LIBRARIES zmq)
 FIND_LIBRARY(LZ4_LIBRARY lz4)
@@ -183,8 +224,8 @@ if (NOT JSON_LIBRARIES AND UNIX AND NOT APPLE)
     endif()
 endif()
 
-if (JPEGTURBO)
-    set (support_LIBS ${JSON_LIBRARIES} ${boost_LIBS} ${ZEROMQ_LIBRARIES} ${PNG_LIBRARIES} ${CURL_LIBRARIES} ${JPEG_LIBRARIES} ${LZ4_LIBRARY} ${JPEG2})
+if (WITH_JPEGTURBO)
+    set (support_LIBS ${JSON_LIBRARIES} ${boost_LIBS} ${ZEROMQ_LIBRARIES} ${PNG_LIBRARIES} ${CURL_LIBRARIES} ${LZ4_LIBRARY} ${TURBOJPEG} ${JPEG})
 else()
     set (support_LIBS ${JSON_LIBRARIES} ${boost_LIBS} ${ZEROMQ_LIBRARIES} ${PNG_LIBRARIES} ${CURL_LIBRARIES} ${JPEG_LIBRARIES} ${LZ4_LIBRARY})
 endif()
@@ -208,9 +249,12 @@ add_library (dvidcpp SHARED
              src/DVIDThreadedFetch.cpp 
              src/Algorithms.cpp 
              src/DVIDCache.cpp)
-         #target_compile_definitions(dvidcpp PRIVATE JPEGTURBO=1)
 
-target_link_libraries (dvidcpp ${support_LIBS})
+if (WITH_JPEGTURBO)
+    target_compile_definitions(dvidcpp PRIVATE WITH_JPEGTURBO=1)
+endif()
+
+target_link_libraries(dvidcpp PRIVATE ${support_LIBS})
 
 # config file for CMake FIND_PACKAGE command
 set (libdvidcpp_version "0.1.0")

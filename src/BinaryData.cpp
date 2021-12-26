@@ -12,7 +12,7 @@ extern "C" {
 #include <lz4.h>
 #include <jpeglib.h>
 #include <setjmp.h>
-#if JPEGTURBO
+#if WITH_JPEGTURBO
 #include <turbojpeg.h>
 #endif
 }
@@ -479,7 +479,7 @@ BinaryDataPtr BinaryData::decompress_jpeg(const BinaryDataPtr jpegbinary,
         throw ErrMsg("Cannot decompress empty buffer");
     }
     
-#if JPEGTURBO
+#if WITH_JPEGTURBO
     long unsigned int _jpegSize = jpegbinary->length();
     unsigned char* _compressedImage = (unsigned char*) jpegbinary->get_raw();
 
