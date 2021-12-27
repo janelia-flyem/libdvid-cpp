@@ -195,7 +195,7 @@ if (WITH_JPEGTURBO)
         set(JPEG -load_hidden ${JPEG})
 
     elseif(UNIX)
-        add_link_options("--exclude-libs libturbojpeg.a,libjpeg.a")
+        add_link_options("-Wl,--exclude-libs,libturbojpeg.a:libjpeg.a")
     endif()
 else()
     FIND_PACKAGE(JPEG REQUIRED)
