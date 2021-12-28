@@ -1,8 +1,11 @@
 import sys
+import glob
 import site
 import platform
 import subprocess
 
+assert not glob.glob(f"{sys.prefix}/lib/libturbojpeg.*"), \
+    "libjpeg-turbo should not be a runtime dependency of libdvid-cpp!"
 
 if platform.system() == "Darwin":
     def get_symbols(lib_path):

@@ -22,6 +22,9 @@ build:
   script_env:
     - SKIP_LIBDVID_TESTS
 
+  ignore_run_exports:
+    - libjpeg-turbo
+
 requirements:
   ##
   ## A note about krb5:
@@ -50,7 +53,7 @@ requirements:
     - lz4-c {{ lz4_c }}
     - zeromq {{ zeromq }}
     - libpng 1.6.28
-    - libjpeg-turbo  # Statically linked, so no runtime dependency below.
+    - libjpeg-turbo 2  # Statically linked, so no runtime dependency below.
 
     # In 7.62.0, CURL_HTTP_VERSION_2TLS became the default setting for CURLOPT_HTTP_VERSION
     - curl >=7.62.0
@@ -79,6 +82,9 @@ requirements:
     #- krb5 1.14.6 # See note above
 
 test:
+  requires:
+    - jpeg  # We install libjpeg to ensure that we're not using it. See run_test.py
+
   # Python imports
   imports:
     - libdvid
