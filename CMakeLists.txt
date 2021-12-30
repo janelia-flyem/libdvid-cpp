@@ -201,13 +201,19 @@ else()
     FIND_PACKAGE(JPEG REQUIRED)
 endif()
 
+FIND_PACKAGE(ZLIB REQUIRED)
 FIND_PACKAGE(PNG REQUIRED)
 FIND_PACKAGE(CURL REQUIRED)
 FIND_LIBRARY(ZEROMQ_LIBRARIES zmq)
 FIND_LIBRARY(LZ4_LIBRARY lz4)
+FIND_LIBRARY(LIBDEFLATE_LIBRARY deflate)
 
 if (NOT LZ4_LIBRARY)
     message(FATAL_ERROR "*** Could not find lz4 library ***")
+endif()
+
+if (NOT LIBDEFLATE_LIBRARY)
+    message(FATAL_ERROR "*** Could not find libdeflate library ***")
 endif()
 
 FIND_LIBRARY(JSON_LIBRARIES jsoncpp)
@@ -224,10 +230,18 @@ if (NOT JSON_LIBRARIES AND UNIX AND NOT APPLE)
     endif()
 endif()
 
-if (WITH_JPEGTURBO)
-    set (support_LIBS ${JSON_LIBRARIES} ${boost_LIBS} ${ZEROMQ_LIBRARIES} ${PNG_LIBRARIES} ${CURL_LIBRARIES} ${LZ4_LIBRARY} ${TURBOJPEG} ${JPEG})
+set (support_LIBS ${JSON_LIBRARIES} ${boost_LIBS} ${ZEROMQ_LIBRARIES} ${PNG_LIBRARIES} ${CURL_LIBRARIES} ${LZ4_LIBRARY})
+
+if (WITH_LIBDEFLATE)
+    set (support_LIBS ${support_LIBS} ${LIBDEFLATE_LIBRARY})
 else()
-    set (support_LIBS ${JSON_LIBRARIES} ${boost_LIBS} ${ZEROMQ_LIBRARIES} ${PNG_LIBRARIES} ${CURL_LIBRARIES} ${JPEG_LIBRARIES} ${LZ4_LIBRARY})
+    set (support_LIBS ${support_LIBS} ${ZLIB_LIBRARIES})
+endif()
+
+if (WITH_JPEGTURBO)
+    set (support_LIBS ${support_LIBS} ${TURBOJPEG} ${JPEG})
+else()
+    set (support_LIBS ${support_LIBS} ${JPEG_LIBRARIES})
 endif()
 
 include_directories (BEFORE ${CMAKE_SOURCE_DIR}/libdvid ${CMAKE_SOURCE_DIR})
@@ -249,6 +263,10 @@ add_library (dvidcpp SHARED
              src/DVIDThreadedFetch.cpp 
              src/Algorithms.cpp 
              src/DVIDCache.cpp)
+
+if (WITH_LIBDEFLATE)
+    target_compile_definitions(dvidcpp PRIVATE WITH_LIBDEFLATE=1)
+endif()
 
 if (WITH_JPEGTURBO)
     target_compile_definitions(dvidcpp PRIVATE WITH_JPEGTURBO=1)

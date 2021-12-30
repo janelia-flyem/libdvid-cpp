@@ -52,6 +52,7 @@ requirements:
     - jsoncpp {{ jsoncpp }}
     - lz4-c {{ lz4_c }}
     - zeromq {{ zeromq }}
+    - libdeflate
     - libpng 1.6.28
     - libjpeg-turbo 2  # Statically linked, so no runtime dependency below.
 
@@ -73,6 +74,7 @@ requirements:
     - jsoncpp {{ jsoncpp }}
     - lz4-c {{ lz4_c }}
     - zeromq {{ zeromq }}
+    - libdeflate
     - libpng >=1.6.28,<1.7  # On Mac, libpng versions are not backwards compatible, unfortunately.
                             # See: https://github.com/conda-forge/libpng-feedstock/issues/10
 

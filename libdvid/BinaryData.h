@@ -229,7 +229,7 @@ class BinaryData {
         data.assign( (std::istreambuf_iterator<char>(fin) ),
                 (std::istreambuf_iterator<char>()    ) ); 
     }
-    
+
     //! store binary array
     std::string data;
 };

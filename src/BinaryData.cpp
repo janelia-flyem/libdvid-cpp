@@ -5,11 +5,19 @@
 #include <png++/png.hpp>
 #include <json/json.h>
 
+#include <map>
 #include <cstdint>
 
 extern "C" {
-#include <zlib.h>
 #include <lz4.h>
+
+#if WITH_LIBDEFLATE
+#include <libdeflate.h>
+#else
+#include <zlib.h>
+#endif
+
+// Provided by both libjpeg and libjpegturbo
 #include <jpeglib.h>
 
 #if WITH_JPEGTURBO
@@ -21,6 +29,8 @@ extern "C" {
 
 using std::string;
 using std::istringstream;
+
+#if !defined(WITH_LIBDEFLATE) || WITH_LIBDEFLATE == 0
 
 //***** HELPER FUNCTIONS FOR GZIP COMPRESSION ****//
 //
@@ -141,11 +151,72 @@ int zlib_uncompress2_gzip(Bytef *dest, uLongf *destLen, const Bytef *source, uLo
            err == Z_BUF_ERROR && left + stream.avail_out ? Z_DATA_ERROR :
            err;
 }
+#endif
 
-
-/************** Start of libdvid specific functions *****************/
 
 namespace libdvid {
+
+#if WITH_LIBDEFLATE
+BinaryDataPtr BinaryData::decompress_gzip( const BinaryDataPtr compressed_data,
+                                           int max_uncompressed_size )
+{
+    if (compressed_data->length() == 0) {
+        throw ErrMsg("Cannot decompress empty buffer");
+    }
+
+    std::vector<uint8_t> destination;
+    destination.resize(max_uncompressed_size);
+
+    uint8_t const * src_buf = compressed_data->get_raw();
+    uint8_t * dest_buf = &destination[0];
+
+    size_t dest_length = max_uncompressed_size;
+    size_t src_length = compressed_data->length();
+
+    size_t actual_out_bytes = 0;
+
+    libdeflate_decompressor * decompressor = libdeflate_alloc_decompressor();
+    libdeflate_result result = libdeflate_gzip_decompress( decompressor,
+                                                           src_buf, src_length,
+			                                               dest_buf, dest_length,
+			                                               &actual_out_bytes );
+    libdeflate_free_decompressor(decompressor);
+
+    if (result != LIBDEFLATE_SUCCESS) {
+        static const std::map<libdeflate_result, std::string> ResultNames =
+        {
+            { LIBDEFLATE_SUCCESS, "LIBDEFLATE_SUCCESS" },
+            { LIBDEFLATE_BAD_DATA, "LIBDEFLATE_BAD_DATA"},
+            { LIBDEFLATE_SHORT_OUTPUT, "LIBDEFLATE_SHORT_OUTPUT"},
+            { LIBDEFLATE_INSUFFICIENT_SPACE, "LIBDEFLATE_INSUFFICIENT_SPACE"}
+        };
+        std::ostringstream ss;
+        ss << "decompress_gzip(): libdeflate decompression failed: " << ResultNames.at(result);
+        throw ErrMsg(ss.str());
+    }
+    return BinaryData::create_binary_data(dest_buf, actual_out_bytes);
+}
+
+BinaryDataPtr BinaryData::compress_gzip(const BinaryDataPtr uncompressed_data)
+{
+    libdeflate_compressor * compressor = libdeflate_alloc_compressor(6);
+
+    unsigned long src_length = uncompressed_data->length();
+    unsigned long dest_length = libdeflate_deflate_compress_bound(compressor, src_length);
+
+    std::vector<uint8_t> destination;
+    destination.resize(dest_length);
+
+    uint8_t const * src_buf = uncompressed_data->get_raw();
+    uint8_t * dest_buf = reinterpret_cast<uint8_t *>(&destination[0]);
+
+    size_t compressed_size = libdeflate_deflate_compress( compressor,
+			                                              src_buf, src_length,
+                                                          dest_buf, dest_length );
+    return BinaryData::create_binary_data(dest_buf, compressed_size);
+}
+
+#else
 
 BinaryDataPtr BinaryData::decompress_gzip( const BinaryDataPtr compressed_data,
                                            int max_uncompressed_size )
@@ -153,7 +224,7 @@ BinaryDataPtr BinaryData::decompress_gzip( const BinaryDataPtr compressed_data,
     if (compressed_data->length() == 0) {
         throw ErrMsg("Cannot decompress empty buffer");
     }
-    
+
     std::vector<uint8_t> destination;
     destination.resize(max_uncompressed_size);
 
@@ -168,7 +239,8 @@ BinaryDataPtr BinaryData::decompress_gzip( const BinaryDataPtr compressed_data,
     int err_code = zlib_uncompress2_gzip(dest_buf, &dest_length, src_buf, &src_length);
 
     if (err_code != Z_OK)
-    {   std::ostringstream ss;
+    {
+        std::ostringstream ss;
         ss << "zlib decompression failed: " << err_code;
         throw ErrMsg(ss.str());
     }
@@ -199,14 +271,15 @@ BinaryDataPtr BinaryData::compress_gzip(const BinaryDataPtr uncompressed_data)
     int err_code = zlib_compress2_gzip(dest_buf, &dest_length, src_buf, src_length, level);
 
     if (err_code != Z_OK)
-    {   std::ostringstream ss;
+    {
+        std::ostringstream ss;
         ss << "zlib compression failed: " << err_code;
         throw ErrMsg(ss.str());
     }
 
     return BinaryData::create_binary_data(dest_buf, dest_length);
 }
-
+#endif
 
 BinaryDataPtr BinaryData::decompress_lz4(const BinaryDataPtr lz4binary,
         int uncompressed_size, char* buffer, int bufsize)
@@ -573,8 +646,8 @@ BinaryDataPtr BinaryData::decompress_jpeg(const BinaryDataPtr jpegbinary,
     jpeg_destroy_decompress(&cinfo);
 
     return binary;
-#endif
 }
+#endif
 
 BinaryDataPtr BinaryData::decompress_labelarray_block(const BinaryDataPtr blockbinary, unsigned int block_width)
 {
