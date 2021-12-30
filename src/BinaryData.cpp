@@ -8,150 +8,19 @@
 #include <cstdint>
 
 extern "C" {
-#include "zlib.h"
+#include <zlib.h>
 #include <lz4.h>
 #include <jpeglib.h>
-#include <setjmp.h>
+
 #if WITH_JPEGTURBO
 #include <turbojpeg.h>
+#else
+#include <setjmp.h>
 #endif
 }
 
 using std::string;
 using std::istringstream;
-
-/***** Contains JPEG LIB helper functions (copied from libjpeg) ****/
-
-/*!
- * Define structure for handling custom JPEG memory source.
-*/
-typedef struct {
-    struct jpeg_source_mgr pub; // public fields 
-
-    FILE * infile;            // source stream 
-    JOCTET * buffer;          // start of buffer
-    int start_of_file;        // have we gotten any data yet? 
-} my_source_mgr;
-
-typedef my_source_mgr * my_src_ptr;
-
-/*!
- * Initialize source --- called by jpeg_read_header
- * before any data is actually read.
-*/
-void init_source (j_decompress_ptr cinfo)
-{
-    my_src_ptr src = (my_src_ptr) cinfo->src;
-
-    // We reset the empty-input-file flag for each image,
-    // but we don't clear the input buffer.
-    // This is correct behavior for reading a series of images from one source.
-    src->start_of_file = TRUE;
-}
-
-
-/*!
- * Handle memory copying.
-*/
-boolean fill_mem_input_buffer (j_decompress_ptr cinfo)
-{
-    static const JOCTET mybuffer[4] = {
-        (JOCTET) 0xFF, (JOCTET) JPEG_EOI, 0, 0
-    };
-
-    /* Insert a fake EOI marker */
-
-    cinfo->src->next_input_byte = mybuffer;
-    cinfo->src->bytes_in_buffer = 2;
-
-    return TRUE;
-}
-
-/*!
- * No init necessary.
-*/
-void init_mem_source (j_decompress_ptr cinfo)
-{
-}
-
-/*!
- * More functionality required for working with in-memory source.
-*/
-void skip_input_data (j_decompress_ptr cinfo, long num_bytes) 
-{
-    struct jpeg_source_mgr * src = cinfo->src;                                                             
-
-    // Just a dumb implementation for now.  Could use fseek() except
-    // it doesn't work on pipes.  Not clear that being smart is worth
-    // any trouble anyway --- large skips are infrequent.
-    if (num_bytes > 0) {
-        while (num_bytes > (long) src->bytes_in_buffer) {                                                    
-            num_bytes -= (long) src->bytes_in_buffer;
-            (void) (*src->fill_input_buffer) (cinfo);                                                          
-            //note we assume that fill_input_buffer will never return FALSE,
-            //so suspension need not be handled. 
-        }
-        src->next_input_byte += (size_t) num_bytes; 
-        src->bytes_in_buffer -= (size_t) num_bytes; 
-    }
-}
-
-/*!
- * No work necessary.
-*/
-void term_source (j_decompress_ptr cinfo)
-{
-}
-
-/*!
- * Main function to take memory source for decompression.
-*/
-void jpeg_mem_src (j_decompress_ptr cinfo,
-        unsigned char * inbuffer, unsigned long insize)
-{
-    struct jpeg_source_mgr * src;
-
-    /* The source object is made permanent so that a series of JPEG images
-     *    * can be read from the same buffer by calling jpeg_mem_src only before
-     *       * the first one.
-     *          */
-    if (cinfo->src == NULL) {     /* first time for this JPEG object? */
-        cinfo->src = (struct jpeg_source_mgr *)
-            (*cinfo->mem->alloc_small) ((j_common_ptr) cinfo, JPOOL_PERMANENT,
-                    sizeof(struct jpeg_source_mgr));
-    }
-
-    src = cinfo->src;
-    src->init_source = init_mem_source;
-    src->fill_input_buffer = fill_mem_input_buffer;
-    src->skip_input_data = skip_input_data;
-    src->resync_to_restart = jpeg_resync_to_restart; /* use default method */
-    src->term_source = term_source;
-    src->bytes_in_buffer = (size_t) insize;
-    src->next_input_byte = (JOCTET *) inbuffer; 
-}
-
-/*!
- * Error handling structure for libjpeg library.
-*/
-struct my_error_mgr {
-    struct jpeg_error_mgr pub; 
-    jmp_buf setjmp_buffer;  // for return to caller
-};
-
-typedef struct my_error_mgr * my_error_ptr;
-
-/*
- * Routine that replaces standard error_exit in libjpeg
-*/
-void my_error_exit (j_common_ptr cinfo)
-{
-    my_error_ptr myerr = (my_error_ptr) cinfo->err;
-
-    // return control to the setjmp point 
-    longjmp(myerr->setjmp_buffer, 1);
-}
-
 
 //***** HELPER FUNCTIONS FOR GZIP COMPRESSION ****//
 //
@@ -472,6 +341,8 @@ BinaryDataPtr BinaryData::decompress_png8(const BinaryDataPtr pngbinary,
     return binary;
 }
 
+#if WITH_JPEGTURBO
+
 BinaryDataPtr BinaryData::decompress_jpeg(const BinaryDataPtr jpegbinary,
         unsigned int& width, unsigned int& height)
 {
@@ -479,10 +350,8 @@ BinaryDataPtr BinaryData::decompress_jpeg(const BinaryDataPtr jpegbinary,
         throw ErrMsg("Cannot decompress empty buffer");
     }
     
-#if WITH_JPEGTURBO
     long unsigned int _jpegSize = jpegbinary->length();
     unsigned char* _compressedImage = (unsigned char*) jpegbinary->get_raw();
-
 
     int jpegSubsamp, width2, height2;
     tjhandle _jpegDecompressor = tjInitDecompress();
@@ -505,12 +374,154 @@ BinaryDataPtr BinaryData::decompress_jpeg(const BinaryDataPtr jpegbinary,
     tjDestroy(_jpegDecompressor);
 
     return binary;
+}
 #else
+/***** Contains JPEG LIB helper functions (copied from libjpeg) ****/
+// FIXME: Having structs copied like this is insanely sketchy
+//        and likely to be brittle and cause breakage with future versions of libjpeg.
+
+/*!
+ * Define structure for handling custom JPEG memory source.
+*/
+typedef struct {
+    struct jpeg_source_mgr pub; // public fields
+
+    FILE * infile;            // source stream
+    JOCTET * buffer;          // start of buffer
+    int start_of_file;        // have we gotten any data yet?
+} my_source_mgr;
+
+typedef my_source_mgr * my_src_ptr;
+
+/*!
+ * Initialize source --- called by jpeg_read_header
+ * before any data is actually read.
+*/
+void init_source (j_decompress_ptr cinfo)
+{
+    my_src_ptr src = (my_src_ptr) cinfo->src;
+
+    // We reset the empty-input-file flag for each image,
+    // but we don't clear the input buffer.
+    // This is correct behavior for reading a series of images from one source.
+    src->start_of_file = TRUE;
+}
+
+
+/*!
+ * Handle memory copying.
+*/
+boolean fill_mem_input_buffer (j_decompress_ptr cinfo)
+{
+    static const JOCTET mybuffer[4] = {
+        (JOCTET) 0xFF, (JOCTET) JPEG_EOI, 0, 0
+    };
+
+    /* Insert a fake EOI marker */
+
+    cinfo->src->next_input_byte = mybuffer;
+    cinfo->src->bytes_in_buffer = 2;
+
+    return TRUE;
+}
+
+/*!
+ * No init necessary.
+*/
+void init_mem_source (j_decompress_ptr cinfo)
+{
+}
+
+/*!
+ * More functionality required for working with in-memory source.
+*/
+void skip_input_data (j_decompress_ptr cinfo, long num_bytes)
+{
+    struct jpeg_source_mgr * src = cinfo->src;
+
+    // Just a dumb implementation for now.  Could use fseek() except
+    // it doesn't work on pipes.  Not clear that being smart is worth
+    // any trouble anyway --- large skips are infrequent.
+    if (num_bytes > 0) {
+        while (num_bytes > (long) src->bytes_in_buffer) {
+            num_bytes -= (long) src->bytes_in_buffer;
+            (void) (*src->fill_input_buffer) (cinfo);
+            //note we assume that fill_input_buffer will never return FALSE,
+            //so suspension need not be handled.
+        }
+        src->next_input_byte += (size_t) num_bytes;
+        src->bytes_in_buffer -= (size_t) num_bytes;
+    }
+}
+
+/*!
+ * No work necessary.
+*/
+void term_source (j_decompress_ptr cinfo)
+{
+}
+
+/*!
+ * Main function to take memory source for decompression.
+*/
+void jpeg_mem_src (j_decompress_ptr cinfo,
+        unsigned char * inbuffer, unsigned long insize)
+{
+    struct jpeg_source_mgr * src;
+
+    /* The source object is made permanent so that a series of JPEG images
+     *    * can be read from the same buffer by calling jpeg_mem_src only before
+     *       * the first one.
+     *          */
+    if (cinfo->src == NULL) {     /* first time for this JPEG object? */
+        cinfo->src = (struct jpeg_source_mgr *)
+            (*cinfo->mem->alloc_small) ((j_common_ptr) cinfo, JPOOL_PERMANENT,
+                    sizeof(struct jpeg_source_mgr));
+    }
+
+    src = cinfo->src;
+    src->init_source = init_mem_source;
+    src->fill_input_buffer = fill_mem_input_buffer;
+    src->skip_input_data = skip_input_data;
+    src->resync_to_restart = jpeg_resync_to_restart; /* use default method */
+    src->term_source = term_source;
+    src->bytes_in_buffer = (size_t) insize;
+    src->next_input_byte = (JOCTET *) inbuffer; 
+}
+
+/*!
+ * Error handling structure for libjpeg library.
+*/
+struct my_error_mgr {
+    struct jpeg_error_mgr pub; 
+    jmp_buf setjmp_buffer;  // for return to caller
+};
+
+typedef struct my_error_mgr * my_error_ptr;
+
+/*
+ * Routine that replaces standard error_exit in libjpeg
+*/
+void my_error_exit (j_common_ptr cinfo)
+{
+    my_error_ptr myerr = (my_error_ptr) cinfo->err;
+
+    // return control to the setjmp point 
+    longjmp(myerr->setjmp_buffer, 1);
+}
+
+BinaryDataPtr BinaryData::decompress_jpeg(const BinaryDataPtr jpegbinary,
+        unsigned int& width, unsigned int& height)
+{
+    if (jpegbinary->length() == 0) {
+        throw ErrMsg("Cannot decompress empty buffer");
+    }
+
     struct jpeg_decompress_struct cinfo;
     struct my_error_mgr       jerr;
     cinfo.err = jpeg_std_error((jpeg_error_mgr*)&jerr);
     jerr.pub.error_exit = my_error_exit;
-    
+
     // handle error handling for libjpeg library
     if (setjmp(jerr.setjmp_buffer)) {
         // destroy datastructures and indicate error
@@ -518,7 +529,7 @@ BinaryDataPtr BinaryData::decompress_jpeg(const BinaryDataPtr jpegbinary,
         jpeg_destroy_decompress(&cinfo);
         throw ErrMsg("Invalid JPEG");
     }
-    
+
     jpeg_create_decompress(&cinfo);
 
     // specify data source
@@ -533,7 +544,7 @@ BinaryDataPtr BinaryData::decompress_jpeg(const BinaryDataPtr jpegbinary,
 
     // get image width
     int row_stride = cinfo.output_width * cinfo.output_components;
-    
+
     BinaryDataPtr binary(new BinaryData());
     // create a string buffer to fit the uncompressed result
     binary->data.resize(row_stride * cinfo.output_height);

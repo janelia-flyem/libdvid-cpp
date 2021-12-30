@@ -1,5 +1,10 @@
 if [ "$#" -lt 1 ]; then
-    echo "Usage: $0 <install-environment-dir> [build-dir]"
+    echo "Usage: $0 <conda-environment-dir> [build-dir]"
+    echo ""
+    echo "Prerequisite: Create a suitable conda environment for development:"
+    echo ""
+    echo "    conda create -n libdvid-devel --only-deps libdvid-cpp"
+    echo "    conda install -n libdvid-devel libjpeg-turbo clangxx_osx-64 cmake"
     exit 1;
 fi
 
