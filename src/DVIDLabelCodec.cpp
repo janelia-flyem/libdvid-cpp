@@ -531,33 +531,40 @@ Labels3D decode_label_block(char const * encoded_data, size_t num_bytes)
         return Labels3D(&solid_labels[0], BLOCK_VOXELS, BLOCK_DIMS);
     }
 
-    typedef boost::multi_array<std::vector<uint32_t>, 3> IndexTableArray;
-    IndexTableArray subblock_label_indexes(boost::extents[GZ][GY][GX]);
-
     auto subblock_label_counts = decoder.decode_vector<uint16_t>(NUM_SUBBLOCKS);
-    
+
+    typedef boost::multi_array<std::vector<uint64_t>, 3> LabelVecArray;
+    LabelVecArray subblock_label_lists(boost::extents[GZ][GY][GX]);
+
+    // Extract index lists for each subblock, and translate to global labels
     size_t sb_index = 0;
     for_indices(GZ, GY, GX, [&](size_t gz, size_t gy, size_t gx) {
         uint16_t sb_label_count = subblock_label_counts[sb_index];
-        subblock_label_indexes[gz][gy][gx] = decoder.decode_vector<uint32_t>(sb_label_count);
+        auto indexes = decoder.decode_vector<uint32_t>(sb_label_count);
+        auto & labels = subblock_label_lists[gz][gy][gx];
+        for (uint32_t i: indexes) {
+            assert(i < global_label_list.size());
+            uint64_t label = global_label_list[i];
+            labels.push_back(label);
+        }
         sb_index += 1;
     });
-    
+
     // Decode bit stream of encoded voxels into subblocks
     typedef boost::multi_array<LabelVec, 3> SubblockArray;
     SubblockArray subblock_dense_labels(boost::extents[GZ][GY][GX]);
     for_indices(GZ, GY, GX, [&](size_t gz, size_t gy, size_t gx) {
-        auto const & subblock_index_table = subblock_label_indexes[gz][gy][gx];
+        auto const & subblock_label_table = subblock_label_lists[gz][gy][gx];
         auto & dense_labels = subblock_dense_labels[gz][gy][gx];
         dense_labels = LabelVec(SUBBLOCK_VOXELS, 0);
 
         size_t bit_counter = 0;
-        size_t bit_length = ceil( log2( subblock_index_table.size() ) );
+        size_t bit_length = ceil( log2( subblock_label_table.size() ) );
 
         if (bit_length == 0)
         {
             // No encoded voxels to read if the subblock is uniform
-            uint64_t solid_label = global_label_list[subblock_index_table[0]];
+            uint64_t solid_label = subblock_label_table[0];
             for (auto & voxel : dense_labels)
             {
                 voxel = solid_label;
@@ -586,14 +593,9 @@ Labels3D decode_label_block(char const * encoded_data, size_t num_bytes)
             uint16_t index = next_bytes >> (16-bit_length-bit_counter);
 
             assert(index < pow(2, bit_length));
-            assert(index < subblock_index_table.size());
+            assert(index < subblock_label_table.size());
 
-            // FIXME: We should pre-construct a subblock_label_list above,
-            //        and reduce this from two lookups to one.
-            uint32_t global_label_index = subblock_index_table[index];
-            assert(global_label_index < global_label_list.size());
-
-            voxel = global_label_list[global_label_index];
+            voxel = subblock_label_table[index];
 
             bit_counter += bit_length;
             while (bit_counter >= 8)
