@@ -184,9 +184,16 @@ void overwrite_subvol( DVIDVoxels<VoxelType, 3> & vol,
     int off_y = subvol_offset_xyz[1];
     int off_x = subvol_offset_xyz[0];
 
-    BinaryDataPtr subvol_binary_data = subvol.get_binary();
     auto & vol_data = vol.get_binary()->get_data();
+    char * vol_buf = &vol_data[0];
+
+    BinaryDataPtr subvol_binary_data = subvol.get_binary();
     auto const & subvol_data = subvol_binary_data->get_data();
+    char const * subvol_buf = subvol_data.c_str();
+
+    // x-offset is constant for all YZ iterations
+    int x_offset = off_x;
+    int x_offset_bytes = x_offset * sizeof(VoxelType);
 
     size_t sv_offset = 0;
     for (size_t sv_z = 0; sv_z < sv_Z; ++sv_z)
@@ -199,22 +206,17 @@ void overwrite_subvol( DVIDVoxels<VoxelType, 3> & vol,
         {
             int y = off_y + sv_y;
             int y_offset = y * vol_X;
+            size_t y_offset_bytes = y_offset * sizeof(VoxelType);
 
-            for (size_t sv_x = 0; sv_x < sv_X; ++sv_x)
-            {
-                int x = off_x + sv_x;
-                int x_offset = x;
+            auto vol_offset_bytes = sizeof(VoxelType) * (z_offset + y_offset + x_offset);
+            auto subvol_offset_bytes = sv_offset * sizeof(VoxelType);
 
-                // Convert to buffer position
-                auto vol_offset_bytes = sizeof(VoxelType) * (z_offset + y_offset + x_offset);
-                auto subvol_offset_bytes = sizeof(VoxelType) * sv_offset;
+            // Copy X-row
+            std::memcpy( vol_buf + vol_offset_bytes,
+                         subvol_buf + subvol_offset_bytes,
+                         sv_X * sizeof(VoxelType) );
 
-                for (auto i = 0; i < sizeof(VoxelType); ++i)
-                {
-                    vol_data[vol_offset_bytes + i] = subvol_data[subvol_offset_bytes + i];
-                }
-                sv_offset += 1;
-            }
+            sv_offset += sv_X;
         }
     }
 }
