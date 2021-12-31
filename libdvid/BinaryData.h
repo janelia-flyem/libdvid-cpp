@@ -212,7 +212,10 @@ class BinaryData {
      * This creates an uninitialized string of the requested length.
      * \param length Number of bytes in data_
     */
-    BinaryData(unsigned int length) : data(length, '\0') {}
+    BinaryData(unsigned int length) {
+        // resize() is slightly faster than the initializing std::string constructor
+        data.resize(length);
+    }
 
     /*!
      * Private empty constructor.
