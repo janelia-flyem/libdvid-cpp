@@ -674,9 +674,15 @@ BinaryDataPtr BinaryData::decompress_gzip_labelarray_block(const BinaryDataPtr g
     // And then each voxel in the bitstream requires log2(8^3) = 9 bits.
     // So the worst-case size is:
     //  (8 + 4 + np.log2(8**3)/8) * 64**3 == 3440640 == (8 * 64**3) * 1.640625
-    // Let's multiply by 2 to be safe.
-    int decomp_size = 2 * sizeof(uint64_t) * block_width * block_width * block_width;
-    BinaryDataPtr gzip_inflated = BinaryData::decompress_gzip(gzip_compressed, decomp_size);
+    // int decomp_size = 1.640625 * sizeof(uint64_t) * block_width * block_width * block_width;
+
+    // HOWEVER, estimating using the above calculation is unnecessary.
+    // The exact uncompresed size is stored in compressed stream, as the last 4 bytes (file footer).
+    char const * buf = gzip_compressed->get_raw_char();
+    size_t bufsize = gzip_compressed->length();
+    uint32_t const * decomp_size = reinterpret_cast<uint32_t const *>(&buf[bufsize-4]);
+
+    BinaryDataPtr gzip_inflated = BinaryData::decompress_gzip(gzip_compressed, *decomp_size);
 
     Labels3D inflated_block = decode_label_block(gzip_inflated->get_raw_char(), gzip_inflated->length());
     return inflated_block.get_binary();
