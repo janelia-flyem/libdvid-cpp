@@ -177,56 +177,58 @@ LabelVec extract_subblock(uint64_t const * block, int gz, int gy, int gx)
 
     LabelVec subblock(SBW * SBW * SBW);
 
+    // X range is constant for all iterations
+    int x_col = gx * SBW + 0;
+    int x_offset = x_col;
+
     // Apparently using for_indices here would be very slow.
     size_t i = 0;
     for (size_t z = 0; z < SBW; ++z)
     {
+        int z_slice = gz * SBW + z;
+        int z_offset = z_slice * BLOCK_WIDTH * BLOCK_WIDTH;
+
         for (size_t y = 0; y < SBW; ++y)
         {
-            for (size_t x = 0; x < SBW; ++x)
-            {
-                int z_slice = gz * SBW + z;
-                int y_row   = gy * SBW + y;
-                int x_col   = gx * SBW + x;
+            int y_row = gy * SBW + y;
+            int y_offset = y_row * BLOCK_WIDTH;
 
-                int z_offset = z_slice * BLOCK_WIDTH * BLOCK_WIDTH;
-                int y_offset = y_row   * BLOCK_WIDTH;
-                int x_offset = x_col;
-
-                subblock[i] = block[z_offset + y_offset + x_offset];
-                ++i;
-            }
+            // Copy the X-row (i.e. 8 voxels)
+            void * dest = static_cast<void *>(&subblock[i]);
+            void const * src = static_cast<void const *>(&block[z_offset + y_offset + x_offset]);
+            std::memcpy(dest, src, SBW * sizeof(uint64_t));
+            i += SBW;
         }
     }
-    
+
     return subblock;
 }
 
 void write_subblock(uint64_t * block, uint64_t const * subblock_flat, int gz, int gy, int gx)
 {
     auto SBW = SUBBLOCK_WIDTH;
-    
+
+    // X range is constant for all iterations
+    int x_col = gx * SBW + 0;
+    int x_offset = x_col;
+
     // Apparently using for_indices here would be very slow.
     size_t subblock_index = 0;
     for (size_t z = 0; z < SBW; ++z)
     {
+        int z_slice = gz * SBW + z;
+        int z_offset = z_slice * BLOCK_WIDTH * BLOCK_WIDTH;
+
         for (size_t y = 0; y < SBW; ++y)
         {
-            // FIXME: Could this be faster if we memcpy a whole x-row at once, rather than iterating pixel by pixel?
-            // (Granted, it's only 8 pixels, but still...)
-            for (size_t x = 0; x < SBW; ++x)
-            {
-                int z_slice = gz * SBW + z;
-                int y_row   = gy * SBW + y;
-                int x_col   = gx * SBW + x;
+            int y_row = gy * SBW + y;
+            int y_offset = y_row * BLOCK_WIDTH;
 
-                int z_offset = z_slice * BLOCK_WIDTH * BLOCK_WIDTH;
-                int y_offset = y_row   * BLOCK_WIDTH;
-                int x_offset = x_col;
-
-                block[z_offset + y_offset + x_offset] = subblock_flat[subblock_index];
-                subblock_index += 1;
-            }
+            // Copy the X-row (i.e. 8 voxels)
+            void * dest = static_cast<void *>(&block[z_offset + y_offset + x_offset]);
+            void const * src = static_cast<void const *>(&subblock_flat[subblock_index]);
+            std::memcpy(dest, src, SBW * sizeof(uint64_t));
+            subblock_index += SBW;
         }
     }
 }
