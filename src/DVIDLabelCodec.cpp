@@ -295,6 +295,20 @@ LabelVec extract_subblock(LabelVec const & label_block, int gz, int gy, int gx)
 //                                 the 8x8x8 voxels are set to label 0.  If Ns[i] = 1, all voxels
 //                                 are the given label index.
 //
+//
+// A note about the worst-case encoded size:
+//
+//      The theoretical worst-case labelarray block is one where every voxel is unique.
+//      In that case, the global table is 64^3 uint64 entries, and 64^3 uint32 entries
+//      (distributed across the sub-blocks), and then each voxel in the bitstream
+//      requires log2(8^3) = 9 bits.
+//
+//      So the worst-case size is:
+//
+//          (8 + 4 + np.log2(8**3)/8) * 64**3 == 3440640 == (8 * 64**3) * 1.640625
+//
+//          int encoded_size = 1.640625 * sizeof(uint64_t) * block_width * block_width * block_width;
+//
 EncodedData encode_label_block(uint64_t const * label_block)
 {
     typedef boost::multi_array<LabelTable, 3> LabelTableArray;
@@ -625,6 +639,8 @@ Labels3D decode_label_block(char const * encoded_data, size_t num_bytes)
     });
 
     // Copy into Labels3D
+    // FIXME: Why is it necessary to incur this copy instead of loading this directly in the loop above?
+    // Profiler says this copy is 14% of the total function time.
     return Labels3D(&full_block[0], BLOCK_VOXELS, BLOCK_DIMS);
 }
 

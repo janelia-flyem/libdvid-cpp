@@ -83,8 +83,7 @@ class BinaryData {
     static BinaryDataPtr decompress_lz4(const BinaryDataPtr lz4binary,
             int uncompressed_size, char* buffer = 0, int bufsize = 0);
 
-    static BinaryDataPtr decompress_gzip( const BinaryDataPtr compressed_data,
-                                          int max_uncompressed_size );
+    static BinaryDataPtr decompress_gzip( const BinaryDataPtr compressed_data );
 
     /*!
      * Load data and compress to lz4 format.

@@ -157,24 +157,21 @@ int zlib_uncompress2_gzip(Bytef *dest, uLongf *destLen, const Bytef *source, uLo
 namespace libdvid {
 
 #if WITH_LIBDEFLATE
-BinaryDataPtr BinaryData::decompress_gzip( const BinaryDataPtr compressed_data,
-                                           int max_uncompressed_size )
+
+BinaryDataPtr BinaryData::decompress_gzip( const BinaryDataPtr compressed_data )
 {
     if (compressed_data->length() == 0) {
         throw ErrMsg("Cannot decompress empty buffer");
     }
 
-    std::vector<uint8_t> destination;
-    destination.resize(max_uncompressed_size);
-
-    uint8_t const * src_buf = compressed_data->get_raw();
-    uint8_t * dest_buf = &destination[0];
-
-    size_t dest_length = max_uncompressed_size;
+    // The exact uncompresed size is stored in compressed stream, as the last 4 bytes (file footer).
+    char const * src_buf = compressed_data->get_raw_char();
     size_t src_length = compressed_data->length();
+    uint32_t const dest_length = *(reinterpret_cast<uint32_t const *>(&src_buf[src_length-4]));
+    BinaryDataPtr inflated_data = BinaryData::create_binary_data(dest_length);
+    char * dest_buf = &(inflated_data->get_data()[0]);
 
     size_t actual_out_bytes = 0;
-
     libdeflate_decompressor * decompressor = libdeflate_alloc_decompressor();
     libdeflate_result result = libdeflate_gzip_decompress( decompressor,
                                                            src_buf, src_length,
@@ -194,7 +191,15 @@ BinaryDataPtr BinaryData::decompress_gzip( const BinaryDataPtr compressed_data,
         ss << "decompress_gzip(): libdeflate decompression failed: " << ResultNames.at(result);
         throw ErrMsg(ss.str());
     }
-    return BinaryData::create_binary_data(dest_buf, actual_out_bytes);
+
+    if (actual_out_bytes != dest_length) {
+        std::ostringstream ss;
+        ss << "decompress_gzip(): After libdeflate decompression, inflated size (" << actual_out_bytes
+           << ") doesn't match expected size (" << dest_length
+           << ") as written in the gzip file footer.";
+        throw ErrMsg(ss.str());
+    }
+    return inflated_data;
 }
 
 BinaryDataPtr BinaryData::compress_gzip(const BinaryDataPtr uncompressed_data)
@@ -218,21 +223,18 @@ BinaryDataPtr BinaryData::compress_gzip(const BinaryDataPtr uncompressed_data)
 
 #else
 
-BinaryDataPtr BinaryData::decompress_gzip( const BinaryDataPtr compressed_data,
-                                           int max_uncompressed_size )
+BinaryDataPtr BinaryData::decompress_gzip( const BinaryDataPtr compressed_data )
 {
     if (compressed_data->length() == 0) {
         throw ErrMsg("Cannot decompress empty buffer");
     }
 
-    std::vector<uint8_t> destination;
-    destination.resize(max_uncompressed_size);
-
+    // The exact uncompresed size is stored in compressed stream, as the last 4 bytes (file footer).
     uint8_t const * src_buf = compressed_data->get_raw();
-    uint8_t * dest_buf = &destination[0];
-
-    unsigned long dest_length = max_uncompressed_size;
-    unsigned long src_length = compressed_data->length();
+    size_t src_length = compressed_data->length();
+    size_t dest_length = *(reinterpret_cast<uint32_t const *>(&src_buf[src_length-4]));
+    BinaryDataPtr inflated_data = BinaryData::create_binary_data(dest_length);
+    uint8_t * dest_buf = reinterpret_cast<uint8_t *>(&(inflated_data->get_data()[0]));
 
     // zlib's uncompress2() will modify dest_length to match the length of the buffer used,
     // and modify src_length to indicate the length of data consumed.
@@ -251,7 +253,15 @@ BinaryDataPtr BinaryData::decompress_gzip( const BinaryDataPtr compressed_data,
         throw ErrMsg("decompress_gzip(): Did not consume all input data.");
     }
 
-    return BinaryData::create_binary_data(dest_buf, dest_length);
+    if (dest_length != inflated_data->length()) {
+        std::ostringstream ss;
+        ss << "decompress_gzip(): After zlib decompression, inflated size (" << dest_length
+           << ") doesn't match expected size (" << inflated_data->length()
+           << ") as written in the gzip file footer.";
+        throw ErrMsg(ss.str());
+    }
+
+    return inflated_data;
 }
 
 BinaryDataPtr BinaryData::compress_gzip(const BinaryDataPtr uncompressed_data)
@@ -669,21 +679,7 @@ BinaryDataPtr BinaryData::decompress_lz4_labelarray_block(const BinaryDataPtr lz
 
 BinaryDataPtr BinaryData::decompress_gzip_labelarray_block(const BinaryDataPtr gzip_compressed, unsigned int block_width)
 {
-    // The theoretical worst-case labelarray block is one where every voxel is unique.
-    // In that case, the global table is 64^3 uint64 entries, and 64^3 uint32 entries (distributed across the sub-blocks),
-    // And then each voxel in the bitstream requires log2(8^3) = 9 bits.
-    // So the worst-case size is:
-    //  (8 + 4 + np.log2(8**3)/8) * 64**3 == 3440640 == (8 * 64**3) * 1.640625
-    // int decomp_size = 1.640625 * sizeof(uint64_t) * block_width * block_width * block_width;
-
-    // HOWEVER, estimating using the above calculation is unnecessary.
-    // The exact uncompresed size is stored in compressed stream, as the last 4 bytes (file footer).
-    char const * buf = gzip_compressed->get_raw_char();
-    size_t bufsize = gzip_compressed->length();
-    uint32_t const * decomp_size = reinterpret_cast<uint32_t const *>(&buf[bufsize-4]);
-
-    BinaryDataPtr gzip_inflated = BinaryData::decompress_gzip(gzip_compressed, *decomp_size);
-
+    BinaryDataPtr gzip_inflated = BinaryData::decompress_gzip(gzip_compressed);
     Labels3D inflated_block = decode_label_block(gzip_inflated->get_raw_char(), gzip_inflated->length());
     return inflated_block.get_binary();
 }
