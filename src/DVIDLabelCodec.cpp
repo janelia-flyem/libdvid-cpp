@@ -584,9 +584,7 @@ Labels3D decode_label_block(char const * encoded_data, size_t num_bytes)
             return;
         }
 
-        // Would it be faster to split this into two loops?
-        // - Construct the array of indices (which could usually be uint16 if subblock_index_table is short enough)
-        // - Second pass to perform the lookup for each index
+        // Unpack bitstream and set voxels
         for (auto & voxel : dense_labels)
         {
             uint16_t next_bytes = decoder.peek_int<uint8_t>(0) << 8;
