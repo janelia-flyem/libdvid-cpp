@@ -42,7 +42,7 @@ requirements:
   ##
   build:
     - {{ compiler('cxx') }}
-    - cmake >=3.18  # For FindPython3 with support for Python3_FIND_VIRTUALENV=ONLY
+    - cmake >=3.21  # For FindPython3 with support for Python3_FIND_VIRTUALENV=ONLY and most recent boost variable names
     #- curl 7.59.*
     #- krb5 1.14.6 # See note above
   host:
