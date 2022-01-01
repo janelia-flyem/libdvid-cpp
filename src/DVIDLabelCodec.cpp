@@ -632,16 +632,15 @@ Labels3D decode_label_block(char const * encoded_data, size_t num_bytes)
     });
 
     // Assemble all of the subblocks into the full block.
-    std::vector<uint64_t> full_block(BLOCK_VOXELS, 0);
+    BinaryDataPtr full_block = BinaryData::create_binary_data(sizeof(uint64_t) * BLOCK_VOXELS);
+    uint64_t * full_block_u64 = reinterpret_cast<uint64_t *>(&(full_block->get_data()[0]));
+
     for_indices(GZ, GY, GX, [&](size_t gz, size_t gy, size_t gx) {
-        auto dense_subblock = subblock_dense_labels[gz][gy][gx];
-        write_subblock( &full_block[0], &dense_subblock[0], gz, gy, gx );
+        auto const & dense_subblock = subblock_dense_labels[gz][gy][gx];
+        write_subblock( full_block_u64, &dense_subblock[0], gz, gy, gx );
     });
 
-    // Copy into Labels3D
-    // FIXME: Why is it necessary to incur this copy instead of loading this directly in the loop above?
-    // Profiler says this copy is 14% of the total function time.
-    return Labels3D(&full_block[0], BLOCK_VOXELS, BLOCK_DIMS);
+    return Labels3D(full_block, BLOCK_DIMS);
 }
 
 
