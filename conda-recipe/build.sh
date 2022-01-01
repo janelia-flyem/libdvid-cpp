@@ -75,6 +75,7 @@ cmake ..\
     ${PYTHON_CMAKE_SETTINGS[@]} \
     -DLIBDVID_WRAP_PYTHON=1 \
     -DWITH_JPEGTURBO=1 \
+    -DWITH_LIBDEFLATE=1 \
 ##
 
 
