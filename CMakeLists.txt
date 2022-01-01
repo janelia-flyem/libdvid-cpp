@@ -58,8 +58,9 @@ ENDIF("${isSystemDir}" STREQUAL "-1")
 
 set (BUILDLOC ${CMAKE_SOURCE_DIR})
 
-
-set (LIBDVID_WRAP_PYTHON NO CACHE BOOL "Build the libdvid python bindings (requires boost_python)")
+set (WITH_JPEGTURBO FALSE CACHE BOOL "Build with libjpeg-turbo instead of libjpeg")
+set (WITH_LIBDEFLATE FALSE CACHE BOOL "Build with libdeflate instead of zlib")
+set (LIBDVID_WRAP_PYTHON FALSE CACHE BOOL "Build the libdvid python bindings (requires boost_python)")
 
 #
 # https://stackoverflow.com/a/36754678/162094
