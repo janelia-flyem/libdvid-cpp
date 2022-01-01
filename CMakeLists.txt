@@ -1,4 +1,4 @@
-CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
+CMAKE_MINIMUM_REQUIRED(VERSION 3.21)
 project (libdvidcpp)
 
 include (ExternalProject)
@@ -177,8 +177,9 @@ else()
     set (PLATFORM_DYLIB_EXTENSION "so")
 endif()
 if (NOT Boost_LIBRARY_DIR_RELEASE)
-    set(Boost_LIBRARY_DIR_RELEASE ${Boost_LIBRARY_DIR})
+    set(Boost_LIBRARY_DIR_RELEASE ${Boost_LIBRARY_DIRS})
 endif()
+
 set (boost_LIBS ${Boost_LIBRARY_DIR_RELEASE}/libboost_thread.${PLATFORM_DYLIB_EXTENSION} ${Boost_LIBRARY_DIR_RELEASE}/libboost_system.${PLATFORM_DYLIB_EXTENSION})
 
 if (WITH_JPEGTURBO)
