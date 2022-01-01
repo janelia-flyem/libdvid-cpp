@@ -556,6 +556,7 @@ Labels3D decode_label_block(char const * encoded_data, size_t num_bytes)
         uint16_t sb_label_count = subblock_label_counts[sb_index];
         auto indexes = decoder.decode_vector<uint32_t>(sb_label_count);
         auto & labels = subblock_label_lists[gz][gy][gx];
+        labels.reserve(sb_label_count);
         for (uint32_t i: indexes) {
             assert(i < global_label_list.size());
             uint64_t label = global_label_list[i];
@@ -570,19 +571,16 @@ Labels3D decode_label_block(char const * encoded_data, size_t num_bytes)
     for_indices(GZ, GY, GX, [&](size_t gz, size_t gy, size_t gx) {
         auto const & subblock_label_table = subblock_label_lists[gz][gy][gx];
         auto & dense_labels = subblock_dense_labels[gz][gy][gx];
-        dense_labels = LabelVec(SUBBLOCK_VOXELS, 0);
+        dense_labels = LabelVec(SUBBLOCK_VOXELS);
 
-        size_t bit_counter = 0;
-        size_t bit_length = ceil( log2( subblock_label_table.size() ) );
+        uint8_t bit_counter = 0;
+        uint8_t bit_length = ceil( log2( subblock_label_table.size() ) );
 
         if (bit_length == 0)
         {
             // No encoded voxels to read if the subblock is uniform
             uint64_t solid_label = subblock_label_table[0];
-            for (auto & voxel : dense_labels)
-            {
-                voxel = solid_label;
-            }
+            std::fill(dense_labels.begin(), dense_labels.end(), solid_label);
             return;
         }
 
@@ -598,7 +596,7 @@ Labels3D decode_label_block(char const * encoded_data, size_t num_bytes)
             }
 
             // Mask out previous bits
-            next_bytes &= (0xFFFF >> bit_counter);
+            next_bytes &= (uint16_t(0xFFFF) >> bit_counter);
 
             static_assert( SUBBLOCK_WIDTH*SUBBLOCK_WIDTH*SUBBLOCK_WIDTH < (1 << 16),
                           "The type of 'index' below must be modified if SUBBLOCK_WIDTH is greater than 8" );
