@@ -534,8 +534,8 @@ void DVIDNodeService::get_specificblocks3D(string datatype_instance,
     }
 
     // it is possible to have less blocks than requested if they are blank
-    while (buffer_size) {
-        // retrieve offset
+    int block_index = 0;
+    while (buffer_size >= 16) {
         vector<int> offset;
         offset.push_back(*((int*)head) * blocksize);
         head += 4;
@@ -546,21 +546,39 @@ void DVIDNodeService::get_specificblocks3D(string datatype_instance,
         offset.push_back(*((int*)head) * blocksize);
         head += 4;
         buffer_size -= 4;
-        int lz4_bytes = *((int*)head);
+
+        int compressed_size = *((int*)head);
         head += 4;
         buffer_size -= 4;
 
+        if (compressed_size > buffer_size) {
+            std::ostringstream ss;
+            ss << "Malformed response for " << resloc.str() << "\n"
+               << "Block header " << block_index << " claims that the block occupies "
+               << compressed_size << " bytes of the response, but only "
+               << buffer_size << " bytes of response remain to be consumed.\n";
+            throw std::runtime_error(ss.str());
+        }
+
         // DVID is supposed to omit blocks that are not present,
         // but in some old versions it returns the header anyway, followed by 0 bytes of data.
-        if (lz4_bytes > 0) {
-            BinaryDataPtr blockdata = BinaryData::create_binary_data((const char*) head, lz4_bytes);
+        if (compressed_size > 0) {
+            BinaryDataPtr blockdata = BinaryData::create_binary_data((const char*) head, compressed_size);
 
             DVIDCompressedBlock c_block(blockdata, offset, blocksize, datasize, ctype);
 
             c_blocks.push_back(c_block);
-            head += lz4_bytes;
-            buffer_size -= lz4_bytes;
+            head += compressed_size;
+            buffer_size -= compressed_size;
         }
+
+        block_index += 1;
+    }
+    if (buffer_size > 0) {
+        std::ostringstream ss;
+        ss << "Malformed response for " + resloc.str() + "\n"
+           << "Buffer was not fully consumed.";
+        throw std::runtime_error(ss.str());
     }
 }
 
