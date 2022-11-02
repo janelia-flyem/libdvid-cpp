@@ -105,7 +105,11 @@ class DVIDVoxels {
     */
     size_t count() const
     {
-        return dims[0] * dims[1] * dims[2];
+        size_t c = 1;
+        for (size_t i = 0; i < N; ++i) {
+            c *= dims[i];
+        }
+        return c;
     }
 
   private:
