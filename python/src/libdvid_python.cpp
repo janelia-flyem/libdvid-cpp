@@ -111,6 +111,56 @@ namespace libdvid { namespace python {
         return result_list;
     }
 
+    //! Helper function to extract and uncompress a list of compressed blocks.
+    template <typename T>
+    boost::python::tuple extract_compressed_blocks_to_voxels(std::vector<DVIDCompressedBlock> const & c_blocks, bool astype_bool=false)
+    {
+        using namespace boost::python;
+
+        // Convert to Python list
+        list result_list;
+
+        // create coordinate data
+        Dims_t cdims;
+        cdims.push_back(3); cdims.push_back(c_blocks.size());
+        unsigned int coordlength = 3*c_blocks.size();
+
+        int coordindex = 0;
+        std::unique_ptr<int[]> coordsdata(new int[coordlength]);
+        for (DVIDCompressedBlock const & cblock : c_blocks)
+        {
+            size_t blocksize = cblock.get_blocksize();
+            Dims_t bdims(3, blocksize);
+            size_t blength = blocksize * blocksize * blocksize;
+
+            auto offset = cblock.get_offset();
+            coordsdata[coordindex++] = offset[2];
+            coordsdata[coordindex++] = offset[1];
+            coordsdata[coordindex++] = offset[0];
+
+            // create dvid voxels per cblock
+            auto rawdata = reinterpret_cast<T const *>(cblock.get_uncompressed_data()->get_raw());
+            DVIDVoxels<T, 3> voxels(rawdata, blength, bdims);
+
+            auto voxels_python = static_cast<object>(voxels);
+            if (astype_bool) {
+                // Convert to numpy bool array
+                result_list.append( voxels_python.attr("astype")("bool") );
+            }
+            else
+            {
+                result_list.append( voxels_python );
+            }
+        }
+
+        // create coords voxel type which will be converted to an ndarray
+        Coords2D coords(coordsdata.get(), coordlength, cdims);
+
+        // return tuple of result list and ndarray
+        return make_tuple(static_cast<object>(coords), result_list);
+    }
+
+
     //! Python wrapper function for DVIDNodeService::get_sparselabelmask().
     //! Instead of requiring the user to pass an "out-parameter" (not idiomatic in python),
     //! This wrapper function returns the result as a python list of numpy objects.
@@ -132,42 +182,45 @@ namespace libdvid { namespace python {
         // if there are no blocks, there should be an exception
         assert(maskblocks.size() > 0);
 
-        // Convert to Python list
-        list result_list;
+        return extract_compressed_blocks_to_voxels<uint8>(maskblocks, true);
+    }
 
-        // create coordinate data
-        Dims_t cdims;
-        cdims.push_back(3); cdims.push_back(maskblocks.size());
-        unsigned int coordlength = 3*maskblocks.size();
-        std::unique_ptr<int[]> coordsdata(new int[coordlength]);
-        int coordindex = 0;
+    //! Python wrapper function for DVIDConnection::get_specificblocks3D(),
+    //! except that the result is uncompressed before returning to the Python caller.
+    boost::python::tuple get_specificblocks3D( DVIDNodeService & nodeService, std::string instance, bool gray, Coords2D const & blockcoords_zyx,
+                                              int scale, bool uncompressed=false, bool supervoxels=false)
+    {
+        using namespace boost::python;
 
-        size_t blocksize = maskblocks[0].get_blocksize();
-        Dims_t bdims(3, blocksize);
-        size_t blength = blocksize*blocksize*blocksize;
-
-        for (DVIDCompressedBlock const & cblock : maskblocks)
-        {
-            auto offset = cblock.get_offset();
-            coordsdata[coordindex++] = offset[2];
-            coordsdata[coordindex++] = offset[1];
-            coordsdata[coordindex++] = offset[0];
-
-            // create dvid voxels per cblock
-            auto rawdata = cblock.get_uncompressed_data()->get_raw();
-            Array8bit3D voxels(rawdata, blength, bdims);
-
-            // Convert to numpy bool array
-            auto voxels_python = static_cast<object>(voxels);
-            auto voxels_python_bool = voxels_python.attr("astype")("bool");
-            result_list.append( voxels_python_bool );
+        if (blockcoords_zyx.get_dims()[1] != 3) {
+            throw ErrMsg("block coordinates must be a 2D, Nx3, in ZYX order");
         }
-        
-        // create coords voxel type which will be converted to an ndarray 
-        Coords2D coords(coordsdata.get(), coordlength, cdims);
-        
-        // return tuple of result list and ndarray
-        return make_tuple(static_cast<object>(coords), result_list);
+
+        std::vector<DVIDCompressedBlock> c_blocks;
+        {
+            PyAllowThreads no_gil; // Permit other Python threads.
+
+            // Copy from 2D array to 1D vector
+            std::vector<int> blockcoords_vec(blockcoords_zyx.get_raw(), blockcoords_zyx.get_raw() + blockcoords_zyx.count());
+
+            // Convert from ZYX to XYZ
+            for (size_t i = 0; i < blockcoords_vec.size(); i += 3)
+            {
+                std::swap(blockcoords_vec[i], blockcoords_vec[i+2]);
+            }
+
+            // Retrieve from DVID
+            nodeService.get_specificblocks3D(instance, blockcoords_vec, gray, c_blocks, scale, uncompressed, supervoxels);
+        }
+
+        if (gray)
+        {
+            return extract_compressed_blocks_to_voxels<uint8>(c_blocks);
+        }
+        else
+        {
+            return extract_compressed_blocks_to_voxels<uint64>(c_blocks);
+        }
     }
 
 
@@ -1162,6 +1215,15 @@ namespace libdvid { namespace python {
                 ":param supervoxels: Request supervoxel segmentation, not agglomerated labels \n"
                 ":returns: (2d INT Nx3 array of z, y, x voxel  coordinates for each block, list of 3D 8bit ndarray masks) \n")
 
+            .def("get_specificblocks3D", &get_specificblocks3D,
+                ( arg("service"), arg("instance"), arg("gray"), arg("blockcoords_zyx"), arg("scale")=0, arg("uncompressed")=false, arg("supervoxels")=false ),
+                "Python wrapper for get_specificblocks3D, i.e. the /specificblocks endpoint.\n"
+                ":param instance: Name of a dvid instance, either labelmap or uint8blk.  Note that you MUST set the 'gray' arg appropriately, too.\n"
+                ":param blockcoords_zyx: A 2D ndarray (N,3) with dtype=int32, indicating the block coordinates (scale 6) which should be fetched\n"
+                ":param scale: Which pyramid scale to fetch data from.  For grayscale data, should always be 0 (since you have to specify the scale in the instance name)\n"
+                ":param uncompressed: If true, fetch uncompressed blocks from DVID.  Note: This function always returns uncompressed data, regardless of how it was fetched from DVID.\n"
+                ":param supervoxels: For labelmap instances, fetch supervoxel data instead of mapped body voxels.\n"
+            )
 
             .def("post_roi", &DVIDNodeService::post_roi,
                 ( arg("roi_name"), arg("blocks_zyx") ),
