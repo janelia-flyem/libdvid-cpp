@@ -445,7 +445,7 @@ Grayscale3D DVIDNodeService::get_grayblocks3D_subvol(string datatype_instance, D
 }
 
 void DVIDNodeService::prefetch_specificblocks3D(string datatype_instance,
-        vector<int>& blockcoords)
+        vector<int> const & blockcoords)
 {
     if ((blockcoords.size() % 3) != 0) {
         throw ErrMsg("Did not specify a multiple of 3 block coords");
@@ -473,7 +473,7 @@ void DVIDNodeService::prefetch_specificblocks3D(string datatype_instance,
 }
 
 void DVIDNodeService::get_specificblocks3D(string datatype_instance,
-                                           vector<int>& blockcoords,
+                                           vector<int> const & blockcoords,
                                            bool gray,
                                            vector<DVIDCompressedBlock>& c_blocks,
                                            int scale,

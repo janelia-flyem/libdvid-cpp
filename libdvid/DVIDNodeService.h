@@ -904,7 +904,7 @@ class DVIDNodeService {
      * \param c_blocks array of lz4/jpeg compressed label blocks
      * \param scale downsample level (0 highest resolution)
     */
-    void get_specificblocks3D(std::string datatype_instance, std::vector<int>& blockcoords, bool gray, 
+    void get_specificblocks3D(std::string datatype_instance, std::vector<int> const & blockcoords, bool gray,
         std::vector<DVIDCompressedBlock>& c_blocks, int scale=0, bool uncompressed=false, bool supervoxels=false);
 
     /*!
@@ -912,7 +912,7 @@ class DVIDNodeService {
      * \param datatype instance name of labelblk type instance
      * \param blockcoords vector of x,y,z,x,y,z ...
     */
-    void prefetch_specificblocks3D(std::string datatype_instance, std::vector<int>& blockcoords);
+    void prefetch_specificblocks3D(std::string datatype_instance, std::vector<int> const & blockcoords);
 
     /*!
      * Fetches sparse label volume as a series of block masks using labelarray interface.
