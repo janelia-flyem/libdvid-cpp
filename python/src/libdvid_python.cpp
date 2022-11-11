@@ -192,8 +192,12 @@ namespace libdvid { namespace python {
     {
         using namespace boost::python;
 
-        if (blockcoords_zyx.get_dims()[1] != 3) {
-            throw ErrMsg("block coordinates must be a 2D, Nx3, in ZYX order");
+        // Note: DVIDVoxels lists its dims using F-order conventions.
+        //       so although the Python caller sent us a C-order (N,3) array,
+        //       we list that shape as (3,N) without changing the buffer underneath.
+        if (blockcoords_zyx.get_dims()[0] != 3) {
+
+            throw ErrMsg("block coordinates must be a 2D ndarray of shape (N,3) listed with ZYX conventions.");
         }
 
         std::vector<DVIDCompressedBlock> c_blocks;
@@ -1223,6 +1227,7 @@ namespace libdvid { namespace python {
                 ":param scale: Which pyramid scale to fetch data from.  For grayscale data, should always be 0 (since you have to specify the scale in the instance name)\n"
                 ":param uncompressed: If true, fetch uncompressed blocks from DVID.  Note: This function always returns uncompressed data, regardless of how it was fetched from DVID.\n"
                 ":param supervoxels: For labelmap instances, fetch supervoxel data instead of mapped body voxels.\n"
+                ":returns: tuple (coords_zyx, blocks)\n"
             )
 
             .def("post_roi", &DVIDNodeService::post_roi,

@@ -18,9 +18,14 @@
 #include <tuple>
 #include <thread>
 
-using std::tuple; using std::make_tuple;
-using std::string; using std::vector;
-using std::ifstream; using std::set; using std::stringstream;
+using std::set;
+using std::vector;
+using std::tuple;
+using std::make_tuple;
+using std::string;
+using std::ifstream;
+using std::stringstream;
+using std::ostringstream;
 //Json::Reader json_reader;
 
 //! Gives the limit for how many vertice can be operated on in one call
@@ -483,6 +488,15 @@ void DVIDNodeService::get_specificblocks3D(string datatype_instance,
     size_t blocksize = get_blocksize(datatype_instance);
     if ((blockcoords.size() % 3) != 0) {
         throw ErrMsg("Did not specify a multiple of 3 block coords");
+    }
+
+    if (gray && scale > 0) {
+        ostringstream ss;
+        ss << "get_specificblocks3D(): DVID grayscale datatypes (e.g. uint8blk) do not support a 'scale' parameter.\n";
+        ss << " Instead, select the appropriate instance for the data scale you need, ";
+        ss << "e.g. '" << datatype_instance << "_" << scale << "',";
+        ss << "and leave the 'scale' argument set to 0 when calling this function.";
+        throw ErrMsg(ss.str());
     }
 
     if (blockcoords.size() == 0) {
