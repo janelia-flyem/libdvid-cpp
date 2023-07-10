@@ -12,21 +12,21 @@
 #
 
 boost:
-  - 1.74.0
+  - 1.78.0
 boost_cpp:
-  - 1.74.0
+  - 1.78.0
 hdf5:
-  - 1.10.6
+  - 1.12.1
 jsoncpp:
-  - 1.9.4
+  - 1.9.5
 lz4_c:
   - 1.9.3
 numpy:
-  - 1.17
+  - 1.21
 python:
-  - 3.7
+  - 3.10
 zeromq:
-  - 4.3.3
+  - 4.3.4
 
 pin_run_as_build:
   boost:
@@ -39,12 +39,28 @@ pin_run_as_build:
     max_pin: x.x.x
   lz4-c:
     max_pin: x.x.x
-  numpy:
-    max_pin: x.x
   python:
     max_pin: x.x
   zeromq:
     max_pin: x.x
 
 CONDA_BUILD_SYSROOT:
-  - /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.10.sdk
+  # Most conda-forge packages are compatible with MacOSX 10.9,
+  # but golang-1.16 requires at least MacOSX 10.13, so FlyEM uses 10.13 as our target across the board.
+  # (See the download page: https://go.dev/dl/)
+  #
+  # You will have to install this SDK manually, via this project:
+  #
+  #   https://github.com/devernay/xcodelegacy
+  #
+  # Quick Instructions:
+  #
+  #   curl https://raw.githubusercontent.com/devernay/xcodelegacy/master/XcodeLegacy.sh > XcodeLegacy.sh
+  #   chmod +x XcodeLegacy.sh
+  #   sudo ./XcodeLegacy.sh -osx1013 buildpackages
+  #   sudo ./XcodeLegacy.sh -osx1013 install
+  #
+  - /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.13.sdk
+
+MACOSX_DEPLOYMENT_TARGET:
+  - 10.13
