@@ -69,7 +69,7 @@ requirements:
 
   run:
     - python {{ python }}
-    - numpy {{ numpy }}
+    - {{ pin_compatible('numpy') }}
     - boost {{ boost }}
     - jsoncpp {{ jsoncpp }}
     - lz4-c {{ lz4_c }}
