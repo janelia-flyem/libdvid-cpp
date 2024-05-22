@@ -12,21 +12,31 @@
 #
 
 boost:
-  - 1.78.0
+  - 1.82.0
 boost_cpp:
-  - 1.78.0
+  - 1.82.0
 hdf5:
-  - 1.12.1
+  - 1.14.3
 jsoncpp:
   - 1.9.5
 lz4_c:
   - 1.9.3
 numpy:
-  - 1.21
+  - 1.26
 python:
-  - 3.10
+  - 3.12.* *_cpython
+python_impl:
+  - cpython
 zeromq:
-  - 4.3.4
+  - 4.3.5
+
+# conda-forge uses these zip_keys, so we do it here even though
+# it's not necessary since we only use a single version of each.
+zip_keys:
+  -
+    - python
+    - numpy
+    - python_impl
 
 pin_run_as_build:
   boost:
@@ -44,23 +54,20 @@ pin_run_as_build:
   zeromq:
     max_pin: x.x
 
-CONDA_BUILD_SYSROOT:
-  # Most conda-forge packages are compatible with MacOSX 10.9,
-  # but golang-1.16 requires at least MacOSX 10.13, so FlyEM uses 10.13 as our target across the board.
-  # (See the download page: https://go.dev/dl/)
-  #
-  # You will have to install this SDK manually, via this project:
-  #
-  #   https://github.com/devernay/xcodelegacy
-  #
-  # Quick Instructions:
-  #
-  #   curl https://raw.githubusercontent.com/devernay/xcodelegacy/master/XcodeLegacy.sh > XcodeLegacy.sh
-  #   chmod +x XcodeLegacy.sh
-  #   sudo ./XcodeLegacy.sh -osx1013 buildpackages
-  #   sudo ./XcodeLegacy.sh -osx1013 install
-  #
-  - /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.13.sdk
 
-MACOSX_DEPLOYMENT_TARGET:
-  - 10.13
+# CONDA_BUILD_SYSROOT:
+#   # Most conda-forge packages are compatible with MacOSX 10.9,
+#   # but golang-1.16 requires at least MacOSX 10.13, so FlyEM uses 10.13 as our target across the board.
+#   # (See the download page: https://go.dev/dl/)
+#   #
+#   # The simplest thing to do is to download the SDK from the release page in this repo:
+#   # https://github.com/phracker/MacOSX-SDKs
+#   # https://github.com/phracker/MacOSX-SDKs/releases
+#   #
+#   # Previously, we would use the XcodeLegacy script, via the following project,
+#   # but it doesn't seem to work with new versions of Xcode.
+#   # https://github.com/devernay/xcodelegacy
+#   - /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.13.sdk
+
+# MACOSX_DEPLOYMENT_TARGET:
+#   - 10.13
