@@ -48,7 +48,7 @@ PYTHON_CMAKE_SETTINGS=(
     -DPython3_FIND_VIRTUALENV=ONLY
     -DPython3_EXECUTABLE=${PREFIX}/bin/python3
     -DPython3_INCLUDE_DIR=${PREFIX}/include/python${PY_ABI}
-    -DPython3_NumPy_INCLUDE_DIR=${PREFIX}/lib/python${PY_VER}/site-packages/numpy/core/include
+    -DPython3_NumPy_INCLUDE_DIR=${PREFIX}/lib/python${PY_VER}/site-packages/numpy/_core/include
     -DPython3_LIBRARY=${PREFIX}/lib/libpython${PY_ABI}.${DYLIB_EXT}
     -DPython3_LIBRARY_RELEASE=${PREFIX}/lib/libpython${PY_ABI}.${DYLIB_EXT}
 )
