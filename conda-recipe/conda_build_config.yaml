@@ -19,6 +19,8 @@ hdf5:
   - 1.14.3
 jsoncpp:
   - 1.9.6
+libpng:
+  - '1.6'
 lz4_c:
   - 1.9.3
 numpy:
