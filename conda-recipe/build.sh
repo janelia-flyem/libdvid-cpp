@@ -72,6 +72,10 @@ cmake ..\
     -DBoost_LIBRARY_DIR="${PREFIX}/lib" \
     -DBoost_INCLUDE_DIR="${PREFIX}/include" \
     -DBoost_PYTHON_LIBRARY="${PREFIX}/lib/libboost_python${CONDA_PY}.${DYLIB_EXT}" \
+    -DZLIB_INCLUDE_DIR=${PREFIX}/include \
+    -DZLIB_LIBRARY=${PREFIX}/lib/libz${SHLIB_EXT} \
+    -DPNG_PNG_INCLUDE_DIR=${PREFIX}/include \
+    -DPNG_LIBRARY=${PREFIX}/lib/libpng${SHLIB_EXT} \
     ${PYTHON_CMAKE_SETTINGS[@]} \
     -DLIBDVID_WRAP_PYTHON=1 \
     -DWITH_JPEGTURBO=1 \

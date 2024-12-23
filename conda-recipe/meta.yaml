@@ -61,6 +61,10 @@ requirements:
     # In 7.62.0, CURL_HTTP_VERSION_2TLS became the default setting for CURLOPT_HTTP_VERSION
     - curl >=7.62.0
 
+    # It seems we need to list zlib explicitly (for libpng??  for cmake??)
+    # even though our own implementation uses libdeflate instead.
+    - zlib
+
     #- krb5 1.14.6 # See note above
 
   {% if not SKIP_LIBDVID_TESTS is defined or SKIP_LIBDVID_TESTS == '0' %}
