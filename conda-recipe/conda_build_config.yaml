@@ -11,10 +11,10 @@
 #     master-conda-build-config: master-conda-build-config.yaml
 #
 
-boost:
-  - 1.86.0
-boost_cpp:
-  - 1.86.0
+libboost_devel:
+  - '1.86'
+libboost_python_devel:
+  - '1.86'
 hdf5:
   - 1.14.3
 jsoncpp:
