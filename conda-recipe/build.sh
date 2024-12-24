@@ -31,6 +31,8 @@ if [[ $1 != "" ]]; then
     fi
 fi
 
+NUMPY_INCLUDE=$(${PREFIX}/bin/python3 -c 'import numpy; print(numpy.get_include())')
+
 # On Mac, you can specify CMAKE_GENERATOR=Xcode if you want.
 CMAKE_GENERATOR=${CMAKE_GENERATOR-Unix Makefiles}
 CMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE-Release}
@@ -48,7 +50,7 @@ PYTHON_CMAKE_SETTINGS=(
     -DPython3_FIND_VIRTUALENV=ONLY
     -DPython3_EXECUTABLE=${PREFIX}/bin/python3
     -DPython3_INCLUDE_DIR=${PREFIX}/include/python${PY_ABI}
-    -DPython3_NumPy_INCLUDE_DIR=${PREFIX}/lib/python${PY_VER}/site-packages/numpy/_core/include
+    -DPython3_NumPy_INCLUDE_DIR=${NUMPY_INCLUDE}
     -DPython3_LIBRARY=${PREFIX}/lib/libpython${PY_ABI}.${DYLIB_EXT}
     -DPython3_LIBRARY_RELEASE=${PREFIX}/lib/libpython${PY_ABI}.${DYLIB_EXT}
 )
