@@ -75,17 +75,12 @@ requirements:
 
   run:
     - python {{ python }}
-    - {{ pin_compatible('numpy') }}
-    - jsoncpp {{ jsoncpp }}
-    - lz4-c {{ lz4_c }}
-    - zeromq {{ zeromq }}
-    - libdeflate
 
     # On Mac, libpng versions are not backwards compatible, unfortunately.
     # See: https://github.com/conda-forge/libpng-feedstock/issues/10
     # However, I think the libpng run_exports (added in conda-build v3)
     # should handle this for us, so we won't specify the constraints here.
-    - libpng
+    # - libpng
 
     # In 7.62.0, CURL_HTTP_VERSION_2TLS became the default setting for CURLOPT_HTTP_VERSION
     - curl >=7.62.0
