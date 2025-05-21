@@ -16,7 +16,7 @@ libboost_devel:
 libboost_python_devel:
   - '1.86'
 libdeflate:
-  - '1.22'
+  - '1.24'
 hdf5:
   - 1.14.3
 jsoncpp:
@@ -24,10 +24,10 @@ jsoncpp:
 libpng:
   - '1.6'
 lz4_c:
-  - 1.9.3
+  - 1.10
 numpy:
   #- 1.26  # Same as conda-forge-pinning (on 2024-12-20), even though numpy 2.0 exists.
-  - '2.0'
+  - '2.2'
 python:
   - 3.12.* *_cpython
 python_impl:
@@ -51,8 +51,6 @@ pin_run_as_build:
   hdf5:
     max_pin: x.x.x
   jsoncpp:
-    max_pin: x.x.x
-  lz4-c:
     max_pin: x.x.x
   python:
     max_pin: x.x

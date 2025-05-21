@@ -9,3 +9,6 @@ build
 .vscode
 build-*/
 *.so
+# pixi environments
+.pixi
+*.egg-info
