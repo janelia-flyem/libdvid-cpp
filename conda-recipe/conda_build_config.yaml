@@ -27,7 +27,7 @@ lz4_c:
   - 1.10
 numpy:
   #- 1.26  # Same as conda-forge-pinning (on 2024-12-20), even though numpy 2.0 exists.
-  - '2.0'
+  - '2.2'
 python:
   - 3.12.* *_cpython
 python_impl:
