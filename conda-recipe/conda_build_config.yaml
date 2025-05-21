@@ -16,7 +16,7 @@ libboost_devel:
 libboost_python_devel:
   - '1.86'
 libdeflate:
-  - '1.22'
+  - '1.24'
 hdf5:
   - 1.14.3
 jsoncpp:
