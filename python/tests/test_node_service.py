@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import unittest
-import collections
+import collections.abc
 import weakref
 import numpy
 import json
@@ -45,7 +45,7 @@ class Test_DVIDNodeService(unittest.TestCase):
         self.assertEqual(readback_value, b"val2")
 
         keys = node_service.get_keys("keyvalue_test")
-        assert isinstance(keys, collections.Iterable)
+        assert isinstance(keys, collections.abc.Iterable)
         assert set(keys) == set(["key1", "key2"])
   
         with self.assertRaises(ErrMsg):

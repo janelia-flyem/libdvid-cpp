@@ -207,7 +207,7 @@ BinaryDataPtr BinaryData::compress_gzip(const BinaryDataPtr uncompressed_data)
     libdeflate_compressor * compressor = libdeflate_alloc_compressor(6);
 
     unsigned long src_length = uncompressed_data->length();
-    unsigned long dest_length = libdeflate_deflate_compress_bound(compressor, src_length);
+    unsigned long dest_length = libdeflate_gzip_compress_bound(compressor, src_length);
 
     std::vector<uint8_t> destination;
     destination.resize(dest_length);
@@ -215,9 +215,14 @@ BinaryDataPtr BinaryData::compress_gzip(const BinaryDataPtr uncompressed_data)
     uint8_t const * src_buf = uncompressed_data->get_raw();
     uint8_t * dest_buf = reinterpret_cast<uint8_t *>(&destination[0]);
 
-    size_t compressed_size = libdeflate_deflate_compress( compressor,
-			                                              src_buf, src_length,
-                                                          dest_buf, dest_length );
+    size_t compressed_size = libdeflate_gzip_compress( compressor,
+                                                       src_buf, src_length,
+                                                       dest_buf, dest_length );
+    libdeflate_free_compressor(compressor);
+
+    if (compressed_size == 0) {
+        throw ErrMsg("compress_gzip(): libdeflate compression failed");
+    }
     return BinaryData::create_binary_data(dest_buf, compressed_size);
 }
 
@@ -451,7 +456,7 @@ BinaryDataPtr BinaryData::decompress_jpeg(const BinaryDataPtr jpegbinary,
     char* uncompressed_data = &(binary->data[0]);
     unsigned char* buffer = (unsigned char*) uncompressed_data;
 
-    tjDecompress2(_jpegDecompressor, _compressedImage, _jpegSize, buffer, width2, 0/*pitch*/, height2, TJPF_GRAY, TJFLAG_FASTDCT);
+    tjDecompress2(_jpegDecompressor, _compressedImage, _jpegSize, buffer, width2, 0/*pitch*/, height2, TJPF_GRAY, 0);
 
 
     tjDestroy(_jpegDecompressor);

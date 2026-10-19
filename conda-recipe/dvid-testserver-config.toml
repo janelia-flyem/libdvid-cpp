@@ -26,3 +26,13 @@ max_log_age = 30   # days
     [store.raid6]
     engine = "basholeveldb"
     path = "/tmp/basholeveldb"
+
+    # labelmap instances require a mutation log.
+    [store.mutationlog]
+    engine = "filelog"
+    path = "/tmp/dvid-mutationlog"
+
+[backend]
+    [backend.default]
+    store = "raid6"
+    log = "mutationlog"

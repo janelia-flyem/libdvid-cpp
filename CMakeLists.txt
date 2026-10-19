@@ -389,10 +389,8 @@ add_test(
     dvidtest_keyvalue http://127.0.0.1:8000
 )
 
-add_test(
-    labelgraph 
-    dvidtest_labelgraph http://127.0.0.1:8000
-)
+# The labelgraph datatype is no longer supported by DVID,
+# so dvidtest_labelgraph is still built but not run.
 
 add_test(
     compression
