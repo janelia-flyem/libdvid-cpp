@@ -13,7 +13,9 @@
 
 #include "DVIDNodeService.h"
 #include <boost/thread/thread.hpp>
-#include <boost/asio/io_service.hpp>
+#include <boost/asio/io_context.hpp>
+#include <boost/asio/dispatch.hpp>
+#include <boost/asio/executor_work_guard.hpp>
 #include <unordered_map>
 
 namespace libdvid {
@@ -35,28 +37,28 @@ class DVIDThreadPool {
     template <typename TTask>
     void add_task(TTask task)
     {
-        io_service_.dispatch(task);
+        boost::asio::dispatch(io_context_, task);
     }
     ~DVIDThreadPool()
     {
-        delete work_ctrl_;
+        work_guard_.reset();
     }
 
   private:
     DVIDThreadPool()
+        : work_guard_(boost::asio::make_work_guard(io_context_))
     {
-        work_ctrl_ = new boost::asio::io_service::work(io_service_);
         int workers = boost::thread::hardware_concurrency() * 2;
         workers = workers < MINPOOLSIZE ? MINPOOLSIZE : workers;
 
         for (int i = 0; i < workers; ++i) {
-            threads_.create_thread(boost::bind(&boost::asio::io_service::run, &io_service_));
+            threads_.create_thread([this]() { io_context_.run(); });
         }
     }
 
-    boost::asio::io_service io_service_;
+    boost::asio::io_context io_context_;
     boost::thread_group threads_;
-    boost::asio::io_service::work *work_ctrl_;
+    boost::asio::executor_work_guard<boost::asio::io_context::executor_type> work_guard_;
 
 };
 
