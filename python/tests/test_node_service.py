@@ -127,7 +127,9 @@ class Test_DVIDNodeService(unittest.TestCase):
     def test_labelmap_mapping(self):
         node_service = DVIDNodeService(TEST_DVID_SERVER, self.uuid, "foo@bar.com", "test_labelmap_mapping")
         node_service.create_labelmap("test_labelmap", 64)
-        assert (node_service.get_mapping("test_labelmap", [1,2,3]) == [1,2,3]).all()
+        # DVID verifies that each supervoxel exists (via the label index),
+        # and maps nonexistent supervoxels to 0.  This instance is empty.
+        assert (node_service.get_mapping("test_labelmap", [1,2,3]) == [0,0,0]).all()
 
     def test_labelarray_put_single_block(self):
         node_service = DVIDNodeService(TEST_DVID_SERVER, self.uuid, "foo@bar.com", "test_labelarray_put_single_block")
