@@ -12,13 +12,13 @@
 #
 
 libboost_devel:
-  - '1.86'
+  - '1.88'
 libboost_python_devel:
-  - '1.86'
+  - '1.88'
 libdeflate:
-  - '1.24'
+  - '1.25'
 hdf5:
-  - 1.14.3
+  - 1.14.6
 jsoncpp:
   - 1.9.6
 libpng:
@@ -26,8 +26,7 @@ libpng:
 lz4_c:
   - 1.10
 numpy:
-  #- 1.26  # Same as conda-forge-pinning (on 2024-12-20), even though numpy 2.0 exists.
-  - '2.2'
+  - 2
 python:
   - 3.12.* *_cpython
 python_impl:
